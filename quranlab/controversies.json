@@ -1,0 +1,132 @@
+{
+  "_meta": {
+    "title": "Analyse textuelle : idées reçues, controverses et pratiques coraniques",
+    "disclaimer": "Cette section est STRICTEMENT descriptive et intra-coranique. Elle recense des occurrences lexicales et des versets, avec leur contexte, et ne formule AUCUNE conclusion doctrinale, juridique ou théologique. Aucun tafsir, hadith ou avis traditionnel n'est utilisé. Les 'notes' indiquent seulement quoi observer dans le texte (récurrences, co-occurrences, polysémie, formulations) : la lecture et l'interprétation restent à la charge du lecteur, verset par verset et dans son contexte.",
+    "method": "Pour chaque sujet : (1) repérer les racines et les termes ; (2) compter leurs occurrences dans tout le corpus ; (3) observer la polysémie (toutes les formes d'une même racine et leurs contextes) ; (4) comparer les versets où ils co-apparaissent ; (5) lire chaque verset dans la sourate et le passage environnants."
+  },
+
+  "femme_genre": {
+    "label": "Statut de la femme et rapports de genre",
+    "question": "Comment le texte parle-t-il des femmes, des hommes et des rapports entre eux ?",
+    "roots": [],
+    "terms_ar": ["النساء", "امرأة", "الرجال", "الأنثى", "الذكر", "أمهات"],
+    "key_verses": ["4:1", "4:7", "4:11", "4:32", "4:34", "2:228", "9:71", "33:35", "16:97", "49:13"],
+    "context_hint": "Lire notamment la sourate 4 (versets 1-35) et 2:221-237 en continu.",
+    "framing": "Observer la répartition des termes (النِّساء / امْرَأَة / رِجال / أُنثى / ذَكَر) et leurs contextes : héritage (4:7-11), rapports conjugaux (2:228, 4:34), équivalence spirituelle (33:35, 16:97), dignité commune (4:1, 49:13). Comparer les formulations sans isoler un verset de son passage."
+  },
+
+  "correction_conjugale": {
+    "label": "La correction conjugale (4:34) et la racine ḍ-r-b",
+    "question": "Quel est l'emploi textuel de la racine ḍ-r-b dans tout le Coran ?",
+    "roots": ["ضرب"],
+    "root_polysemy": ["ضرب"],
+    "terms_ar": ["ضرب", "اضرب", "يضرب", "ضربا"],
+    "key_verses": ["4:34", "4:35", "30:21", "4:19", "2:187", "9:71"],
+    "context_hint": "Lire 4:34-35 en continu, puis comparer avec 30:21 et 4:19.",
+    "framing": "La racine ض-ر-ب est employée dans le Coran pour des sens variés (frapper, proposer une parabole « ضرب مثل », parcourir « ضرب في الأرض », marquer/sceller...). Observer toutes ses formes et leurs contextes avant de lire 4:34, dont le passage se poursuit par l'arbitrage (4:35). Comparer avec l'idéal du lien conjugal : « Il a mis entre vous affection et miséricorde » (30:21) et « vivez avec elles convenablement » (4:19)."
+  },
+
+  "contrainte_liberte": {
+    "label": "Contrainte, liberté et responsabilité",
+    "question": "Le texte évoque-t-il la contrainte en matière de croyance ?",
+    "roots": ["كره"],
+    "terms_ar": ["إكراه", "لا إكراه", "أكره"],
+    "key_verses": ["2:256", "10:99", "18:29", "13:11", "2:286", "76:29"],
+    "context_hint": "Lire 2:256 dans 2:253-257, et 18:29 dans 18:27-31.",
+    "framing": "Recenser la racine ك-ر-ه (déplaisir / contrainte) et l'expression « لا إكراه ». Comparer avec les versets sur la volonté (10:99, 18:29), la charge individuelle (2:286) et le changement conditionné à l'effort des gens (13:11). Observer le vocabulaire de la responsabilité personnelle."
+  },
+
+  "esclavage_servitude": {
+    "label": "Servitude et affranchissement (fakk raqaba)",
+    "question": "Quel vocabulaire le texte emploie-t-il autour de la servitude et de l'émancipation ?",
+    "roots": ["رقب", "عبد", "ملك"],
+    "root_polysemy": ["رقب"],
+    "terms_ar": ["الرقاب", "رقبة", "ما ملكت", "ملكت أيمانكم"],
+    "key_verses": ["90:11", "90:12", "90:13", "2:177", "4:92", "5:89", "24:33", "47:4", "58:3"],
+    "context_hint": "Lire 90:11-18 (le sentier difficile) et 24:33 dans son passage.",
+    "framing": "Repérer la racine ر-ق-ب (nuque) et l'expression « فك رقبة » (délier une nuque). Observer les contextes où l'affranchissement apparaît : comme acte de piété (90:13, 2:177), comme expiation (4:92, 5:89, 58:3). Noter la formule « ما ملكت أيمانكم » et le contexte de réforme des rapports (24:33). Comparer les domaines d'emploi du champ lexical de la maîtrise (م-ل-ك)."
+  },
+
+  "mariage_age": {
+    "label": "Mariage, maturité et âge (rushd)",
+    "question": "Le texte fixe-t-il un âge chiffré, ou des critères de maturité ?",
+    "roots": ["نكح", "بلغ", "رشد"],
+    "root_polysemy": ["رشد"],
+    "terms_ar": ["النكاح", "بلغ", "أشد", "رشد"],
+    "key_verses": ["4:6", "4:3", "4:25", "24:32", "24:33", "2:221", "6:152"],
+    "context_hint": "Lire 4:6 dans 4:1-10 et 6:152 dans 6:151-153.",
+    "framing": "Observer les termes ن-ك-ح (mariage), ب-ل-غ (atteindre) et ر-ش-د (maturité / droiture). Comparer 4:6 (« atteindre le mariage » + « maturité » pour la gestion des biens) avec 6:152 (maturité liée à la responsabilité) et 24:32-33 (conditions et abstention). Relever que le texte associe union et capacité/discernement, sans énoncer de nombre."
+  },
+
+  "priere_modalites": {
+    "label": "Modalités de la prière (aṣ-ṣalāt) : postures et récitation",
+    "question": "Quelles postures et quelle consigne de récitation le texte énonce-t-il ?",
+    "roots": ["قوم", "ركع", "سجد", "قرا"],
+    "root_polysemy": ["ركع", "سجد"],
+    "terms_ar": ["الصلاة", "قانتين", "قياما", "الركوع", "السجود"],
+    "key_verses": ["2:238", "2:43", "3:43", "22:26", "4:102", "17:78", "73:20"],
+    "context_hint": "Lire 4:102 (prière en situation de crainte) et 73:1-20 en continu.",
+    "framing": "Repérer les postures via les racines : ق-و-م (se tenir / établir), ر-ك-ع (s'incliner), س-ج-د (se prosterner), et la récitation via ق-ر-أ. Observer la consigne « فَاقْرَءُوا مَا تَيَسَّرَ مِنْهُ » (73:20 : « lisez ce qui vous est facile ») et les mentions de postures dans 2:43, 3:43, 22:26, 4:102. Comparer les versets entre eux pour voir quelles postures et quelle latitude de récitation sont explicitement énoncées."
+  },
+
+  "guerre_paix": {
+    "label": "Guerre, paix et légitime défense",
+    "question": "Comment le texte formule-t-il la guerre et la paix ?",
+    "roots": ["قتل", "سلم", "عدو"],
+    "terms_ar": ["قتال", "السلام", "اعتداء", "العدو"],
+    "key_verses": ["2:190", "2:191", "2:193", "8:61", "60:8", "5:32", "9:5"],
+    "context_hint": "Lire 2:190-193 en continu, 9:4-6 en continu, et 60:8-9.",
+    "framing": "Recenser ق-ت-ل, س-ل-م et le vocabulaire de la limite (اعتداء / حدود). Comparer les versets qui encadrent le combat par des conditions (2:190-193), ceux qui appellent à la paix (8:61) et à la bienveillance envers les non-belligérants (60:8), et le principe de la vie (5:32). Observer que des versets de combat (9:5) sont insérés dans des passages régis par des clauses (9:4, 9:6) : lire l'ensemble."
+  },
+
+  "peines_legales": {
+    "label": "Peines et châtiments",
+    "question": "Quels termes le texte emploie-t-il pour les sanctions ?",
+    "roots": ["سرق", "زني", "قطع", "جلد"],
+    "terms_ar": ["السارق", "الزانية", "الزاني", "فاجلدوا", "فاقطعوا"],
+    "key_verses": ["5:38", "24:2", "24:4", "4:15", "4:16"],
+    "context_hint": "Lire 24:2-9 en continu et 5:38-39.",
+    "framing": "Repérer س-ر-ق, ز-ن-ي, ق-ط-ع, ج-ل-د et le vocabulaire de la preuve (شهداء / أربعة). Comparer les versets de sanction avec leurs clauses (repentir 5:39, 24:5 ; preuves 24:4) et la logique de la réforme. Observer la co-présence constante sanction / réparation / preuve."
+  },
+
+  "vetement_pudeur": {
+    "label": "Vêtement et pudeur : khumur (24:31) et jalabib (33:59)",
+    "question": "Quel vocabulaire pour le vêtement, la pudeur et le regard ?",
+    "roots": ["حجب", "زين", "خمر"],
+    "root_polysemy": ["خمر", "حجب"],
+    "terms_ar": ["الحجاب", "خمر", "الخمار", "جلباب", "الزينة", "فروجهم"],
+    "key_verses": ["24:30", "24:31", "33:59", "7:26", "24:60"],
+    "context_hint": "Lire 24:30-31 en continu et 33:59 dans 33:53-59.",
+    "framing": "Observer le vocabulaire : خ-م-ر (couvrir → خُمُر, voiles) en 24:31, ج-ل-ب-ب (جَلَابِيب, manteaux) en 33:59, ز-ي-ن (parure) et ح-ج-ب (séparation). Comparer 24:30 et 24:31 : les deux adressent d'abord le regard ; 33:59 motive par la reconnaissance/identification. Relever que le texte parle de couvrir et de se faire reconnaître, sans décrire un uniforme unique."
+  },
+
+  "liberte_croyance": {
+    "label": "Liberté de croyance et apostasie",
+    "question": "Que dit le texte sur le choix de croire ou non ?",
+    "roots": ["دين", "ردد", "كره"],
+    "terms_ar": ["لا إكراه", "الدين", "ارتد", "كفر"],
+    "key_verses": ["2:256", "18:29", "10:99", "4:137", "6:107", "109:6", "88:22"],
+    "context_hint": "Lire 2:256 dans son passage et 109 dans son entier.",
+    "framing": "Comparer les versets qui posent l'absence de contrainte (2:256), la liberté de choisir (18:29, 109:6), la limite du rôle du messager (88:22, 6:107) et ceux qui évoquent le retour en arrière (4:137). Observer la tension entre liberté individuelle et avertissement : relever le vocabulaire de la volonté et de la responsabilité."
+  },
+
+  "gens_du_livre": {
+    "label": "Gens du Livre et autres croyances",
+    "question": "Comment le texte situe-t-il les autres traditions ?",
+    "roots": ["هود", "نصر", "صلح"],
+    "terms_ar": ["أهل الكتاب", "اليهود", "النصارى", "الصابئين"],
+    "key_verses": ["2:62", "5:69", "3:199", "5:48", "60:8", "2:113"],
+    "context_hint": "Lire 2:62 dans 2:62-66 et 5:48 dans 5:44-50.",
+    "framing": "Recenser les désignations (أهل الكتاب, اليهود, النصارى, الصابئين) et les critères énoncés (2:62, 5:69 : foi + œuvres). Comparer avec 3:199 (reconnaissance de la droiture) et 5:48 (pluralité des voies). Observer les versets qui distinguent croyances et conduites."
+  },
+
+  "alcool_substances": {
+    "label": "Alcool, jeu et substances",
+    "question": "Quel vocabulaire pour l'alcool et le jeu ?",
+    "roots": ["خمر", "يسر"],
+    "terms_ar": ["الخمر", "الميسر", "سكر", "خمر"],
+    "key_verses": ["2:219", "5:90", "5:91", "16:67"],
+    "context_hint": "Lire 5:90-91 en continu et comparer avec 2:219.",
+    "framing": "Repérer خ-م-ر (couvrir/alcool) et م-ي-س-ر (jeu). Comparer 2:219 (présentation du pour et du contre) et 5:90-91 (formulation de l'interdit et de la visée : éloigner de l'évocation et de la prière). Observer la gradation des formulations entre les deux passages."
+  }
+}

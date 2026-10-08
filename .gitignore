@@ -1,0 +1,31 @@
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Environnements virtuels ---------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Données générées (reconstruites automatiquement au 1er lancement) ----
+# Sources brutes téléchargées (~13 Mo) : régénérables via `python -m quranlab init`
+data/raw/
+# Base SQLite (~29 Mo) : construite automatiquement par l'app si absente.
+# Pour un démarrage instantané en ligne, commentez la ligne ci-dessous et
+# versionnez data/quran.db (Streamlit Cloud le clonera tel quel).
+data/quran.db
+
+# --- Streamlit ------------------------------------------------------------
+.streamlit/secrets.toml
+
+# --- Divers ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

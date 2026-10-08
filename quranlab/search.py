@@ -1,0 +1,1014 @@
+"""Moteur de recherche intra-coranique.
+
+Trois axes, strictement textuels :
+  1. recherche textuelle arabe (normalisée, sans diacritiques) ;
+  2. recherche textuelle française (insensible aux accents/casse) ;
+  3. recherche par racine (trilitère / quadrilitère), en arabe ou Buckwalter.
+Plus une agrégation thématique (racines + termes) définie dans themes.json.
+"""
+
+import json
+import sqlite3
+from pathlib import Path
+
+from .buckwalter import (
+    arabic_to_buckwalter,
+    buckwalter_to_arabic,
+    is_arabic,
+    normalize_arabic,
+    normalize_latin,
+)
+
+_THEMES_PATH = Path(__file__).resolve().parent / "themes.json"
+
+# Cache en mémoire du fichier de thèmes (invalidé si le fichier change).
+_THEMES_CACHE: dict | None = None
+_THEMES_MTIME: int | None = None
+
+
+# --------------------------------------------------------------------------
+# Recherche textuelle
+# --------------------------------------------------------------------------
+def search_arabic(con: sqlite3.Connection, query: str, limit: int = 100) -> list:
+    """Recherche une chaîne arabe (diacritiques ignorés) dans le texte simple."""
+    q = normalize_arabic(query).strip()
+    if not q:
+        return []
+    rows = con.execute(
+        """
+        SELECT sura, aya, text_uthmani, text_simple
+        FROM verses
+        WHERE text_simple_norm LIKE ?
+        ORDER BY sura, aya
+        LIMIT ?
+        """,
+        (f"%{q}%", limit),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def search_french(
+    con: sqlite3.Connection,
+    query: str,
+    limit: int = 100,
+    translation_key: str | None = None,
+) -> list:
+    """Recherche une chaîne française dans les traductions.
+
+    **Un seul enregistrement par verset** (`GROUP BY sura, aya`) : un verset
+    dont le terme apparaît dans plusieurs traductions n'est retourné qu'une
+    fois. `hits` compte le nombre de traductions touchées, `translation_keys`
+    les clés correspondantes, `translation`/`author` un extrait représentatif
+    (détail complet via `french_matches_rows`).
+    """
+    q = normalize_latin(query).strip()
+    if not q:
+        return []
+    sql = """
+        SELECT tv.sura, tv.aya, v.text_uthmani,
+               COUNT(DISTINCT tv.translation_id) AS hits,
+               GROUP_CONCAT(DISTINCT t.key) AS translation_keys,
+               MIN(tv.text) AS translation,
+               MIN(t.author) AS author
+        FROM translation_verses tv
+        JOIN translations t ON t.id = tv.translation_id
+        JOIN verses v ON v.sura = tv.sura AND v.aya = tv.aya
+        WHERE tv.text_norm LIKE ?
+    """
+    params: list = [f"%{q}%"]
+    if translation_key:
+        sql += " AND t.key = ?"
+        params.append(translation_key)
+    sql += " GROUP BY tv.sura, tv.aya ORDER BY tv.sura, tv.aya LIMIT ?"
+    params.append(limit)
+    return [dict(r) for r in con.execute(sql, params).fetchall()]
+
+
+def french_matches_rows(
+    con: sqlite3.Connection,
+    query: str,
+    refs,
+    translation_key: str | None = None,
+) -> list:
+    """Lignes détaillées (une par traduction touchée) pour des versets donnés.
+
+    Sert d'appoint à `search_french` (dédupliqué) quand on veut afficher
+    chaque traduction contenant réellement le terme.
+    """
+    q = normalize_latin(query).strip()
+    refs = list(dict.fromkeys(tuple(r) for r in refs))
+    if not q or not refs:
+        return []
+    where = " OR ".join("(tv.sura = ? AND tv.aya = ?)" for _ in refs)
+    sql = f"""
+        SELECT tv.sura, tv.aya, tv.text AS translation, t.key AS translation_key,
+               t.author, v.text_uthmani
+        FROM translation_verses tv
+        JOIN translations t ON t.id = tv.translation_id
+        JOIN verses v ON v.sura = tv.sura AND v.aya = tv.aya
+        WHERE tv.text_norm LIKE ? AND ({where})
+    """
+    params: list = [f"%{q}%"] + [x for ref in refs for x in ref]
+    if translation_key:
+        sql += " AND t.key = ?"
+        params.append(translation_key)
+    sql += " ORDER BY tv.sura, tv.aya, t.id"
+    return [dict(r) for r in con.execute(sql, params).fetchall()]
+
+
+# --------------------------------------------------------------------------
+# Recherche par racine
+# --------------------------------------------------------------------------
+def resolve_root(con: sqlite3.Connection, root_input: str):
+    """Résout une racine saisie (arabe ou Buckwalter) vers sa forme canonique."""
+    root_input = root_input.strip()
+    row = None
+    if is_arabic(root_input):
+        row = con.execute(
+            "SELECT root_buckwalter, root_arabic FROM words "
+            "WHERE root_norm = ? LIMIT 1",
+            (normalize_arabic(root_input),),
+        ).fetchone()
+        if row is None:
+            bw = arabic_to_buckwalter(root_input)
+            row = con.execute(
+                "SELECT root_buckwalter, root_arabic FROM words "
+                "WHERE root_buckwalter = ? LIMIT 1",
+                (bw,),
+            ).fetchone()
+    else:
+        row = con.execute(
+            "SELECT root_buckwalter, root_arabic FROM words "
+            "WHERE root_buckwalter = ? LIMIT 1",
+            (root_input,),
+        ).fetchone()
+    return row
+
+
+def search_root(
+    con: sqlite3.Connection,
+    root_input: str,
+    limit: int = 1000,
+    with_context: int = 0,
+) -> dict:
+    """Liste toutes les occurrences d'une racine.
+
+    with_context : nombre de versets de contexte avant/après (0 = aucun).
+    """
+    resolved = resolve_root(con, root_input)
+    if resolved is None:
+        return {"found": False, "input": root_input, "occurrences": []}
+
+    root_bw = resolved["root_buckwalter"]
+    root_ar = resolved["root_arabic"]
+    rows = con.execute(
+        """
+        SELECT w.sura, w.aya, w.word_index, w.form_arabic, w.transliteration,
+               w.lemma_buckwalter, w.pos, v.text_uthmani, v.text_simple
+        FROM words w
+        JOIN verses v ON v.sura = w.sura AND v.aya = w.aya
+        WHERE w.root_buckwalter = ?
+        ORDER BY w.sura, w.aya, w.word_index
+        LIMIT ?
+        """,
+        (root_bw, limit),
+    ).fetchall()
+
+    occurrences = []
+    seen_verses = set()
+    for r in rows:
+        occ = dict(r)
+        if with_context and (r["sura"], r["aya"]) not in seen_verses:
+            seen_verses.add((r["sura"], r["aya"]))
+            occ["context"] = get_context(
+                con, r["sura"], r["aya"], before=with_context, after=with_context
+            )
+        occurrences.append(occ)
+
+    return {
+        "found": True,
+        "input": root_input,
+        "root_buckwalter": root_bw,
+        "root_arabic": root_ar,
+        "count": len(occurrences),
+        "verses_count": len({(o["sura"], o["aya"]) for o in occurrences}),
+        "occurrences": occurrences,
+    }
+
+
+# --------------------------------------------------------------------------
+# Lecture de versets / contexte
+# --------------------------------------------------------------------------
+def get_verse(con: sqlite3.Connection, sura: int, aya: int) -> dict | None:
+    v = con.execute(
+        "SELECT sura, aya, text_uthmani, text_simple FROM verses "
+        "WHERE sura = ? AND aya = ?",
+        (sura, aya),
+    ).fetchone()
+    if v is None:
+        return None
+    verse = dict(v)
+    verse["translations"] = [
+        dict(r)
+        for r in con.execute(
+            """
+            SELECT t.key, t.author, tv.text
+            FROM translation_verses tv
+            JOIN translations t ON t.id = tv.translation_id
+            WHERE tv.sura = ? AND tv.aya = ?
+            ORDER BY t.id
+            """,
+            (sura, aya),
+        ).fetchall()
+    ]
+    verse["words"] = [
+        dict(r)
+        for r in con.execute(
+            """
+            SELECT word_index, form_arabic, transliteration, root_arabic,
+                   lemma_buckwalter, pos
+            FROM words WHERE sura = ? AND aya = ? ORDER BY word_index
+            """,
+            (sura, aya),
+        ).fetchall()
+    ]
+    return verse
+
+
+def get_context(
+    con: sqlite3.Connection, sura: int, aya: int, before: int = 1, after: int = 1
+) -> dict:
+    rows = con.execute(
+        """
+        SELECT sura, aya, text_uthmani FROM verses
+        WHERE sura = ? AND aya BETWEEN ? AND ?
+        ORDER BY aya
+        """,
+        (sura, max(1, aya - before), aya + after),
+    ).fetchall()
+    return {"before": [dict(r) for r in rows if r["aya"] < aya],
+            "verse": next((dict(r) for r in rows if r["aya"] == aya), None),
+            "after": [dict(r) for r in rows if r["aya"] > aya]}
+
+
+def verses_bundle(con: sqlite3.Connection, refs) -> dict:
+    """Récupère en une passe, pour une liste de références (sura, aya), le texte
+    uthmani et toutes les traductions disponibles.
+
+    Retourne {(sura, aya): {"text_uthmani": str, "translations": [ {author, key, text} ]}}.
+    """
+    refs = list(dict.fromkeys(tuple(r) for r in refs))
+    if not refs:
+        return {}
+    where = " OR ".join("(v.sura = ? AND v.aya = ?)" for _ in refs)
+    params = [x for ref in refs for x in ref]
+
+    bundle: dict = {}
+    for row in con.execute(
+        f"SELECT v.sura, v.aya, v.text_uthmani FROM verses v WHERE {where}", params
+    ):
+        bundle[(row["sura"], row["aya"])] = {
+            "text_uthmani": row["text_uthmani"],
+            "translations": [],
+        }
+
+    where_tv = " OR ".join("(tv.sura = ? AND tv.aya = ?)" for _ in refs)
+    for row in con.execute(
+        f"""
+        SELECT tv.sura, tv.aya, t.key, t.author, tv.text
+        FROM translation_verses tv
+        JOIN translations t ON t.id = tv.translation_id
+        WHERE {where_tv}
+        ORDER BY tv.sura, tv.aya, t.id
+        """,
+        params,
+    ):
+        key = (row["sura"], row["aya"])
+        if key in bundle:
+            bundle[key]["translations"].append(
+                {"key": row["key"], "author": row["author"], "text": row["text"]}
+            )
+    return bundle
+
+
+# --------------------------------------------------------------------------
+# Thèmes (agrégation racines + termes)
+# --------------------------------------------------------------------------
+def themes_fingerprint() -> int:
+    """Empreinte (mtime) du fichier de thèmes — sert de clé de cache."""
+    return _THEMES_PATH.stat().st_mtime_ns
+
+
+def load_themes() -> dict:
+    """Charge le fichier themes.json brut (clé `_meta` incluse).
+
+    Résultat mis en mémoire : invalidé automatiquement si le fichier change
+    (édition de themes.json pendant que l'app tourne).
+    """
+    global _THEMES_CACHE, _THEMES_MTIME
+    mtime = _THEMES_PATH.stat().st_mtime_ns
+    if _THEMES_CACHE is None or mtime != _THEMES_MTIME:
+        _THEMES_CACHE = json.loads(_THEMES_PATH.read_text(encoding="utf-8"))
+        _THEMES_MTIME = mtime
+    return _THEMES_CACHE
+
+
+def _themes_only() -> dict:
+    """Ne retourne que les thèmes (sans la clé de métadonnées `_meta`)."""
+    return {k: v for k, v in load_themes().items() if not k.startswith("_")}
+
+
+def themes_categories() -> list:
+    """Liste ordonnée des catégories thématiques (depuis `_meta`)."""
+    data = load_themes()
+    cats = list(data.get("_meta", {}).get("categories", []))
+    for spec in _themes_only().values():
+        cat = spec.get("category", "Sans catégorie")
+        if cat not in cats:
+            cats.append(cat)
+    return cats
+
+
+def themes_by_category() -> dict:
+    """Regroupe les thèmes par catégorie : {catégorie: [(clé, spec), ...]}."""
+    themes = _themes_only()
+    grouped = {cat: [] for cat in themes_categories()}
+    for key, spec in themes.items():
+        grouped.setdefault(spec.get("category", "Sans catégorie"), []).append(
+            (key, spec)
+        )
+    for items in grouped.values():
+        items.sort(key=lambda kv: kv[1].get("label", kv[0]))
+    return grouped
+
+
+def _theme_haystacks(key: str, spec: dict) -> tuple[str, str]:
+    """Texte d'index d'un thème : (pôle latin, pôle arabe) normalisés."""
+    roots = spec.get("roots", [])
+    roots_lat = " ".join(
+        arabic_to_buckwalter(r) if is_arabic(r) else r for r in roots
+    )
+    hay_lat = normalize_latin(
+        " ".join(
+            [
+                key,
+                spec.get("label", ""),
+                spec.get("description", ""),
+                spec.get("category", ""),
+                roots_lat,
+                " ".join(spec.get("terms_fr", [])),
+            ]
+        )
+    )
+    hay_ar = normalize_arabic(
+        " ".join(
+            [
+                key,
+                spec.get("label", ""),
+                spec.get("description", ""),
+                " ".join(roots),
+                " ".join(spec.get("terms_ar", [])),
+            ]
+        )
+    )
+    return hay_lat, hay_ar
+
+
+def theme_matches(key: str, spec: dict, query: str) -> bool:
+    """Vrai si `query` (français, arabe ou Buckwalter) apparaît dans le thème."""
+    q = (query or "").strip()
+    if not q:
+        return True
+    hay_lat, hay_ar = _theme_haystacks(key, spec)
+    if is_arabic(q):
+        return normalize_arabic(q) in hay_ar
+    return normalize_latin(q) in hay_lat
+
+
+def filter_themes(query: str = "", category: str | None = None) -> list:
+    """Filtre les thèmes par catégorie et/ou terme libre.
+
+    Retourne une liste ordonnée de `(catégorie, clé, spec)` ; la recherche
+    porte sur le libellé, la description, la clé, les racines (arabe ou
+    Buckwalter) et les termes arabe/français.
+    """
+    grouped = themes_by_category()
+    q = (query or "").strip()
+    out: list = []
+    for cat, items in grouped.items():
+        if category and cat != category:
+            continue
+        for key, spec in items:
+            if q and not theme_matches(key, spec, q):
+                continue
+            out.append((cat, key, spec))
+    return out
+
+
+def theme_counts(con: sqlite3.Connection, limit: int = 500) -> dict:
+    """{clé de thème: nombre de versets rattachés} pour tous les thèmes."""
+    return {k: theme(con, k, limit=limit)["verses_count"] for k in _themes_only()}
+
+
+def theme(con: sqlite3.Connection, name: str, limit: int = 500) -> dict:
+    """Regroupe toutes les occurrences textuelles d'un thème intra-coranique."""
+    themes = _themes_only()
+    key = name.strip().lower()
+    if key not in themes:
+        return {"found": False, "name": name, "available": sorted(themes)}
+
+    spec = themes[key]
+    verses: dict = {}
+
+    def _add(sura, aya, source, detail=None):
+        entry = verses.setdefault(
+            (sura, aya), {"sura": sura, "aya": aya, "sources": [], "matches": []}
+        )
+        if source not in entry["sources"]:
+            entry["sources"].append(source)
+        if detail and detail not in entry["matches"]:
+            entry["matches"].append(detail)
+
+    for root in spec.get("roots", []):
+        res = search_root(con, root, limit=limit)
+        if res.get("found"):
+            for o in res["occurrences"]:
+                _add(o["sura"], o["aya"], f"racine {res['root_arabic']}", o["form_arabic"])
+
+    for term in spec.get("terms_ar", []):
+        for row in search_arabic(con, term, limit=limit):
+            _add(row["sura"], row["aya"], f"terme {term}")
+
+    for term in spec.get("terms_fr", []):
+        for row in search_french(con, term, limit=limit):
+            _add(row["sura"], row["aya"], f"fr « {term} »")
+
+    ordered = [verses[k] for k in sorted(verses)]
+    return {
+        "found": True,
+        "name": key,
+        "category": spec.get("category", "Sans catégorie"),
+        "label": spec.get("label", key),
+        "description": spec.get("description", ""),
+        "roots": spec.get("roots", []),
+        "terms_ar": spec.get("terms_ar", []),
+        "terms_fr": spec.get("terms_fr", []),
+        "verses_count": len(ordered),
+        "verses": ordered,
+    }
+
+
+# --------------------------------------------------------------------------
+# Idées reçues et controverses (analyse strictement textuelle)
+# --------------------------------------------------------------------------
+def load_controversies() -> dict:
+    """Charge controversies.json (clé `_meta` incluse)."""
+    path = Path(__file__).resolve().parent / "controversies.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _controversies_only() -> dict:
+    return {k: v for k, v in load_controversies().items() if not k.startswith("_")}
+
+
+def controversy_topics() -> dict:
+    """Retourne les sujets de controverse {clé: spec} (sans `_meta`)."""
+    return _controversies_only()
+
+
+def _term_stem(term: str) -> str:
+    """Retire l'article défini pour compter les occurrences d'un terme."""
+    return term[2:] if term.startswith("ال") and len(term) > 3 else term
+
+
+def controversy(con: sqlite3.Connection, name: str, limit: int = 500) -> dict:
+    """Analyse textuelle d'un sujet : récurrence lexicale + versets clés.
+
+    Ne produit aucune conclusion : compte les occurrences (racines et termes),
+    et retourne les versets clés avec leur texte et toutes leurs traductions.
+    """
+    items = _controversies_only()
+    key = name.strip().lower()
+    if key not in items:
+        return {"found": False, "name": name, "available": sorted(items)}
+
+    spec = items[key]
+
+    recurrence = []
+    for root in spec.get("roots", []):
+        res = search_root(con, root, limit=limit)
+        if res.get("found"):
+            recurrence.append(
+                {
+                    "kind": "racine",
+                    "label": res["root_arabic"],
+                    "detail": res["root_buckwalter"],
+                    "occurrences": res["count"],
+                    "verses": res["verses_count"],
+                }
+            )
+        else:
+            recurrence.append(
+                {
+                    "kind": "racine",
+                    "label": root,
+                    "detail": "introuvable",
+                    "occurrences": 0,
+                    "verses": 0,
+                }
+            )
+    for term in spec.get("terms_ar", []):
+        rows = search_arabic(con, _term_stem(term), limit=limit)
+        recurrence.append(
+            {
+                "kind": "terme",
+                "label": term,
+                "detail": _term_stem(term),
+                "occurrences": len(rows),
+                "verses": len(rows),
+            }
+        )
+
+    polysemy = []
+    for root in spec.get("root_polysemy", []):
+        p = root_polysemy(con, root, limit=limit)
+        if p:
+            polysemy.append(p)
+
+    refs = []
+    for ref in spec.get("key_verses", []):
+        sura, aya = (int(x) for x in ref.split(":"))
+        refs.append((sura, aya))
+    bundle = verses_bundle(con, refs)
+
+    verses = []
+    for sura, aya in refs:
+        data = bundle.get((sura, aya), {})
+        verses.append(
+            {
+                "sura": sura,
+                "aya": aya,
+                "text_uthmani": data.get("text_uthmani", ""),
+                "translations": data.get("translations", []),
+                "missing": (sura, aya) not in bundle,
+            }
+        )
+
+    return {
+        "found": True,
+        "name": key,
+        "label": spec.get("label", key),
+        "question": spec.get("question", ""),
+        "framing": spec.get("framing", ""),
+        "context_hint": spec.get("context_hint", ""),
+        "recurrence": recurrence,
+        "polysemy": polysemy,
+        "verses": verses,
+    }
+
+
+def root_polysemy(con: sqlite3.Connection, root_input: str, limit: int = 1000) -> dict | None:
+    """Analyse la polysémie d'une racine : toutes ses formes et occurrences.
+
+    Retourne les formes distinctes (avec comptage) et la liste des occurrences
+    (verset, forme, POS) pour observer la variété des emplois dans le corpus.
+    """
+    res = search_root(con, root_input, limit=limit)
+    if not res.get("found"):
+        return None
+    forms: dict = {}
+    occurrences = []
+    for o in res["occurrences"]:
+        form = o["form_arabic"]
+        forms[form] = forms.get(form, 0) + 1
+        occurrences.append(
+            {
+                "sura": o["sura"],
+                "aya": o["aya"],
+                "form": form,
+                "pos": o["pos"],
+                "text_uthmani": o["text_uthmani"],
+            }
+        )
+    return {
+        "root": res["root_arabic"],
+        "buckwalter": res["root_buckwalter"],
+        "total": res["count"],
+        "verses": res["verses_count"],
+        "forms": sorted(forms.items(), key=lambda kv: (-kv[1], kv[0])),
+        "occurrences": occurrences,
+    }
+
+
+# --------------------------------------------------------------------------
+# Concordance interne / versets en miroir (le Coran s'explique par le Coran)
+# --------------------------------------------------------------------------
+def verse_root_set(con: sqlite3.Connection, sura: int, aya: int) -> set:
+    """Ensemble des racines (Buckwalter) présentes dans un verset."""
+    rows = con.execute(
+        "SELECT DISTINCT root_buckwalter FROM words "
+        "WHERE sura = ? AND aya = ? AND root_buckwalter IS NOT NULL",
+        (sura, aya),
+    ).fetchall()
+    return {r["root_buckwalter"] for r in rows}
+
+
+def mirror_verses(
+    con: sqlite3.Connection, sura: int, aya: int, limit: int = 12, min_shared: int = 2
+) -> dict:
+    """Trouve les « versets en miroir » : autres versets partageant le plus de
+    racines avec le verset de référence (correspondance lexicale intra-coranique)."""
+    target = verse_root_set(con, sura, aya)
+    if not target:
+        return {"sura": sura, "aya": aya, "roots_arabic": [], "matches": []}
+
+    qmarks = ",".join("?" * len(target))
+    rows = con.execute(
+        f"""
+        SELECT DISTINCT w.sura, w.aya, w.root_buckwalter
+        FROM words w
+        WHERE w.root_buckwalter IN ({qmarks})
+          AND NOT (w.sura = ? AND w.aya = ?)
+        """,
+        [*sorted(target), sura, aya],
+    ).fetchall()
+
+    shared: dict = {}
+    for r in rows:
+        shared.setdefault((r["sura"], r["aya"]), set()).add(r["root_buckwalter"])
+
+    matches = []
+    for (s, a), roots in shared.items():
+        if len(roots) >= min_shared:
+            matches.append(
+                {
+                    "sura": s,
+                    "aya": a,
+                    "shared": len(roots),
+                    "ratio": round(len(roots) / len(target), 2),
+                    "roots_arabic": sorted(buckwalter_to_arabic(r) for r in roots),
+                }
+            )
+    matches.sort(key=lambda m: (-m["shared"], m["sura"], m["aya"]))
+    matches = matches[:limit]
+
+    bundle = verses_bundle(con, [(m["sura"], m["aya"]) for m in matches])
+    for m in matches:
+        data = bundle.get((m["sura"], m["aya"]), {})
+        m["text_uthmani"] = data.get("text_uthmani", "")
+        m["translations"] = data.get("translations", [])
+
+    return {
+        "sura": sura,
+        "aya": aya,
+        "roots_arabic": sorted(buckwalter_to_arabic(r) for r in target),
+        "matches": matches,
+    }
+
+
+def concordance(
+    con: sqlite3.Connection,
+    root: str | None = None,
+    term: str | None = None,
+    limit: int = 300,
+) -> dict:
+    """Grille de concordance pour une notion : toutes les occurrences d'une
+    racine ou d'un terme, avec texte arabe et traductions."""
+    if root:
+        res = search_root(con, root, limit=limit)
+        if not res.get("found"):
+            return {"found": False, "kind": "racine", "input": root}
+        refs = list(dict.fromkeys((o["sura"], o["aya"]) for o in res["occurrences"]))
+        bundle = verses_bundle(con, refs)
+        verses = [
+            {
+                "sura": s,
+                "aya": a,
+                "text_uthmani": bundle.get((s, a), {}).get("text_uthmani", ""),
+                "translations": bundle.get((s, a), {}).get("translations", []),
+            }
+            for (s, a) in refs
+        ]
+        return {
+            "found": True,
+            "kind": "racine",
+            "label": res["root_arabic"],
+            "detail": res["root_buckwalter"],
+            "occurrences": res["count"],
+            "verses_count": len(refs),
+            "verses": verses,
+        }
+    if term:
+        rows = search_arabic(con, term, limit=limit)
+        refs = list(dict.fromkeys((r["sura"], r["aya"]) for r in rows))
+        bundle = verses_bundle(con, refs)
+        verses = [
+            {
+                "sura": s,
+                "aya": a,
+                "text_uthmani": bundle.get((s, a), {}).get("text_uthmani", ""),
+                "translations": bundle.get((s, a), {}).get("translations", []),
+            }
+            for (s, a) in refs
+        ]
+        return {
+            "found": True,
+            "kind": "terme",
+            "label": term,
+            "detail": "",
+            "occurrences": len(refs),
+            "verses_count": len(refs),
+            "verses": verses,
+        }
+    return {"found": False}
+
+
+# --------------------------------------------------------------------------
+# Passerelle français -> arabe (lexique + thèmes + déduction par le corpus)
+# --------------------------------------------------------------------------
+_LEXICON_PATH = Path(__file__).resolve().parent / "lexicon_fr.json"
+_LEXICON_CACHE: dict | None = None
+_LEXICON_MTIME: int | None = None
+
+
+def load_lexicon() -> dict:
+    """Charge lexicon_fr.json (FR -> racines), mis en cache comme themes.json."""
+    global _LEXICON_CACHE, _LEXICON_MTIME
+    if not _LEXICON_PATH.exists():
+        return {}
+    mtime = _LEXICON_PATH.stat().st_mtime_ns
+    if _LEXICON_CACHE is None or mtime != _LEXICON_MTIME:
+        _LEXICON_CACHE = json.loads(_LEXICON_PATH.read_text(encoding="utf-8"))
+        _LEXICON_MTIME = mtime
+    return _LEXICON_CACHE
+
+
+def _stem(word: str) -> str:
+    """Ébauche de pluriel français : « prieres » -> «priere» (si > 4 lettres)."""
+    word = normalize_latin(word)
+    if len(word) > 4 and word.endswith(("s", "x")):
+        return word[:-1]
+    return word
+
+
+def _query_forms(query: str) -> set:
+    """Formes normalisées d'une requête : chaîne entière + tokens (singulier)."""
+    q = normalize_latin(query).strip()
+    if not q:
+        return set()
+    forms = {q}
+    for w in q.replace("-", " ").replace("'", " ").split():
+        forms.add(w)
+        forms.add(_stem(w))
+    return forms
+
+
+def _entry_matches(key: str, forms: set, query: str) -> bool:
+    """Vrai si l'entrée (clé FR) correspond à la requête."""
+    key_n = normalize_latin(key)
+    if {key_n, _stem(key_n)} & forms:
+        return True
+    qn = normalize_latin(query).strip()
+    # sous-chaîne pour les libellés multi-mots : « liberte de croyance »
+    return len(key_n) > 4 and (key_n in qn or qn in key_n)
+
+
+def lexicon_candidates(query: str) -> list:
+    """Entrées du lexique FR correspondant : [{fr, roots, gloss, source}]."""
+    forms = _query_forms(query)
+    if not forms:
+        return []
+    out = []
+    for key, spec in load_lexicon().items():
+        if key.startswith("_"):
+            continue
+        if _entry_matches(key, forms, query):
+            out.append(
+                {
+                    "fr": spec.get("label", key),
+                    "key": key,
+                    "roots": list(spec.get("roots", [])),
+                    "gloss": spec.get("gloss", ""),
+                    "source": "lexique",
+                }
+            )
+    return out
+
+
+def themes_fr_candidates(query: str) -> list:
+    """Thèmes (themes.json) dont un terme FR correspond à la requête."""
+    forms = _query_forms(query)
+    if not forms:
+        return []
+    out = []
+    for key, spec in _themes_only().items():
+        terms_ok = any(
+            {normalize_latin(t), _stem(t)} & forms
+            for t in spec.get("terms_fr", [])
+        )
+        if not terms_ok and not _entry_matches(key, forms, query):
+            continue
+        roots = list(spec.get("roots", []))
+        if not roots:
+            continue
+        label = spec.get("label", key)
+        out.append(
+            {
+                "fr": label,
+                "key": key,
+                "roots": roots,
+                "gloss": spec.get("description", ""),
+                "source": f"thème « {label} »",
+            }
+        )
+    return out
+
+
+def root_stats(con: sqlite3.Connection, root_bw: str) -> dict | None:
+    """Statistiques légères d'une racine (sans charger les occurrences)."""
+    row = con.execute(
+        "SELECT root_arabic, COUNT(*) AS occurrences, "
+        "COUNT(DISTINCT sura || ':' || aya) AS verses "
+        "FROM words WHERE root_buckwalter = ? "
+        "GROUP BY root_buckwalter",
+        (root_bw,),
+    ).fetchone()
+    if row is None:
+        return None
+    return {
+        "root_bw": root_bw,
+        "root_ar": row["root_arabic"],
+        "occurrences": row["occurrences"],
+        "verses": row["verses"],
+    }
+
+
+def resolve_roots(con: sqlite3.Connection, roots) -> list:
+    """Ne garde que les racines réellement présentes dans le corpus."""
+    out, seen = [], set()
+    for r in roots:
+        bw = arabic_to_buckwalter(r) if is_arabic(r) else r
+        if bw in seen:
+            continue
+        st = root_stats(con, bw)
+        if st:
+            seen.add(bw)
+            out.append(st)
+    return out
+
+
+def corpus_root_bridge(
+    con: sqlite3.Connection,
+    query: str,
+    limit: int = 100,
+    top: int = 6,
+    min_hit_ratio: float = 0.3,
+    max_corpus_ratio: float = 0.1,
+) -> list:
+    """Racines déduites du corpus (approche distributionnelle).
+
+    Cherche d'abord les versets dont les traductions contiennent le terme FR,
+    puis les racines présentes dans ces versets — en retenant celles qui y sont
+    fréquentes (`hit_ratio`) mais rares dans le corpus entier (`lift`).
+    """
+    rows = search_french(con, query, limit=limit)
+    if len(rows) < 2:
+        return []
+    refs = [(r["sura"], r["aya"]) for r in rows]
+    n = len(refs)
+    where = " OR ".join("(sura = ? AND aya = ?)" for _ in refs)
+    params = [x for ref in refs for x in ref]
+    hits = {
+        r["root_buckwalter"]: r["nv"]
+        for r in con.execute(
+            f"SELECT root_buckwalter, "
+            f"COUNT(DISTINCT sura || ':' || aya) AS nv "
+            f"FROM words WHERE root_buckwalter IS NOT NULL AND ({where}) "
+            f"GROUP BY root_buckwalter",
+            params,
+        )
+    }
+    if not hits:
+        return []
+    total = con.execute("SELECT COUNT(*) FROM verses").fetchone()[0]
+    qmarks = ",".join("?" * len(hits))
+    corp = con.execute(
+        f"SELECT root_buckwalter, COUNT(DISTINCT sura || ':' || aya) AS nv "
+        f"FROM words WHERE root_buckwalter IN ({qmarks}) "
+        f"GROUP BY root_buckwalter",
+        list(hits),
+    ).fetchall()
+    out = []
+    for r in corp:
+        p_hit = hits[r["root_buckwalter"]] / n
+        p_all = r["nv"] / total
+        if p_all <= 0 or p_hit < min_hit_ratio or p_all > max_corpus_ratio:
+            continue
+        out.append(
+            {
+                "root_bw": r["root_buckwalter"],
+                "hit_ratio": p_hit,
+                "lift": p_hit / p_all,
+                "verses": r["nv"],
+            }
+        )
+    out.sort(key=lambda d: (-d["lift"], -d["hit_ratio"]))
+    return out[:top]
+
+
+def french_bridge(
+    con: sqlite3.Connection, query: str, limit: int = 100, top_corpus: int = 6
+) -> dict:
+    """Passerelle FR -> AR : correspondances proposées pour une requête française.
+
+    Trois sources fusionnées et dédupliquées par racine (priorité d'insertion :
+    lexique > thème > corpus déduit). Seules les racines présentes dans la
+    base sont retournées.
+    """
+    q = (query or "").strip()
+    proposals: dict = {}
+
+    def _add(p: dict) -> None:
+        bw = p["root_bw"]
+        if bw in proposals:
+            for src in p["sources"]:
+                if src not in proposals[bw]["sources"]:
+                    proposals[bw]["sources"].append(src)
+        else:
+            proposals[bw] = p
+
+    # Saisie directe d'une racine (arabe ou Buckwalter) : résolution immédiate.
+    # Inoffensif pour les mots français (root_stats ne matche pas) — un seul
+    # SELECT indexé de plus.
+    for st in resolve_roots(con, [q]):
+        _add(
+            {
+                "fr": q,
+                "root_bw": st["root_bw"],
+                "root_ar": st["root_ar"],
+                "occurrences": st["occurrences"],
+                "verses": st["verses"],
+                "sources": ["racine"],
+                "detail": "saisie directe de racine",
+            }
+        )
+
+    for entry in lexicon_candidates(q):
+        for st in resolve_roots(con, entry["roots"]):
+            _add(
+                {
+                    "fr": entry["fr"],
+                    "root_bw": st["root_bw"],
+                    "root_ar": st["root_ar"],
+                    "occurrences": st["occurrences"],
+                    "verses": st["verses"],
+                    "sources": [entry["source"]],
+                    "detail": entry.get("gloss", ""),
+                }
+            )
+    for entry in themes_fr_candidates(q):
+        for st in resolve_roots(con, entry["roots"]):
+            _add(
+                {
+                    "fr": entry["fr"],
+                    "root_bw": st["root_bw"],
+                    "root_ar": st["root_ar"],
+                    "occurrences": st["occurrences"],
+                    "verses": st["verses"],
+                    "sources": [entry["source"]],
+                    "detail": entry.get("gloss", ""),
+                }
+            )
+
+    added_by_corpus = 0
+    for c in corpus_root_bridge(con, q, limit=limit, top=top_corpus):
+        st = root_stats(con, c["root_bw"])
+        if not st:
+            continue
+        src = f"corpus (lift ×{c['lift']:.0f})"
+        if c["root_bw"] in proposals:
+            _add({"root_bw": c["root_bw"], "sources": [src]})
+            continue
+        if added_by_corpus >= top_corpus:
+            continue
+        added_by_corpus += 1
+        _add(
+            {
+                "fr": q,
+                "root_bw": st["root_bw"],
+                "root_ar": st["root_ar"],
+                "occurrences": st["occurrences"],
+                "verses": st["verses"],
+                "sources": [src],
+                "detail": (
+                    f"present dans {c['hit_ratio'] * 100:.0f}% des versets FR "
+                    f"touche(s), rare ailleurs"
+                ),
+            }
+        )
+
+    out = []
+    for p in proposals.values():
+        p["source"] = " · ".join(p.get("sources", []))
+        out.append(p)
+    return {"query": q, "proposals": out}

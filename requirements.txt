@@ -1,0 +1,13 @@
+# ---------------------------------------------------------------------------
+# Dépendances de QuranLab
+# ---------------------------------------------------------------------------
+# Le moteur (téléchargement, base SQLite, recherche, CLI) n'utilise QUE la
+# bibliothèque standard de Python : sqlite3, urllib, json, re, unicodedata,
+# threading, argparse. Aucune dépendance externe n'est requise pour le cœur.
+#
+# Seule l'interface web (app.py) ajoute des dépendances :
+
+streamlit>=1.30,<2
+
+# Dépendance de Streamlit, utilisée par st.dataframe (analyse mot-à-mot).
+pandas>=2.0

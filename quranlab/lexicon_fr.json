@@ -1,0 +1,614 @@
+{
+  "_meta": {
+    "note": "Lexique français -> racines arabes (Buckwalter) alimentant la passerelle de recherche de l'onglet Recherche. Racines validées contre le corpus (Quranic Arabic Corpus) : une racine absente de la base est ignorée à la lecture.",
+    "version": "1.0",
+    "lang": "fr"
+  },
+  "patience": {
+    "label": "patience",
+    "roots": [
+      "Sbr"
+    ],
+    "gloss": "endurance, constance (sabr)"
+  },
+  "priere": {
+    "label": "prière",
+    "roots": [
+      "Slw"
+    ],
+    "gloss": "salât, prière rituelle"
+  },
+  "invocation": {
+    "label": "invocation",
+    "roots": [
+      "dEw"
+    ],
+    "gloss": "duʿâ, appel, prière d'invocation"
+  },
+  "justice": {
+    "label": "justice",
+    "roots": [
+      "Edl"
+    ],
+    "gloss": "'adl, équité"
+  },
+  "vol": {
+    "label": "vol",
+    "roots": [
+      "srq",
+      "Tyr"
+    ],
+    "gloss": "vol (soustraction) / vol (élévation, ṭayr)"
+  },
+  "foi": {
+    "label": "foi",
+    "roots": [
+      "Amn"
+    ],
+    "gloss": "īmân, confiance, fiabilité"
+  },
+  "croyance": {
+    "label": "croyance",
+    "roots": [
+      "Amn"
+    ],
+    "gloss": "croire, se fier"
+  },
+  "misericorde": {
+    "label": "miséricorde",
+    "roots": [
+      "rHm"
+    ],
+    "gloss": "raḥma, compassion"
+  },
+  "colere": {
+    "label": "colère",
+    "roots": [
+      "gDb"
+    ],
+    "gloss": "gaḍab, courroux"
+  },
+  "peur": {
+    "label": "peur",
+    "roots": [
+      "xwf"
+    ],
+    "gloss": "ḫawf, crainte"
+  },
+  "crainte": {
+    "label": "crainte",
+    "roots": [
+      "xwf"
+    ],
+    "gloss": "peur, déférence"
+  },
+  "espoir": {
+    "label": "espoir",
+    "roots": [
+      "Aml"
+    ],
+    "gloss": "amal, espérance"
+  },
+  "amour": {
+    "label": "amour",
+    "roots": [
+      "Hbb"
+    ],
+    "gloss": "ḥubb, attachement"
+  },
+  "haine": {
+    "label": "haine",
+    "roots": [
+      "bgD"
+    ],
+    "gloss": "baġḍ, aversion"
+  },
+  "science": {
+    "label": "science",
+    "roots": [
+      "Elm"
+    ],
+    "gloss": "'ilm, savoir"
+  },
+  "connaissance": {
+    "label": "connaissance",
+    "roots": [
+      "Elm"
+    ],
+    "gloss": "savoir, connaissance"
+  },
+  "parole": {
+    "label": "parole",
+    "roots": [
+      "qwl"
+    ],
+    "gloss": "qawlu, dire, énoncé"
+  },
+  "mensonge": {
+    "label": "mensonge",
+    "roots": [
+      "k*b"
+    ],
+    "gloss": "kaḏb, fausseté"
+  },
+  "verite": {
+    "label": "vérité",
+    "roots": [
+      "Hqq"
+    ],
+    "gloss": "ḥaqq, réel, vérité"
+  },
+  "pauvrete": {
+    "label": "pauvreté",
+    "roots": [
+      "frq"
+    ],
+    "gloss": "faqr, indigence"
+  },
+  "pauvre": {
+    "label": "pauvre",
+    "roots": [
+      "frq"
+    ],
+    "gloss": "pauvre, indigent"
+  },
+  "richesse": {
+    "label": "richesse",
+    "roots": [
+      "gny"
+    ],
+    "gloss": "ġinā, autonomie, suffisance"
+  },
+  "or": {
+    "label": "or (métal)",
+    "roots": [
+      "*hb"
+    ],
+    "gloss": "ḏahab, métal précieux"
+  },
+  "aumone": {
+    "label": "aumône",
+    "roots": [
+      "Sdq",
+      "zkw"
+    ],
+    "gloss": "ṣadaqa, zâkat"
+  },
+  "charite": {
+    "label": "charité",
+    "roots": [
+      "Sdq",
+      "zkw"
+    ],
+    "gloss": "don, aumône"
+  },
+  "orphelin": {
+    "label": "orphelin",
+    "roots": [
+      "ytm"
+    ],
+    "gloss": "yatîm, sans père"
+  },
+  "guidance": {
+    "label": "guidance",
+    "roots": [
+      "hdy"
+    ],
+    "gloss": "hudā, orientation"
+  },
+  "lumiere": {
+    "label": "lumière",
+    "roots": [
+      "nwr"
+    ],
+    "gloss": "nûr, clarté"
+  },
+  "tenebres": {
+    "label": "ténèbres",
+    "roots": [
+      "Zlm"
+    ],
+    "gloss": "ẓulm, obscurité, injustice"
+  },
+  "terre": {
+    "label": "terre",
+    "roots": [
+      "ArD"
+    ],
+    "gloss": "'arḍ, sol, monde"
+  },
+  "eau": {
+    "label": "eau",
+    "roots": [
+      "mAy"
+    ],
+    "gloss": "mā', eau"
+  },
+  "ciel": {
+    "label": "ciel",
+    "roots": [
+      "smw"
+    ],
+    "gloss": "samā, voûte céleste"
+  },
+  "soleil": {
+    "label": "soleil",
+    "roots": [
+      "$ms"
+    ],
+    "gloss": "šams"
+  },
+  "lune": {
+    "label": "lune",
+    "roots": [
+      "qmr"
+    ],
+    "gloss": "qamar"
+  },
+  "pluie": {
+    "label": "pluie",
+    "roots": [
+      "mTr"
+    ],
+    "gloss": "maṭar, ondée"
+  },
+  "faim": {
+    "label": "faim",
+    "roots": [
+      "jwE"
+    ],
+    "gloss": "jû', disette"
+  },
+  "guerre": {
+    "label": "guerre",
+    "roots": [
+      "Hrb"
+    ],
+    "gloss": "ḥarb, combat"
+  },
+  "paix": {
+    "label": "paix",
+    "roots": [
+      "slm"
+    ],
+    "gloss": "salâm, soumission pacifique"
+  },
+  "marriage": {
+    "label": "mariage",
+    "roots": [
+      "nkH",
+      "zwj"
+    ],
+    "gloss": "union conjugale"
+  },
+  "epouse": {
+    "label": "épouse",
+    "roots": [
+      "zwj"
+    ],
+    "gloss": "žawğ, conjointe"
+  },
+  "epoux": {
+    "label": "époux",
+    "roots": [
+      "zwj"
+    ],
+    "gloss": "žawğ, conjoint"
+  },
+  "enfant": {
+    "label": "enfant",
+    "roots": [
+      "Tfl"
+    ],
+    "gloss": "ṭifl, petit enfant"
+  },
+  "roi": {
+    "label": "roi",
+    "roots": [
+      "mlk"
+    ],
+    "gloss": "malik, souverain"
+  },
+  "nom": {
+    "label": "nom",
+    "roots": [
+      "smw"
+    ],
+    "gloss": "ism, appellation"
+  },
+  "egarement": {
+    "label": "égarement",
+    "roots": [
+      "Dll"
+    ],
+    "gloss": "ḍalāl, erreur de chemin"
+  },
+  "rappel": {
+    "label": "rappel",
+    "roots": [
+      "*kr"
+    ],
+    "gloss": "ḏikr, mention, mémorisation"
+  },
+  "creation": {
+    "label": "création",
+    "roots": [
+      "xlq"
+    ],
+    "gloss": "ḫalq, production"
+  },
+  "mort": {
+    "label": "mort",
+    "roots": [
+      "mwt"
+    ],
+    "gloss": "mawt, trépas"
+  },
+  "vie": {
+    "label": "vie",
+    "roots": [
+      "Hyy"
+    ],
+    "gloss": "ḥayât, vivant"
+  },
+  "resurrection": {
+    "label": "résurrection",
+    "roots": [
+      "bEv"
+    ],
+    "gloss": "ba'th, relever, ramener"
+  },
+  "paradis": {
+    "label": "paradis",
+    "roots": [
+      "jnn"
+    ],
+    "gloss": "janna, jardin"
+  },
+  "feu": {
+    "label": "feu",
+    "roots": [
+      "nwr"
+    ],
+    "gloss": "nâr, flamme"
+  },
+  "prophete": {
+    "label": "prophète",
+    "roots": [
+      "nbA"
+    ],
+    "gloss": "nabî, messager"
+  },
+  "livre": {
+    "label": "livre",
+    "roots": [
+      "ktb"
+    ],
+    "gloss": "kitāb, écrit"
+  },
+  "revelation": {
+    "label": "révélation",
+    "roots": [
+      "nzl"
+    ],
+    "gloss": "nuzûl, descente"
+  },
+  "gratitude": {
+    "label": "gratitude",
+    "roots": [
+      "$kr"
+    ],
+    "gloss": "šukr, reconnaissance"
+  },
+  "ingratitude": {
+    "label": "ingratitude",
+    "roots": [
+      "kfr"
+    ],
+    "gloss": "kufr, négation, ingratitude"
+  },
+  "pardon": {
+    "label": "pardon",
+    "roots": [
+      "gfr"
+    ],
+    "gloss": "ġfar, effacement"
+  },
+  "ignorance": {
+    "label": "ignorance",
+    "roots": [
+      "jhl"
+    ],
+    "gloss": "gaḥlâ, non-savoir"
+  },
+  "sagesse": {
+    "label": "sagesse",
+    "roots": [
+      "Hkm"
+    ],
+    "gloss": "ḥikma, discernement"
+  },
+  "jugement": {
+    "label": "jugement",
+    "roots": [
+      "Hkm"
+    ],
+    "gloss": "ḥukm, décision"
+  },
+  "oeuvre": {
+    "label": "œuvre",
+    "roots": [
+      "Eml"
+    ],
+    "gloss": "'amal, action"
+  },
+  "usure": {
+    "label": "usure",
+    "roots": [
+      "rbw"
+    ],
+    "gloss": "ribā, augmentation illicite"
+  },
+  "commerce": {
+    "label": "commerce",
+    "roots": [
+      "byE"
+    ],
+    "gloss": "bay', échange"
+  },
+  "peine": {
+    "label": "peine (châtiment)",
+    "roots": [
+      "E*b"
+    ],
+    "gloss": "'aḏāb, sanction"
+  },
+  "chatiment": {
+    "label": "châtiment",
+    "roots": [
+      "E*b"
+    ],
+    "gloss": "sanction, tourment"
+  },
+  "recompense": {
+    "label": "récompense",
+    "roots": [
+      "jzA",
+      "jzy"
+    ],
+    "gloss": "retour, salaire"
+  },
+  "famille": {
+    "label": "famille",
+    "roots": [
+      "Eyl"
+    ],
+    "gloss": "'ayl, lignage, moyens"
+  },
+  "mere": {
+    "label": "mère",
+    "roots": [
+      "Amm"
+    ],
+    "gloss": "umm"
+  },
+  "pere": {
+    "label": "père",
+    "roots": [
+      "Abw"
+    ],
+    "gloss": "ab"
+  },
+  "liberte": {
+    "label": "liberté",
+    "roots": [
+      "fkk"
+    ],
+    "gloss": "fakk, affranchissement"
+  },
+  "servitude": {
+    "label": "servitude",
+    "roots": [
+      "Ebd"
+    ],
+    "gloss": "'abad, servir, adorer"
+  },
+  "purification": {
+    "label": "purification",
+    "roots": [
+      "Thr"
+    ],
+    "gloss": "ṭahâra, pureté"
+  },
+  "jeune": {
+    "label": "jeûne",
+    "roots": [
+      "Swm"
+    ],
+    "gloss": "ṣawm, abstention"
+  },
+  "pelerinage": {
+    "label": "pèlerinage",
+    "roots": [
+      "Hjj"
+    ],
+    "gloss": "ḥaǧǧ, rite du pèlerinage"
+  },
+  "doute": {
+    "label": "doute",
+    "roots": [
+      "$kk"
+    ],
+    "gloss": "šakk, hésitation"
+  },
+  "bonte": {
+    "label": "bonté",
+    "roots": [
+      "Hsn"
+    ],
+    "gloss": "ḥusn, beauté, excellence"
+  },
+  "pouvoir": {
+    "label": "pouvoir (capacité)",
+    "roots": [
+      "qdr"
+    ],
+    "gloss": "qudra, mesure, capacité"
+  },
+  "ombre": {
+    "label": "ombre",
+    "roots": [
+      "Zll"
+    ],
+    "gloss": "ẓill, couvert"
+  },
+  "chemin": {
+    "label": "chemin",
+    "roots": [
+      "Trq"
+    ],
+    "gloss": "ṭarîq, voie"
+  },
+  "promesse": {
+    "label": "promesse",
+    "roots": [
+      "wdE"
+    ],
+    "gloss": "wa'd, engagement"
+  },
+  "temoin": {
+    "label": "témoin",
+    "roots": [
+      "$hd"
+    ],
+    "gloss": "šahada, attester"
+  },
+  "ennemi": {
+    "label": "ennemi",
+    "roots": [
+      "Edw"
+    ],
+    "gloss": "'aduww, adversaire"
+  },
+  "orgueil": {
+    "label": "orgueil",
+    "roots": [
+      "kbr"
+    ],
+    "gloss": "kibr, arrogance"
+  },
+  "nourriture": {
+    "label": "nourriture",
+    "roots": [
+      "TEm"
+    ],
+    "gloss": "ṭa'âm, aliment"
+  },
+  "grace": {
+    "label": "grâce",
+    "roots": [
+      "nEm"
+    ],
+    "gloss": "ni'ma, bienfait"
+  }
+}
