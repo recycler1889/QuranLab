@@ -47,6 +47,33 @@ def search_arabic(con: sqlite3.Connection, query: str, limit: int = 100) -> list
     return [dict(r) for r in rows]
 
 
+def arabic_occurrence_summary(
+    con: sqlite3.Connection, query: str, limit: int = 100
+) -> dict:
+    """Compte les occurrences d'une chaîne arabe dans tout le texte du Coran.
+
+    `occurrences` = nombre de fois où le terme (diacritiques ignorés) apparaît ;
+    `verses` = nombre de versets distincts qui le contiennent. Les versets
+    (jusqu'à `limit`) sont renvoyés pour l'affichage contextualisé.
+    """
+    q = normalize_arabic(query).strip()
+    if not q:
+        return {"occurrences": 0, "verses": 0, "rows": []}
+    row = con.execute(
+        "SELECT COUNT(*) AS verses, "
+        "COALESCE(SUM((LENGTH(text_simple_norm) "
+        "  - LENGTH(REPLACE(text_simple_norm, ?, ''))) / LENGTH(?)), 0) "
+        "  AS occurrences "
+        "FROM verses WHERE text_simple_norm LIKE ?",
+        (q, q, f"%{q}%"),
+    ).fetchone()
+    return {
+        "occurrences": int(row["occurrences"] or 0),
+        "verses": row["verses"] or 0,
+        "rows": search_arabic(con, q, limit=limit),
+    }
+
+
 def search_french(
     con: sqlite3.Connection,
     query: str,
@@ -212,7 +239,7 @@ def get_verse(con: sqlite3.Connection, sura: int, aya: int) -> dict | None:
         dict(r)
         for r in con.execute(
             """
-            SELECT t.key, t.author, tv.text
+            SELECT t.key, t.author, t.language, tv.text
             FROM translation_verses tv
             JOIN translations t ON t.id = tv.translation_id
             WHERE tv.sura = ? AND tv.aya = ?
@@ -275,7 +302,7 @@ def verses_bundle(con: sqlite3.Connection, refs) -> dict:
     where_tv = " OR ".join("(tv.sura = ? AND tv.aya = ?)" for _ in refs)
     for row in con.execute(
         f"""
-        SELECT tv.sura, tv.aya, t.key, t.author, tv.text
+        SELECT tv.sura, tv.aya, t.key, t.author, t.language, tv.text
         FROM translation_verses tv
         JOIN translations t ON t.id = tv.translation_id
         WHERE {where_tv}
@@ -286,7 +313,12 @@ def verses_bundle(con: sqlite3.Connection, refs) -> dict:
         key = (row["sura"], row["aya"])
         if key in bundle:
             bundle[key]["translations"].append(
-                {"key": row["key"], "author": row["author"], "text": row["text"]}
+                {
+                    "key": row["key"],
+                    "author": row["author"],
+                    "language": row["language"],
+                    "text": row["text"],
+                }
             )
     return bundle
 
@@ -410,12 +442,59 @@ def theme_counts(con: sqlite3.Connection, limit: int = 500) -> dict:
     return {k: theme(con, k, limit=limit)["verses_count"] for k in _themes_only()}
 
 
+def resolve_theme_key(name: str) -> tuple[str | None, list[str]]:
+    """Résout un nom de thème tolérant : clé exacte, sinon correspondance unique.
+
+    Au-delà de la clé exacte (``priere``), on accepte une variante usuelle en
+    recherchant la saisie dans la clé, le libellé et les termes fr/ar des thèmes
+    (ex. ``salat`` retrouve le thème ``priere`` dont le libellé contient
+    « aṣ-ṣalāt »). La correspondance par sous-chaîne n'est tentée qu'au-delà de
+    4 caractères et n'aboutit que si elle désigne **un seul** thème.
+
+    Retourne ``(clé, [])`` si résolu, sinon ``(None, suggestions)``.
+    """
+    themes = _themes_only()
+    key = name.strip().lower()
+    if key in themes:
+        return key, []
+    q_lat = normalize_latin(key)
+    q_ar = normalize_arabic(key)
+    if len(q_lat) < 4 and len(q_ar) < 4:
+        return None, []
+    matches: list[str] = []
+    for k, spec in themes.items():
+        hay_lat = normalize_latin(
+            " ".join(
+                [k, spec.get("label", ""), " ".join(spec.get("terms_fr", []))]
+            )
+        )
+        hay_ar = normalize_arabic(
+            " ".join(
+                [spec.get("label", ""), " ".join(spec.get("terms_ar", []))]
+            )
+        )
+        if (q_lat and len(q_lat) >= 4 and q_lat in hay_lat) or (
+            q_ar and len(q_ar) >= 4 and q_ar in hay_ar
+        ):
+            matches.append(k)
+    if len(matches) == 1:
+        return matches[0], []
+    return None, sorted(matches)
+
+
 def theme(con: sqlite3.Connection, name: str, limit: int = 500) -> dict:
     """Regroupe toutes les occurrences textuelles d'un thème intra-coranique."""
     themes = _themes_only()
     key = name.strip().lower()
     if key not in themes:
-        return {"found": False, "name": name, "available": sorted(themes)}
+        key, suggestions = resolve_theme_key(name)
+        if key is None:
+            return {
+                "found": False,
+                "name": name,
+                "available": sorted(themes),
+                "suggestions": suggestions,
+            }
 
     spec = themes[key]
     verses: dict = {}
@@ -613,25 +692,34 @@ def verse_root_set(con: sqlite3.Connection, sura: int, aya: int) -> set:
     return {r["root_buckwalter"] for r in rows}
 
 
-def mirror_verses(
-    con: sqlite3.Connection, sura: int, aya: int, limit: int = 12, min_shared: int = 2
-) -> dict:
-    """Trouve les « versets en miroir » : autres versets partageant le plus de
-    racines avec le verset de référence (correspondance lexicale intra-coranique)."""
-    target = verse_root_set(con, sura, aya)
+def _verses_sharing_roots(
+    con: sqlite3.Connection,
+    target: set,
+    exclude: tuple | None = None,
+    limit: int = 12,
+    min_shared: int = 2,
+) -> list:
+    """Versets partageant le plus de racines avec un ensemble cible (Buckwalter).
+
+    Cœur commun de `mirror_verses` (cible = racines d'un verset) et de
+    `similar_verses_by_roots` (cible = racines issues d'un mot-clé). Chaque
+    résultat porte son nombre de racines communes, le ratio de recouvrement,
+    le texte uthmani et les traductions.
+    """
     if not target:
-        return {"sura": sura, "aya": aya, "roots_arabic": [], "matches": []}
+        return []
 
     qmarks = ",".join("?" * len(target))
-    rows = con.execute(
-        f"""
-        SELECT DISTINCT w.sura, w.aya, w.root_buckwalter
-        FROM words w
-        WHERE w.root_buckwalter IN ({qmarks})
-          AND NOT (w.sura = ? AND w.aya = ?)
-        """,
-        [*sorted(target), sura, aya],
-    ).fetchall()
+    sql = (
+        "SELECT DISTINCT w.sura, w.aya, w.root_buckwalter "
+        "FROM words w "
+        f"WHERE w.root_buckwalter IN ({qmarks})"
+    )
+    extra: list = [*sorted(target)]
+    if exclude is not None:
+        sql += " AND NOT (w.sura = ? AND w.aya = ?)"
+        extra += [exclude[0], exclude[1]]
+    rows = con.execute(sql, extra).fetchall()
 
     shared: dict = {}
     for r in rows:
@@ -657,11 +745,67 @@ def mirror_verses(
         data = bundle.get((m["sura"], m["aya"]), {})
         m["text_uthmani"] = data.get("text_uthmani", "")
         m["translations"] = data.get("translations", [])
+    return matches
 
+
+def top_roots_in_verses(con: sqlite3.Connection, refs, top: int = 8) -> list:
+    """Racines les plus fréquentes dans un ensemble de versets.
+
+    Sert à dériver des racines « représentatives » d'un mot-clé arabe (dont le
+    texte apparaît dans plusieurs versets) pour en suggérer des similaires.
+    """
+    refs = list(dict.fromkeys(tuple(r) for r in refs))
+    if not refs:
+        return []
+    where = " OR ".join("(sura = ? AND aya = ?)" for _ in refs)
+    params = [x for ref in refs for x in ref]
+    rows = con.execute(
+        f"SELECT root_buckwalter, root_arabic, COUNT(*) AS n "
+        f"FROM words WHERE root_buckwalter IS NOT NULL AND ({where}) "
+        f"GROUP BY root_buckwalter ORDER BY n DESC LIMIT ?",
+        params + [top],
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def mirror_verses(
+    con: sqlite3.Connection, sura: int, aya: int, limit: int = 12, min_shared: int = 2
+) -> dict:
+    """Trouve les « versets en miroir » : autres versets partageant le plus de
+    racines avec le verset de référence (correspondance lexicale intra-coranique)."""
+    target = verse_root_set(con, sura, aya)
+    matches = _verses_sharing_roots(
+        con, target, exclude=(sura, aya), limit=limit, min_shared=min_shared
+    )
     return {
         "sura": sura,
         "aya": aya,
         "roots_arabic": sorted(buckwalter_to_arabic(r) for r in target),
+        "matches": matches,
+    }
+
+
+def similar_verses_by_roots(
+    con: sqlite3.Connection,
+    roots,
+    limit: int = 12,
+    min_shared: int = 2,
+) -> dict:
+    """Versets similaires suggérés à partir d'un mot-clé / d'une liste de racines.
+
+    Les racines (arabe ou Buckwalter) sont résolues contre la base ; les versets
+    sont classés par nombre de racines communes puis par ratio de recouvrement.
+    """
+    target_bw = {
+        (arabic_to_buckwalter(r) if is_arabic(r) else r)
+        for r in roots
+    }
+    target_bw = {r for r in target_bw if root_stats(con, r)}
+    matches = _verses_sharing_roots(
+        con, target_bw, exclude=None, limit=limit, min_shared=min_shared
+    )
+    return {
+        "roots_arabic": sorted(buckwalter_to_arabic(r) for r in target_bw),
         "matches": matches,
     }
 
@@ -841,6 +985,26 @@ def root_stats(con: sqlite3.Connection, root_bw: str) -> dict | None:
         "occurrences": row["occurrences"],
         "verses": row["verses"],
     }
+
+
+def roots_union_stats(con: sqlite3.Connection, root_bws) -> dict:
+    """Occurrences et versets distincts pour un ensemble de racines (union).
+
+    Sert de compteur partagé à la passerelle français→arabe : additionner les
+    compteurs par racine surestimerait les versets ; ici un verset contenant
+    plusieurs racines ciblées n'est compté qu'une fois.
+    """
+    root_bws = list(dict.fromkeys(r for r in root_bws if r))
+    if not root_bws:
+        return {"occurrences": 0, "verses": 0}
+    qmarks = ",".join("?" * len(root_bws))
+    row = con.execute(
+        f"SELECT COUNT(*) AS occurrences, "
+        f"COUNT(DISTINCT sura || ':' || aya) AS verses "
+        f"FROM words WHERE root_buckwalter IN ({qmarks})",
+        root_bws,
+    ).fetchone()
+    return {"occurrences": row["occurrences"] or 0, "verses": row["verses"] or 0}
 
 
 def resolve_roots(con: sqlite3.Connection, roots) -> list:

@@ -121,6 +121,8 @@ def cmd_theme(args) -> int:
         res = search.theme(con, args.name, limit=args.limit)
         if not res["found"]:
             print(f"Thème inconnu : {args.name}")
+            if res.get("suggestions"):
+                print("Vouliez-vous dire : " + ", ".join(res["suggestions"]))
             print("Disponibles : " + ", ".join(res["available"]))
             return 1
         print(f"### {res['label']}  —  [{res['category']}]")

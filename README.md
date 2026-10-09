@@ -2,7 +2,7 @@
 
 Outil **local** de recherche et d'analyse **strictement intra-coranique**.
 Le point de départ est toujours le **texte arabe** (racine, morphologie),
-avec un affichage comparatif de traductions françaises.
+avec un affichage comparatif de traductions (françaises et anglaises).
 
 Aucun tafsir, aucun hadith, aucune interprétation traditionnelle
 post-coranique : le Coran est éclairé par le Coran.
@@ -26,12 +26,15 @@ quran-lab/
 │  ├─ build.py                # schéma + construction de la base SQLite
 │  ├─ db.py                   # connexion SQLite
 │  ├─ search.py               # moteur : texte, racines, versets, thèmes
+│  ├─ ui.py                   # vues partagées : versets, tableaux, recherche universelle
 │  ├─ themes.json             # cartographies thématiques (salât, wudû', ...)
 │  ├─ lexicon_fr.json         # lexique FR → racines (passerelle, 86 entrées)
 │  ├─ cli.py                  # interface ligne de commande
 │  └─ __main__.py
 └─ tests/
-   └─ test_buckwalter.py
+   ├─ test_buckwalter.py       # conversions Buckwalter ↔ arabe, normalisation
+   ├─ test_theme.py            # générateurs SVG / feuille de style
+   └─ test_search_helpers.py   # aides de recherche pures (sans base)
 ```
 
 ## 2. Démarrage
@@ -58,7 +61,7 @@ python -m quranlab root rHm --context 1  # idem en Buckwalter, avec contexte
 python -m quranlab search "الرحمن" --lang ar
 python -m quranlab search "miséricorde" --lang fr --translation fr.hamidullah
 python -m quranlab bridge "patience"       # français → racine arabe
-python -m quranlab verse 5:6             # verset + 3 traductions + mot-à-mot
+python -m quranlab verse 5:6             # verset + traductions + mot-à-mot
 python -m quranlab theme salat           # cartographie thématique
 python -m quranlab themes                # liste des thèmes prédéfinis
 ```
@@ -84,13 +87,16 @@ racine ; `segments.features` conserve l'annotation complète du corpus.
 - **Texte simple (imla'i)** : `ara-quransimple`, base d'alignement des mots.
 - **Traductions françaises** : Muhammad Hamidullah, Rashid Maash,
   Islamic Foundation (Montada).
+- **Traductions anglaises** : Saheeh International (Umm Muhammad),
+  Marmaduke Pickthall.
 - **Morphologie & racines** : *Quranic Arabic Corpus* v0.4 (Kais Dukes, GPL),
   annoté sur le texte vérifié de Tanzil.
 
 > Remarque : Blachère et Masson sont sous droits d'auteur et ne sont pas
-> distribuables librement. Les trois traductions retenues sont littérales et
-> sans appareil dogmatique. On peut ajouter une traduction locale (fichier
-> `{chapter, verse, text}`) en l'enregistrant dans `config.TRANSLATIONS`.
+> distribuables librement. Les traductions retenues sont littérales et sans
+> appareil dogmatique. On peut ajouter une traduction locale (fichier
+> `{chapter, verse, text}`) en l'enregistrant dans `config.TRANSLATIONS` ; sa
+> `language` (`fr` / `en`) pilote aussi la voix de la synthèse vocale.
 
 ## 6. Cartographie thématique (`quranlab/themes.json`)
 
@@ -118,6 +124,14 @@ automatiquement dans la CLI (`python -m quranlab themes`) et dans le menu
 déroulant Streamlit (onglet *Thèmes*), regroupé par catégorie. Pour vérifier
 qu'une racine existe, la commande `python -m quranlab root <racine>` ou
 l'onglet *Racine* sert de contrôle.
+
+**Résolution tolérante du nom** : la CLI (`theme <nom>`) accepte la clé exacte
+(`priere`) **ou** une variante usuelle. La saisie est recherchée (au-delà de
+4 caractères) dans la clé, le libellé et les termes fr/ar, et n'est retenue que
+si elle désigne un seul thème. Ainsi `python -m quranlab theme salat` retrouve
+`priere` (libellé « aṣ-ṣalāt »), `zakat` retrouve `aumone`, `hajj` retrouve
+`pelerinage`. En cas d'ambiguïté ou d'absence, la liste des thèmes disponibles
+est affichée (`search.resolve_theme_key()`).
 
 **Onglet *Thèmes* (app)** : les 164 thèmes sont tous accessibles — recherche
 plein texte (libellé, description, clé, racine arabe **ou** Buckwalter, termes
@@ -152,6 +166,52 @@ par traduction reste disponible via `search.french_matches_rows()` (utilisé par
 la CLI). Le rendu des racines est partagé entre l'onglet *Racine* et la
 passerelle (`render_root_results`) : **un seul expander par verset**, toutes
 les formes de la racine y sont listées.
+
+### 7.1 Barre de recherche universelle bilingue (dans chaque onglet)
+
+Chaque onglet (*Racine*, *Recherche*, *Verset comparé*, *Thèmes*, *Idées reçues*,
+*Concordance*) ouvre sur une **barre de recherche universelle**
+(`quranlab/ui.py`, `ui.universal_search()`) qui accepte **indifféremment le
+français ou l'arabe**. La langue est détectée automatiquement
+(`ui.occurrence_summary()`, via `buckwalter.is_arabic`) :
+
+- **Saisie française** (n'importe quel mot) → **passerelle** vers les racines
+  `search.french_bridge()` (lexique → thèmes → déduction par le corpus) ;
+- **Saisie arabe** → si le mot est une **racine** (`صبر`, `رحم`), recherche par
+  racine ; sinon **recherche textuelle** (`search.arabic_occurrence_summary()`)
+  avec comptage exact des occurrences dans `verses.text_simple_norm`.
+
+Dans tous les cas, l'interface affiche **systématiquement le nombre total
+d'occurrences** : **« N occurrence(s) trouvée(s) dans Y verset(s) »**
+(`ui.counter_label()`). Pour les requêtes françaises, le compteur est calculé en
+**union** des racines (`search.roots_union_stats()`) : un verset contenant
+plusieurs racines ciblées n'est compté qu'une fois. Les versets sont ensuite
+affichés contextualisés (sélecteur de racine + limite d'affichage, ou liste
+textuelle pour l'arabe), avec un repli dépliable reprenant les occurrences
+françaises dans les traductions.
+
+Les composants de vue (`html_table`, `render_verse`, `render_verses`,
+`render_root_results`, `universal_search`, `verse_picker`) sont **mutualisés dans
+`quranlab/ui.py`** ; `app.py` ne fait plus qu'orchestrer les onglets. Aucun
+thème visuel supplémentaire n'est requis : les résultats héritent de la charte
+courante (Clair / Intermédiaire bleu-gris / Sombre).
+
+### 7.2 Onglet « Verset comparé » — deux modes
+
+Réarchitecturé (`app.py`, onglet *Verset comparé*) autour d'un sélecteur
+réutilisable `ui.verse_picker()` (liste des sourates + numéro de verset) :
+
+- **Mode « Comparer deux versets »** : deux sélecteurs **indépendants** A et B,
+  affichés **côte à côte** (texte arabe uthmani + traductions plurielles). Une
+  synthèse compare leur **structure thématique** : racines de chaque verset,
+  racines **communes** et leur nombre (`search.verse_root_set()`).
+- **Mode « Suggérer des versets similaires »** : à partir d'une **référence**
+  `sura:aya` → versets en **miroir** par racines partagées
+  (`search.mirror_verses()`) ; à partir d'un **mot-clé** (français ou arabe) →
+  passerelle vers les racines puis proximité lexicale
+  (`search.similar_verses_by_roots()`, racines dérivées par
+  `search.top_roots_in_verses()` pour un mot arabe). Seuils réglables (racines
+  communes minimales, nombre de suggestions).
 
 ## 8. Idées reçues, controverses et pratiques (`quranlab/controversies.json`)
 

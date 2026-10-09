@@ -4,12 +4,16 @@ Lancement :
     streamlit run app.py
 """
 
-import html
-
 import streamlit as st
 
-from quranlab import db, search
+from quranlab import config, db, onboarding, search, ui
 from quranlab import theme as theme_mod
+from quranlab.buckwalter import buckwalter_to_arabic
+
+# Rendu partagé (versets, tableaux, recherche universelle) : voir quranlab/ui.py.
+html_table = ui.html_table
+render_verse = ui.render_verse
+render_root_results = ui.render_root_results
 
 st.set_page_config(page_title="quranlab — analyse intra-coranique", layout="wide")
 
@@ -23,37 +27,60 @@ with st.sidebar:
         format_func=lambda k: theme_mod.PALETTES[k]["label"],
         key="theme_choice",
     )
+
+    st.subheader("Audio")
+    st.selectbox(
+        "Récitateur",
+        [r["key"] for r in config.RECITERS],
+        format_func=lambda k: next(
+            r["label"] for r in config.RECITERS if r["key"] == k
+        ),
+        key="reciter",
+        help="Récitation verset par verset (EveryAyah).",
+    )
+    st.checkbox(
+        "Lecteur coranique par verset", value=True, key="show_quran_audio"
+    )
+    st.checkbox(
+        "Synthèse vocale (TTS)", value=True, key="show_tts",
+        help="Lit chaque traduction à voix haute via le moteur du navigateur "
+        "(voix française ou anglaise selon la traduction).",
+    )
+
+    st.divider()
     st.caption(
         "Lecture strictement intra-coranique — sans tafsir, hadith ni "
         "interprétation post-coranique."
     )
+    st.divider()
+    onboarding.sidebar_guide_button()
+
+    with st.expander("Suggestions d'amélioration"):
+        st.markdown(
+            "QuranLab évolue au fil des usages. Idées, incohérences, sources à "
+            "ajouter, nouveaux récitateurs ou langues, améliorations "
+            "d'ergonomie : **faites-nous en part**."
+        )
+        if config.SUGGESTIONS_URL:
+            st.markdown(f"[Proposer une amélioration]({config.SUGGESTIONS_URL})")
+        else:
+            st.caption(
+                "Voir la section du même nom dans le guide de démarrage."
+            )
 
 st.markdown(theme_mod.css(theme_name), unsafe_allow_html=True)
 
-st.title("quranlab")
-st.caption(
+ui.page_header(
+    "quranlab",
     "Recherche et analyse strictement intra-coraniques — texte, structure, "
-    "linguistique et racines. Sans tafsir, hadith ni interprétation post-coranique."
+    "linguistique et racines. Sans tafsir, hadith ni interprétation "
+    "post-coranique.",
 )
 
-
-def html_table(rows: list, columns: list | None = None) -> None:
-    """Tableau HTML thémé (respecte les variables CSS --ql-*)."""
-    if not rows:
-        return
-    columns = columns or list(rows[0].keys())
-    head = "".join(f"<th>{html.escape(str(c))}</th>" for c in columns)
-    body = "".join(
-        "<tr>" + "".join(
-            f"<td>{html.escape(str(r.get(c, '')))}</td>" for c in columns
-        ) + "</tr>"
-        for r in rows
-    )
-    st.markdown(
-        f"<table class='ql'><thead><tr>{head}</tr></thead>"
-        f"<tbody>{body}</tbody></table>",
-        unsafe_allow_html=True,
-    )
+# Tutoriel de première visite (modale) + rappel accessible en permanence.
+onboarding.init()
+onboarding.render()
+onboarding.inline_guide()
 
 
 @st.cache_resource(show_spinner=False)
@@ -74,8 +101,6 @@ try:
 except Exception as exc:  # noqa: BLE001
     st.error(f"Impossible de préparer la base : {exc}")
     st.stop()
-
-SURAH_NAMES = db.surah_names(con)
 
 
 # --------------------------------------------------------------------------
@@ -114,40 +139,9 @@ with st.sidebar:
     st.markdown(
         f"- **{_fmt(stats['surahs'])}** sourates · **{_fmt(stats['verses'])}** versets\n"
         f"- **{_fmt(stats['words'])}** mots annotés · **{_fmt(stats['roots'])}** racines distinctes\n"
-        f"- **{stats['translations']}** traductions françaises\n"
+        f"- **{stats['translations']}** traductions (FR/EN)\n"
         f"- **{n_themes}** thèmes · **{n_topics}** sujets d'analyse"
     )
-
-
-# --------------------------------------------------------------------------
-# Rendu unifié d'un verset : texte arabe (RTL) + traductions françaises
-# --------------------------------------------------------------------------
-def render_verse(
-    sura: int,
-    aya: int,
-    text_uthmani: str,
-    translations: list,
-    label: str | None = None,
-    caption: str | None = None,
-    font_size: str = "1.45rem",
-) -> None:
-    """Affiche un verset : référence (avec nom de sourate), texte arabe uthmani
-    puis, systématiquement, les traductions françaises empilées."""
-    ref = f"{sura}:{aya}"
-    name = SURAH_NAMES.get(sura, "")
-    st.markdown(f"**{label or (f'{ref} — {name}' if name else ref)}**")
-    st.markdown(
-        f"<div dir='rtl' lang='ar' style='font-size:{font_size};"
-        f"line-height:2.2;margin:.2rem 0 .5rem 0'>{text_uthmani}</div>",
-        unsafe_allow_html=True,
-    )
-    if not translations:
-        st.caption("Aucune traduction disponible.")
-    for t in translations:
-        st.markdown(f"**{t['author']}** — {t['text']}")
-    if caption:
-        st.caption(caption)
-    st.divider()
 
 
 tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord = st.tabs(
@@ -155,71 +149,13 @@ tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord = st.tabs(
 )
 
 # --------------------------------------------------- Rendu partagé : racine
-def render_root_results(con, res, limit_note: str | None = None) -> None:
-    """Résumé + occurrences d'une racine (expanders : verset complet)."""
-    if not res.get("found"):
-        st.warning(f"Racine introuvable : {res.get('input', '')}")
-        return
-    st.markdown(
-        f"**Racine {res['root_arabic']}** `[{res['root_buckwalter']}]` — "
-        f"{res['count']} occurrence(s) dans {res['verses_count']} verset(s)"
-    )
-    if limit_note:
-        st.caption(limit_note)
-    elif res["count"] >= 1000:
-        st.caption("Limite atteinte : 1000 premières occurrences affichées.")
-
-    # Traductions de tous les versets concernés (+ contexte) en une passe.
-    refs = [(o["sura"], o["aya"]) for o in res["occurrences"]]
-    for o in res["occurrences"]:
-        if "context" in o:
-            refs += [(c["sura"], c["aya"])
-                     for c in o["context"]["before"] + o["context"]["after"]]
-    bundle = search.verses_bundle(con, refs)
-
-    # Un seul expander par verset, même si le racine y apparaît en plusieurs
-    # formes (ex. « فَاصْبِرْ » + « صَبْرٌ » dans le même verset).
-    by_verse: dict = {}
-    for o in res["occurrences"]:
-        by_verse.setdefault((o["sura"], o["aya"]), []).append(o)
-
-    for (sura, aya), occs in by_verse.items():
-        nom = SURAH_NAMES.get(sura, "")
-        forms = " · ".join(dict.fromkeys(o["form_arabic"] for o in occs))
-        with st.expander(f"{sura}:{aya} — {nom} · {forms}"):
-            data = bundle.get((sura, aya), {})
-            ctx = occs[0].get("context", {})
-            for c in ctx.get("before", []):
-                cd = bundle.get((c["sura"], c["aya"]), {})
-                render_verse(
-                    c["sura"], c["aya"],
-                    cd.get("text_uthmani", c["text_uthmani"]),
-                    cd.get("translations", []),
-                    font_size="1.1rem",
-                )
-            render_verse(
-                sura, aya,
-                data.get("text_uthmani", occs[0]["text_uthmani"]),
-                data.get("translations", []),
-                caption=" · ".join(
-                    f"{o['form_arabic']} ({o['transliteration']}, {o['pos']}, "
-                    f"lemme {o['lemma_buckwalter']})"
-                    for o in occs
-                ),
-            )
-            for c in ctx.get("after", []):
-                cd = bundle.get((c["sura"], c["aya"]), {})
-                render_verse(
-                    c["sura"], c["aya"],
-                    cd.get("text_uthmani", c["text_uthmani"]),
-                    cd.get("translations", []),
-                    font_size="1.1rem",
-                )
-
-
 # ------------------------------------------------------------------ Racine
 with tab_root:
     st.subheader("Indexation par racine")
+    ui.universal_search(
+        con, "root",
+        placeholder="Rechercher en français ou en arabe (ex. miséricorde / رحمة)…",
+    )
     st.caption("Saisir une racine en arabe (رحم) ou en Buckwalter (rHm).")
     col1, col2 = st.columns([3, 1])
     root_in = col1.text_input("Racine", key="root_in")
@@ -231,6 +167,10 @@ with tab_root:
 # ---------------------------------------------------------------- Recherche
 with tab_search:
     st.subheader("Recherche textuelle et multilingue")
+    ui.universal_search(
+        con, "search",
+        placeholder="Rechercher un mot en français ou en arabe…",
+    )
     lang = st.radio(
         "Langue", ["Français", "Arabe"], horizontal=True, key="search_lang"
     )
@@ -326,40 +266,190 @@ with tab_search:
 
 # ------------------------------------------------------------------- Verset
 with tab_verse:
-    st.subheader("Affichage comparatif multi-sources")
-    ref = st.text_input("Référence (sura:aya)", value="2:255", key="ref")
-    if ref and ":" in ref:
-        try:
-            sura, aya = (int(x) for x in ref.split(":"))
-        except ValueError:
-            st.warning("Format attendu : sura:aya (ex. 2:255)")
-            st.stop()
-        v = search.get_verse(con, sura, aya)
-        if v is None:
-            st.warning("Verset introuvable.")
-        else:
-            st.markdown(f"### {db.surah_name(con, sura)} — {aya}")
-            render_verse(
-                sura, aya, v["text_uthmani"], v["translations"],
-                label="Texte et traductions", font_size="1.8rem",
+    st.subheader("Affichage comparatif et versets similaires")
+    ui.universal_search(
+        con, "verse",
+        placeholder="Rechercher en français ou en arabe (ex. lumière / نور)…",
+    )
+
+    mode = st.radio(
+        "Mode",
+        ["Comparer deux versets", "Suggérer des versets similaires"],
+        horizontal=True,
+        key="verse_mode",
+    )
+
+    # --- Mode 1 : comparaison manuelle de deux versets ---------------------
+    if mode == "Comparer deux versets":
+        st.caption(
+            "Sélectionnez deux versets indépendamment : ils sont affichés côte "
+            "à côte avec leur texte arabe, leurs traductions et leurs racines."
+        )
+        colA, colB = st.columns(2)
+        with colA:
+            st.markdown("**Verset A**")
+            sa, aa = ui.verse_picker(con, "a", default_sura=2, default_aya=255)
+            va = search.get_verse(con, sa, aa)
+        with colB:
+            st.markdown("**Verset B**")
+            sb, ab = ui.verse_picker(con, "b", default_sura=4, default_aya=34)
+            vb = search.get_verse(con, sb, ab)
+
+        colA2, colB2 = st.columns(2)
+        with colA2:
+            if va:
+                st.markdown(f"#### {db.surah_name(con, sa)} — {aa}")
+                ui.render_verse(
+                    sa, aa, va["text_uthmani"], va["translations"],
+                    label=f"{sa}:{aa}", font_size="1.5rem",
+                )
+            else:
+                st.warning("Verset A introuvable.")
+        with colB2:
+            if vb:
+                st.markdown(f"#### {db.surah_name(con, sb)} — {ab}")
+                ui.render_verse(
+                    sb, ab, vb["text_uthmani"], vb["translations"],
+                    label=f"{sb}:{ab}", font_size="1.5rem",
+                )
+            else:
+                st.warning("Verset B introuvable.")
+
+        if va and vb:
+            ra = search.verse_root_set(con, sa, aa)
+            rb = search.verse_root_set(con, sb, ab)
+            common = ra & rb
+            st.markdown("### Comparaison de structure thématique (racines)")
+            st.markdown(
+                f"**{len(common)} racine(s) commune(s)** : "
+                + (" · ".join(sorted(buckwalter_to_arabic(r) for r in common))
+                   or "aucune")
             )
-            st.markdown("**Analyse mot-à-mot**")
-            html_table(
-                [
-                    {
-                        "n": w["word_index"],
-                        "forme": w["form_arabic"],
-                        "translittération": w["transliteration"],
-                        "racine": w["root_arabic"],
-                        "POS": w["pos"],
-                    }
-                    for w in v["words"]
+            cc1, cc2 = st.columns(2)
+            cc1.markdown(
+                f"**Racines de {sa}:{aa} ({len(ra)})** — "
+                + " · ".join(sorted(buckwalter_to_arabic(r) for r in ra))
+            )
+            cc2.markdown(
+                f"**Racines de {sb}:{ab} ({len(rb)})** — "
+                + " · ".join(sorted(buckwalter_to_arabic(r) for r in rb))
+            )
+
+    # --- Mode 2 : suggestion automatique de versets similaires -------------
+    else:
+        st.caption(
+            "Saisissez une référence (sura:aya) pour trouver ses versets en "
+            "miroir, ou un mot-clé (français ou arabe) pour une suggestion par "
+            "proximité de racines."
+        )
+        qv = st.text_input(
+            "Verset de référence (sura:aya) ou mot-clé",
+            key="similar_q",
+        )
+        s1, s2 = st.columns(2)
+        min_shared = s1.slider(
+            "Racines communes minimales", 1, 6, 2, key="similar_min"
+        )
+        limit = s2.slider(
+            "Nombre de suggestions", 5, 40, 12, key="similar_limit"
+        )
+
+        if qv and ":" in qv:
+            msura = maya = None
+            try:
+                msura, maya = (int(x) for x in qv.split(":"))
+            except ValueError:
+                # Avertir sans interrompre le script : st.stop() couperait aussi
+                # le rendu des onglets suivants (Thèmes, Idées reçues, …).
+                st.warning("Format attendu : sura:aya (ex. 4:34)")
+            if msura is not None:
+                base = search.get_verse(con, msura, maya)
+                if base is None:
+                    st.warning("Verset introuvable.")
+                else:
+                    st.markdown("**Verset de référence**")
+                    ui.render_verse(
+                        msura, maya, base["text_uthmani"], base["translations"],
+                        label=f"{msura}:{maya}",
+                    )
+                    mir = search.mirror_verses(
+                        con, msura, maya, limit=limit, min_shared=min_shared
+                    )
+                    st.markdown(
+                        f"**Racines du verset ({len(mir['roots_arabic'])}) :** "
+                        + " · ".join(mir["roots_arabic"])
+                    )
+                    st.markdown(
+                        f"**{len(mir['matches'])} verset(s) similaire(s)**"
+                    )
+                    if not mir["matches"]:
+                        st.info(
+                            "Aucun verset ne partage assez de racines — baissez "
+                            "le seuil de racines communes minimales."
+                        )
+                    for m in mir["matches"]:
+                        ui.render_verse(
+                            m["sura"], m["aya"], m["text_uthmani"],
+                            m["translations"],
+                            label=(
+                                f"{m['sura']}:{m['aya']}  ·  {m['shared']} "
+                                f"racines communes ({m['ratio'] * 100:.0f}%)"
+                            ),
+                            caption=(
+                                "racines partagées : "
+                                + " · ".join(m["roots_arabic"])
+                            ),
+                        )
+        elif qv:
+            summary = ui.occurrence_summary(con, qv)
+            roots = [p["root_bw"] for p in summary["props"]] if summary else []
+            if not roots and summary and summary["ar_rows"]:
+                roots = [
+                    r["root_buckwalter"]
+                    for r in search.top_roots_in_verses(
+                        con,
+                        [(r["sura"], r["aya"]) for r in summary["ar_rows"]],
+                        top=8,
+                    )
                 ]
-            )
+            if not roots:
+                st.warning(
+                    f"Aucune racine exploitable pour « {qv} » — essayez un autre "
+                    "mot-clé ou une référence sura:aya."
+                )
+            else:
+                sim = search.similar_verses_by_roots(
+                    con, roots, limit=limit, min_shared=min_shared
+                )
+                st.markdown(
+                    f"**Racines du mot-clé « {qv} » ({len(sim['roots_arabic'])}) :** "
+                    + " · ".join(sim["roots_arabic"])
+                )
+                st.markdown(
+                    f"**{len(sim['matches'])} verset(s) similaire(s) suggéré(s)**"
+                )
+                if not sim["matches"]:
+                    st.info(
+                        "Aucun verset ne partage assez de racines — baissez le "
+                        "seuil de racines communes minimales."
+                    )
+                for m in sim["matches"]:
+                    ui.render_verse(
+                        m["sura"], m["aya"], m["text_uthmani"], m["translations"],
+                        label=(
+                            f"{m['sura']}:{m['aya']}  ·  {m['shared']} racines "
+                            f"communes ({m['ratio'] * 100:.0f}%)"
+                        ),
+                        caption="racines partagées : " + " · ".join(m["roots_arabic"]),
+                    )
 
 # ------------------------------------------------------------------- Thèmes
 with tab_theme:
     st.subheader("Cartographie thématique intra-coranique")
+    ui.universal_search(
+        con, "theme",
+        placeholder="Rechercher en français ou en arabe (lancera aussi la passerelle)…",
+    )
     note = search.load_themes().get("_meta", {}).get("note", "")
     if note:
         st.caption(note)
@@ -402,32 +492,41 @@ with tab_theme:
             [k for _, k, _ in filtered],
             format_func=lambda k: labels[k],
             key="theme_pick",
+            index=None,
+            placeholder="— Choisissez un thème pour voir ses versets —",
         )
 
-        res = search.theme(con, key)
-        st.markdown(f"### {res['label']}")
-        st.markdown(res["description"])
-        extra = ""
-        if res.get("terms_ar"):
-            extra += f" · termes arabe : {', '.join(res['terms_ar'])}"
-        if res.get("terms_fr"):
-            extra += f" · termes fr : {', '.join(res['terms_fr'])}"
-        st.caption(
-            f"Catégorie : {res['category']} · Racines : {', '.join(res['roots'])} · "
-            f"{res['verses_count']} verset(s){extra}"
-        )
-
-        bundle = search.verses_bundle(
-            con, [(v["sura"], v["aya"]) for v in res["verses"]]
-        )
-        for v in res["verses"]:
-            data = bundle.get((v["sura"], v["aya"]), {})
-            render_verse(
-                v["sura"], v["aya"],
-                data.get("text_uthmani", ""),
-                data.get("translations", []),
-                caption="sources : " + ", ".join(v["sources"]),
+        if key is None:
+            st.info(
+                "Sélectionnez un thème ci-dessus : les versets rattachés et leur "
+                "récitation s'afficheront ici (rien n'est chargé tant que rien "
+                "n'est choisi — l'interface reste légère)."
             )
+        else:
+            res = search.theme(con, key)
+            st.markdown(f"### {res['label']}")
+            st.markdown(res["description"])
+            extra = ""
+            if res.get("terms_ar"):
+                extra += f" · termes arabe : {', '.join(res['terms_ar'])}"
+            if res.get("terms_fr"):
+                extra += f" · termes fr : {', '.join(res['terms_fr'])}"
+            st.caption(
+                f"Catégorie : {res['category']} · Racines : {', '.join(res['roots'])} · "
+                f"{res['verses_count']} verset(s){extra}"
+            )
+
+            bundle = search.verses_bundle(
+                con, [(v["sura"], v["aya"]) for v in res["verses"]]
+            )
+            for v in res["verses"]:
+                data = bundle.get((v["sura"], v["aya"]), {})
+                render_verse(
+                    v["sura"], v["aya"],
+                    data.get("text_uthmani", ""),
+                    data.get("translations", []),
+                    caption="sources : " + ", ".join(v["sources"]),
+                )
 
         with st.expander(f"Vue d'ensemble des {len(filtered)} thème(s) affiché(s)"):
             html_table(
@@ -446,6 +545,10 @@ with tab_theme:
 # ------------------------------------------- Idées reçues et controverses
 with tab_controv:
     st.subheader("Analyse textuelle des idées reçues et controverses")
+    ui.universal_search(
+        con, "controv",
+        placeholder="Rechercher en français ou en arabe (ex. femme / نساء)…",
+    )
     meta = search.load_controversies().get("_meta", {})
     st.info(meta.get("disclaimer", ""))
     st.caption("Méthode : " + meta.get("method", ""))
@@ -455,9 +558,16 @@ with tab_controv:
         f"{len(topics)} sujets — analyse textuelle descriptive, sans conclusion doctrinale."
     )
     key = st.selectbox(
-        "Sujet", sorted(topics), format_func=lambda k: topics[k]["label"]
+        "Sujet", sorted(topics), format_func=lambda k: topics[k]["label"],
+        index=None,
+        placeholder="— Choisissez un sujet pour voir son analyse —",
     )
-    if key:
+    if key is None:
+        st.info(
+            "Choisissez un sujet dans la liste : récurrence lexicale, polysémie "
+            "et versets clés s'afficheront ici."
+        )
+    elif key:
         res = search.controversy(con, key)
         st.markdown(f"### {res['label']}")
         st.markdown(f"**Question posée :** {res['question']}")
@@ -512,6 +622,10 @@ with tab_controv:
 # ------------------------------- Concordance interne / versets en miroir
 with tab_concord:
     st.subheader("Concordance interne — « le Coran s'explique par le Coran »")
+    ui.universal_search(
+        con, "concord",
+        placeholder="Rechercher en français ou en arabe pour bâtir une concordance…",
+    )
     st.caption(
         "Croisement de versets par racines partagées : concordance par notion, "
         "et versets en miroir d'un verset de référence."
@@ -523,39 +637,48 @@ with tab_concord:
 
     if mode == "Verset en miroir":
         col_ref, col_opts = st.columns([2, 3])
-        ref = col_ref.text_input("Verset de référence (sura:aya)", value="4:34", key="mirror_ref")
+        ref = col_ref.text_input("Verset de référence (sura:aya)", key="mirror_ref")
         min_shared = col_opts.slider("Racines communes minimales", 1, 6, 2)
         limit = col_opts.slider("Nombre de versets en miroir", 5, 40, 12)
         if ref and ":" in ref:
+            msura = maya = None
             try:
                 msura, maya = (int(x) for x in ref.split(":"))
             except ValueError:
+                # Avertir sans interrompre le script : st.stop() couperait aussi
+                # le rendu des onglets suivants (Thèmes, Idées reçues, …).
                 st.warning("Format attendu : sura:aya (ex. 4:34)")
-                st.stop()
-            base = search.get_verse(con, msura, maya)
-            if base is None:
-                st.warning("Verset introuvable.")
-            else:
-                st.markdown("**Verset de référence**")
-                render_verse(
-                    msura, maya, base["text_uthmani"], base["translations"],
-                    label=f"{msura}:{maya}",
-                )
-                mir = search.mirror_verses(con, msura, maya, limit=limit, min_shared=min_shared)
-                st.markdown(
-                    f"**Racines du verset ({len(mir['roots_arabic'])}) :** "
-                    + " · ".join(mir["roots_arabic"])
-                )
-                st.markdown(f"**{len(mir['matches'])} verset(s) en miroir**")
-                for m in mir["matches"]:
+            if msura is not None:
+                base = search.get_verse(con, msura, maya)
+                if base is None:
+                    st.warning("Verset introuvable.")
+                else:
+                    st.markdown("**Verset de référence**")
                     render_verse(
-                        m["sura"], m["aya"], m["text_uthmani"], m["translations"],
-                        label=(
-                            f"{m['sura']}:{m['aya']}  ·  {m['shared']} racines "
-                            f"communes ({m['ratio']*100:.0f}%)"
-                        ),
-                        caption="racines partagées : " + " · ".join(m["roots_arabic"]),
+                        msura, maya, base["text_uthmani"], base["translations"],
+                        label=f"{msura}:{maya}",
                     )
+                    mir = search.mirror_verses(
+                        con, msura, maya, limit=limit, min_shared=min_shared
+                    )
+                    st.markdown(
+                        f"**Racines du verset ({len(mir['roots_arabic'])}) :** "
+                        + " · ".join(mir["roots_arabic"])
+                    )
+                    st.markdown(f"**{len(mir['matches'])} verset(s) en miroir**")
+                    for m in mir["matches"]:
+                        render_verse(
+                            m["sura"], m["aya"], m["text_uthmani"],
+                            m["translations"],
+                            label=(
+                                f"{m['sura']}:{m['aya']}  ·  {m['shared']} "
+                                f"racines communes ({m['ratio']*100:.0f}%)"
+                            ),
+                            caption=(
+                                "racines partagées : "
+                                + " · ".join(m["roots_arabic"])
+                            ),
+                        )
     else:
         kind = st.radio("Critère", ["Racine", "Terme arabe"], horizontal=True)
         if kind == "Racine":
