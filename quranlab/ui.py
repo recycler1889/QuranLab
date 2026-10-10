@@ -83,11 +83,16 @@ def _palette() -> dict:
 
 def active_reciter() -> dict:
     """Récitateur sélectionné (repli sur le premier de config.RECITERS)."""
+    reciters = [r for r in (getattr(config, "RECITERS", None) or [])
+                if isinstance(r, dict) and r.get("key")]
+    if not reciters:
+        reciters = [{"key": "alafasy", "label": "Mishary Rachid Alafasy",
+                     "edition": "Alafasy_128kbps"}]
     key = st.session_state.get("reciter")
-    for r in config.RECITERS:
-        if r["key"] == key:
+    for r in reciters:
+        if r.get("key") == key:
             return r
-    return config.RECITERS[0]
+    return reciters[0]
 
 
 def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:

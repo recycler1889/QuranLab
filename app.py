@@ -29,11 +29,13 @@ with st.sidebar:
     )
 
     st.subheader("Audio")
+    _reciters = list(getattr(config, "RECITERS", []) or [])
+    _reciter_keys = [r.get("key") for r in _reciters if r.get("key")]
     st.selectbox(
         "Récitateur",
-        [r["key"] for r in config.RECITERS],
+        _reciter_keys,
         format_func=lambda k: next(
-            r["label"] for r in config.RECITERS if r["key"] == k
+            (r.get("label", k) for r in _reciters if r.get("key") == k), k
         ),
         key="reciter",
         help="Récitation verset par verset (EveryAyah).",
