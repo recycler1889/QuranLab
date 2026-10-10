@@ -523,6 +523,74 @@ _FR = {
         "Rendre chaque mot des versets cliquable (ouvre la fiche du mot)."
     ),
     "learn.no_vocab": "Lexique indisponible.",
+    "iqra.title": "Lire l'arabe — méthode Iqraʾ",
+    "iqra.caption": (
+        "Parcours en 4 étapes : alphabet, voyelles, signes, puis lecture "
+        "progressive du Coran en polices Uthmani."
+    ),
+    "iqra.choose_step": "Étape du parcours",
+    "iqra.step1": "1 · Alphabet",
+    "iqra.step2": "2 · Voyelles",
+    "iqra.step3": "3 · Signes",
+    "iqra.step4": "4 · Lecture",
+    "iqra.s1_intro": (
+        "Les 28 lettres de l'alphabet ont jusqu'à quatre formes selon leur "
+        "place dans le mot. Les six lettres « non connectives » n'en ont que "
+        "deux : elles ne s'attachent jamais à la suivante."
+    ),
+    "iqra.s1_col_letter": "Lettre",
+    "iqra.s1_col_name": "Nom",
+    "iqra.s1_col_iso": "Isolée",
+    "iqra.s1_col_init": "Initiale",
+    "iqra.s1_col_medi": "Médiale",
+    "iqra.s1_col_fin": "Finale",
+    "iqra.s1_col_tr": "Prononciation",
+    "iqra.s1_note_connect": (
+        "La forme « initiale » se lie à la lettre suivante, la « médiale » aux "
+        "deux côtés, la « finale » seulement à la précédente."
+    ),
+    "iqra.s1_note_nonconnect": (
+        "Ces six lettres ne se rattachent jamais à la suivante : leur forme "
+        "initiale égale leur forme isolée."
+    ),
+    "iqra.s2_intro": (
+        "Une voyelle courte (haraka) sonorise la consonne : fatha (a), kasra "
+        "(i), dhamma (u). Une voyelle longue (madd) double le temps de la "
+        "syllabe."
+    ),
+    "iqra.s2_table_short": "Voyelles courtes — harakāt",
+    "iqra.s2_table_long": "Voyelles longues — moudoud",
+    "iqra.s2_col_form": "Avec ب",
+    "iqra.s2_col_name": "Nom",
+    "iqra.s2_col_sound": "Son",
+    "iqra.s2_col_combo": "Construction",
+    "iqra.s2_exercise": "Entraînement : lisez la syllabe, puis vérifiez.",
+    "iqra.s2_drill_hint": "Quelle transcription pour cette syllabe ?",
+    "iqra.s2_check": "Vérifier",
+    "iqra.s2_correct": "Correct !",
+    "iqra.s2_wrong": "Non — c'était « {tr} ».",
+    "iqra.s2_next": "Syllabe suivante",
+    "iqra.s3_intro": (
+        "Trois signes affinent la lecture : soukoun (aucune voyelle), chaddah "
+        "(consonne doublée), tanwin (n final). Lisez les exemples à voix haute."
+    ),
+    "iqra.s3_role": "Rôle",
+    "iqra.s3_mot": "Mot",
+    "iqra.s3_tr": "Prononciation",
+    "iqra.s3_mean": "Sens",
+    "iqra.s4_intro": (
+        "Assemblez les briques lues : des mots simples aux expressions, puis "
+        "lisez de courtes sourates. La transcription phonétique vous guide, "
+        "la récitation vous corrige."
+    ),
+    "iqra.s4_practice": "Passerelle vers le Coran — lisez ces sourates courtes",
+    "iqra.s4_practice_hint": (
+        "Chaque verset s'affiche en Uthmani avec sa récitation audio (bouton "
+        "du lecteur) et sa transcription phonétique juste au-dessous : lisez "
+        "lentement, puis écoutez."
+    ),
+    "iqra.s4_surah_fmt": "Sourate {n} — {name}",
+    "iqra.s4_no_con": "Connexion aux données indisponible : passerelle Coran masquée.",
 }
 
 _EN = {
@@ -988,6 +1056,73 @@ _EN = {
         "Make every word in verses clickable (opens the word card)."
     ),
     "learn.no_vocab": "Lexicon unavailable.",
+    "iqra.title": "Read Arabic — Iqraʾ method",
+    "iqra.caption": (
+        "A 4-step path: alphabet, vowels, signs, then progressive Qur'an "
+        "reading in Uthmani fonts."
+    ),
+    "iqra.choose_step": "Course step",
+    "iqra.step1": "1 · Alphabet",
+    "iqra.step2": "2 · Vowels",
+    "iqra.step3": "3 · Signs",
+    "iqra.step4": "4 · Reading",
+    "iqra.s1_intro": (
+        "The 28 letters of the alphabet have up to four forms depending on "
+        "their position in the word. The six 'non-connective' letters have "
+        "only two: they never bind to the following letter."
+    ),
+    "iqra.s1_col_letter": "Letter",
+    "iqra.s1_col_name": "Name",
+    "iqra.s1_col_iso": "Isolated",
+    "iqra.s1_col_init": "Initial",
+    "iqra.s1_col_medi": "Medial",
+    "iqra.s1_col_fin": "Final",
+    "iqra.s1_col_tr": "Sound",
+    "iqra.s1_note_connect": (
+        "An 'initial' form binds to the following letter, a 'medial' form to "
+        "both sides, a 'final' form only to the previous one."
+    ),
+    "iqra.s1_note_nonconnect": (
+        "These six letters never bind to the next one: their initial form "
+        "equals their isolated form."
+    ),
+    "iqra.s2_intro": (
+        "A short vowel (haraka) voices the consonant: fatha (a), kasra (i), "
+        "dhamma (u). A long vowel (madd) doubles the length of the syllable."
+    ),
+    "iqra.s2_table_short": "Short vowels — harakāt",
+    "iqra.s2_table_long": "Long vowels — moudoud",
+    "iqra.s2_col_form": "With ب",
+    "iqra.s2_col_name": "Name",
+    "iqra.s2_col_sound": "Sound",
+    "iqra.s2_col_combo": "Building",
+    "iqra.s2_exercise": "Practice: read the syllable, then check.",
+    "iqra.s2_drill_hint": "Which transliteration for this syllable?",
+    "iqra.s2_check": "Check",
+    "iqra.s2_correct": "Correct!",
+    "iqra.s2_wrong": "No — it was “{tr}”.",
+    "iqra.s2_next": "Next syllable",
+    "iqra.s3_intro": (
+        "Three signs refine your reading: sukun (no vowel), shadda (doubled "
+        "consonant), tanwin (final n). Read the examples aloud."
+    ),
+    "iqra.s3_role": "Role",
+    "iqra.s3_mot": "Word",
+    "iqra.s3_tr": "Sound",
+    "iqra.s3_mean": "Meaning",
+    "iqra.s4_intro": (
+        "Assemble the bricks you have read: from simple words to set phrases, "
+        "then read short surahs. The phonetic transliteration guides you, the "
+        "recitation corrects you."
+    ),
+    "iqra.s4_practice": "Bridge to the Qur'an — read these short surahs",
+    "iqra.s4_practice_hint": (
+        "Each verse shows in Uthmani with its audio recitation (player "
+        "button) and its phonetic transliteration right below: read slowly, "
+        "then listen."
+    ),
+    "iqra.s4_surah_fmt": "Surah {n} — {name}",
+    "iqra.s4_no_con": "Data connection unavailable: Qur'an bridge hidden.",
 }
 
 # --- API ------------------------------------------------------------------

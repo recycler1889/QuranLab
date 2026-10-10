@@ -8,7 +8,7 @@ import sqlite3
 
 import streamlit as st
 
-from quranlab import bookmarks, config, db, i18n, learn_ui, onboarding, search, ui
+from quranlab import bookmarks, config, db, i18n, iqra_ui, learn_ui, onboarding, search, ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -1059,4 +1059,10 @@ with tab_bm:
 
 # ---------------------------------------------------------------- Apprendre
 with tab_learn:
+
+    # Parcours de lecture de l'arabe (méthode Iqraʾ) : 4 étapes + passerelle
+    # vers la lecture du Coran en polices Uthmani.
+    if getattr(config, "LEARN_ENABLED", False):
+        iqra_ui.render_tab(con)
+
     learn_ui.render_tab(con)
