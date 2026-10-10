@@ -16,9 +16,11 @@ import json
 
 import streamlit as st
 
-from . import config, db, search
+from . import config, db, i18n, search
 from . import theme as theme_mod
 from .buckwalter import is_arabic
+
+t = i18n.t
 
 # --------------------------------------------------------------------------
 # Noms de sourates (cache paresseux — évite de dépendre d'app.py)
@@ -32,6 +34,26 @@ def surah_names() -> dict:
     if _NAMES is None:
         _NAMES = db.surah_names(db.connect())
     return _NAMES
+
+
+def _lang_name(code: str | None = None) -> str:
+    """Nom localisé de la langue d'interface (ou ``code`` si fourni)."""
+    return t("ui.lang." + (code or i18n.lang()))
+
+
+def translations_for_lang(translations: list) -> list:
+    """Traductions de la langue d'interface active (repli : toutes).
+
+    Garantit qu'un verset affiché ne mélange **jamais** les langues : seul le
+    jeu de traductions de la langue choisie est retenu. Si aucune ne correspond
+    (données incomplètes), on renvoie la liste complète pour ne rien perdre.
+    """
+    lg = i18n.lang()
+    picked = [
+        tr for tr in (translations or [])
+        if str(tr.get("language", "")).lower() == lg
+    ]
+    return picked or list(translations or [])
 
 
 # --------------------------------------------------------------------------
@@ -114,6 +136,8 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
     reciter = reciter or active_reciter()
     url = config.audio_url(reciter["edition"], sura, aya)
     title = html.escape(f"{reciter['label']} · {sura}:{aya}")
+    play = json.dumps(t("ui.listen"), ensure_ascii=False)
+    pause = json.dumps(t("ui.pause"), ensure_ascii=False)
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;}}
@@ -128,26 +152,45 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
         overflow:hidden;text-overflow:ellipsis;max-width:170px;}}
     </style></head><body>
       <div class="bar">
-        <button id="pp" title="Lecture / Pause">&#9654; Écouter</button>
-        <button id="st" title="Arrêter">&#9632;</button>
+        <button id="pp" title="{html.escape(t('ui.listen_title'))}">&#9654; {t("ui.listen")}</button>
+        <button id="st" title="{html.escape(t('ui.stop_title'))}">&#9632;</button>
         <span class="meta">{title}</span>
         <audio id="au" preload="none" src="{url}"></audio>
       </div>
       <script>
         var au=document.getElementById('au'),pp=document.getElementById('pp');
+        var PLAY='\u25B6 ' + {play}, PAUSE='\u275A\u275A ' + {pause};
         pp.addEventListener('click',function(){{
-          if(au.paused){{au.play();pp.textContent='\u275A\u275A Pause';}}
-          else{{au.pause();pp.textContent='\u25B6 Écouter';}}
+          if(au.paused){{au.play();pp.textContent=PAUSE;}}
+          else{{au.pause();pp.textContent=PLAY;}}
         }});
         document.getElementById('st').addEventListener('click',function(){{
-          au.pause();au.currentTime=0;pp.textContent='\u25B6 Écouter';
+          au.pause();au.currentTime=0;pp.textContent=PLAY;
         }});
         au.addEventListener('ended',function(){{
-          pp.textContent='\u25B6 Écouter';}});
+          pp.textContent=PLAY;}});
       </script>
     </body></html>"""
     st.iframe(comp, height=36)
 
+
+# Gabarit du sélecteur de voix : les marqueurs __*__ sont remplacés par
+# ``_tts_voice_js`` selon la langue (fr-FR / en-US), la liste des préférences de
+# voix et la clé localStorage propre à la langue.
+_LG_MATCH = {"fr": "fr", "en": "en"}
+_LG_SUBS = {"fr": ("fran", "french"), "en": ("eng",)}
+_LG_PREFS = {
+    "fr": [
+        "google franc", "microso", "hortense", "julie", "denise",
+        "aurore", "pauline", "amelie", "amé", "virginie", "audrey",
+        "samantha", "siri", "google",
+    ],
+    "en": [
+        "google us", "google uk", "microso", "samantha", "susan", "daniel",
+        "karen", "moira", "sonia", "aaron", "alex", "fred", "zira",
+        "david", "mark", "siri", "google",
+    ],
+}
 
 _TTS_VOICE_JS = r"""
 var VOICES = window.speechSynthesis ? (window.speechSynthesis.getVoices() || []) : [];
@@ -156,47 +199,63 @@ if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefin
     VOICES = window.speechSynthesis.getVoices() || VOICES;
   };
 }
-function qlFr(v) {
+function qlMatch(v) {
   if (!v) { return false; }
   var l = (v.lang || '').replace(/_/g, '-').toLowerCase();
-  return l.indexOf('fr') === 0 ||
-    (v.name || '').toLowerCase().indexOf('fran') >= 0 ||
-    (v.name || '').toLowerCase().indexOf('french') >= 0;
+  if (l.indexOf(__LG__) === 0) { return true; }
+  var n = (v.name || '').toLowerCase(), SUB = __SUBS__;
+  for (var i = 0; i < SUB.length; i++) {
+    if (n.indexOf(SUB[i]) >= 0) { return true; }
+  }
+  return false;
 }
 function qlPick() {
   var chosen = null;
-  try { chosen = window.localStorage.getItem('ql_tts_voice') || null; }
+  try { chosen = window.localStorage.getItem(__LS_KEY__) || null; }
   catch (e) { chosen = null; }
   if (chosen) {
     var m = VOICES.filter(function(v) { return v.name === chosen; });
     if (m.length) { return m[0]; }
   }
-  var fr = VOICES.filter(qlFr);
-  if (!fr.length) { return null; }
-  var PREF = ['google franc', 'microso', 'hortense', 'julie', 'denise',
-    'aurore', 'pauline', 'amelie', 'am', 'virginie', 'audrey', 'samantha'];
+  var match = VOICES.filter(qlMatch);
+  if (!match.length) { return null; }
+  var PREF = __PREFS__;
   for (var j = 0; j < PREF.length; j++) {
-    var h = fr.filter(function(v) {
+    var h = match.filter(function(v) {
       return (v.name || '').toLowerCase().indexOf(PREF[j]) >= 0;
     });
     if (h.length) { return h[0]; }
   }
-  var exact = fr.filter(function(v) {
-    return (v.lang || '').replace(/_/g, '-').toLowerCase() === 'fr-fr';
+  var exact = match.filter(function(v) {
+    return (v.lang || '').replace(/_/g, '-').toLowerCase() === __LGEXACT__;
   });
   if (exact.length) { return exact[0]; }
-  return fr[0];
+  return match[0];
 }
 """
+
+
+def _tts_voice_js(lg: str) -> str:
+    """Gabarit JS de choix de voix paramétré pour la langue ``lg``."""
+    tag = _LG_MATCH.get(lg, _LG_MATCH["fr"])
+    subs = json.dumps(list(_LG_SUBS.get(lg, _LG_SUBS["fr"])), ensure_ascii=False)
+    prefs = json.dumps(list(_LG_PREFS.get(lg, _LG_PREFS["fr"])), ensure_ascii=False)
+    return (
+        _TTS_VOICE_JS
+        .replace("__LGEXACT__", f"{tag}-{tag.upper()}")
+        .replace("__LG__", tag)
+        .replace("__SUBS__", subs)
+        .replace("__PREFS__", prefs)
+        .replace("__LS_KEY__", f"ql_tts_voice_{tag}")
+    )
 
 
 def tts(text: str, language: str = "fr") -> None:
     """Bouton de synthèse vocale (Web Speech API du navigateur) d'un texte.
 
-    La voix suit la langue de la traduction (``fr`` → fr-FR, ``en`` → en-US).
-    Composant autonome : chaque traduction dispose de son propre lecteur, qui
-    bascule entre « Lire » et « Stop ». Aucune clé/API externe n'est requise ;
-    le moteur TTS est celui du navigateur.
+    La langue lue suit ``language`` (``fr`` → fr-FR, ``en`` → en-US) tandis que
+    les libellés du bouton suivent la langue d'**interface** active. Composant
+    autonome : bascule entre lire/arrêter. Aucune clé/API externe n'est requise.
     """
     pal = _palette()
     locale = config.tts_locale(language)
@@ -204,6 +263,10 @@ def tts(text: str, language: str = "fr") -> None:
     pitch = float(st.session_state.get("tts_pitch", 1.0))
     # json.dumps → littéral JS sûr ; « < » échappé pour ne pas clore </script>.
     payload = json.dumps(text or "", ensure_ascii=False).replace("<", "\\u003c")
+    play = json.dumps(t("ui.play"), ensure_ascii=False)
+    stop = json.dumps(t("ui.stop"), ensure_ascii=False)
+    unavail = json.dumps(t("ui.tts_unavail"), ensure_ascii=False)
+    title = html.escape(t("ui.tts_title", locale=locale))
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;}}
@@ -214,16 +277,16 @@ def tts(text: str, language: str = "fr") -> None:
         font-family:system-ui,"Segoe UI",sans-serif;}}
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
     </style></head><body>
-      <button id="b" title="Lire à voix haute ({locale})">
-        &#9654; Lire</button>
+      <button id="b" title="{title}">
+        &#9654; {t("ui.play")}</button>
       <script>
         var RATE={rate!r};var PITCH={pitch!r};
-        {_TTS_VOICE_JS}
+        {_tts_voice_js(language)}
         var b=document.getElementById('b'),t={payload};
-        var IDLE='\u25B6 Lire';
+        var IDLE='\u25B6 ' + {play};
         b.addEventListener('click',function(){{
           if(!('speechSynthesis' in window)){{
-            b.textContent='TTS indisponible';return;}}
+            b.textContent={unavail};return;}}
           if(b.dataset.on==='1'){{
             speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
           var u=new SpeechSynthesisUtterance(t);
@@ -235,7 +298,7 @@ def tts(text: str, language: str = "fr") -> None:
           speechSynthesis.cancel();
           try{{speechSynthesis.resume();}}catch(e){{}}
           speechSynthesis.speak(u);
-          b.dataset.on='1';b.textContent='\u25A0 Stop';
+          b.dataset.on='1';b.textContent='\u25A0 ' + {stop};
         }});
       </script>
     </body></html>"""
@@ -251,31 +314,28 @@ def verse_media(
     """Lecteur unique par verset : **deux actions, jamais de doublon**.
 
     - une **récitation** du verset par le récitateur choisi ;
-    - un **unique** bouton de synthèse vocale **en français** (voix ``fr-FR``
-      du navigateur), qui lit la première traduction française disponible.
+    - un **unique** bouton de synthèse vocale dans la langue d'interface active
+      (voix ``fr-FR`` ou ``en-US`` du navigateur), qui lit la première
+      traduction disponible dans cette langue.
 
     Tout est regroupé dans un seul iframe ``st.iframe`` (non sandboxé : la Web
-    Speech API s'y active normalement).
+    Speech API s'y active normalement). Aucun mélange de langues : les
+    traductions lues suivent la langue choisie.
     """
     show_audio = st.session_state.get("show_quran_audio", True)
     show_tts = st.session_state.get("show_tts", True)
 
-    fr_text = ""
+    lg = i18n.lang()
+    locale = i18n.ui_locale()
+    active_trans = translations_for_lang(translations)
+
+    tts_text = ""
     if show_tts:
-        fr_text = (
-            next(
-                (t["text"] for t in translations
-                 if t.get("language") == "fr" and t.get("text")),
-                None,
-            )
-            or next(
-                (t["text"] for t in translations if t.get("text")),
-                None,
-            )
-            or ""
+        tts_text = next(
+            (tr["text"] for tr in active_trans if tr.get("text")), ""
         )
 
-    if not show_audio and not fr_text:
+    if not show_audio and not tts_text:
         return
 
     pal = _palette()
@@ -291,45 +351,51 @@ def verse_media(
         title = html.escape(f"{reciter['label']} · {sura}:{aya}")
         rows.append(
             '<div class="row">'
-            '<button id="pp" title="Lecture / Pause">▶ Écouter</button>'
-            '<button id="st" title="Arrêter">■</button>'
+            f'<button id="pp" title="{html.escape(t("ui.listen_title"))}">'
+            f'\u25B6 {t("ui.listen")}</button>'
+            f'<button id="st" title="{html.escape(t("ui.stop_title"))}">\u25A0</button>'
             f'<span class="meta">{title}</span>'
             f'<audio id="au" preload="none" src="{url}"></audio>'
             "</div>"
         )
         listeners += """
         var au=document.getElementById('au');
+        var PLAY='\u25B6 ' + %s, PAUSE='\u275A\u275A ' + %s;
         document.getElementById('pp').addEventListener('click',function(){
-          if(au.paused){au.play();this.textContent='\u275A\u275A Pause';}
-          else{au.pause();this.textContent='\u25B6 \u00C9couter';}
+          if(au.paused){au.play();this.textContent=PAUSE;}
+          else{au.pause();this.textContent=PLAY;}
         });
         document.getElementById('st').addEventListener('click',function(){
           au.pause();au.currentTime=0;
-          document.getElementById('pp').textContent='\u25B6 \u00C9couter';});
+          document.getElementById('pp').textContent=PLAY;});
         au.addEventListener('ended',function(){
-          document.getElementById('pp').textContent='\u25B6 \u00C9couter';});
-        """
+          document.getElementById('pp').textContent=PLAY;});
+        """ % (
+            json.dumps(t("ui.listen"), ensure_ascii=False),
+            json.dumps(t("ui.pause"), ensure_ascii=False),
+        )
 
-    if fr_text:
-        payload = json.dumps(fr_text, ensure_ascii=False).replace("<", "\\u003c")
+    if tts_text:
+        payload = json.dumps(tts_text, ensure_ascii=False).replace("<", "\\u003c")
+        tts_button = t("ui.tts_button")
         rows.append(
             '<div class="row">'
-            '<button id="speak" title="Synthèse vocale française (fr-FR)">'
-            "▶ Écouter en français</button></div>"
+            f'<button id="speak" title="{html.escape(t("ui.speak_tooltip", locale=locale))}">'
+            f'\u25B6 {tts_button}</button></div>'
         )
         listeners += f"""
         var RATE={rate!r};var PITCH={pitch!r};
-        {_TTS_VOICE_JS}
+        {_tts_voice_js(lg)}
         var b=document.getElementById('speak');
-        var IDLE='\u25B6 \u00C9couter en fran\u00E7ais';
+        var IDLE='\u25B6 ' + {json.dumps(tts_button, ensure_ascii=False)};
         b.addEventListener('click',function(){{
           if(!('speechSynthesis' in window)){{
-            b.textContent='TTS indisponible';return;}}
+            b.textContent={json.dumps(t("ui.tts_unavail"), ensure_ascii=False)};return;}}
           if(b.dataset.on==='1'){{
             speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
           var u=new SpeechSynthesisUtterance({payload});
           var v=null;try{{v=qlPick();}}catch(e){{}}
-          if(v){{u.voice=v;u.lang=v.lang||'fr-FR';}}else{{u.lang='fr-FR';}}
+          if(v){{u.voice=v;u.lang=v.lang||{locale!r};}}else{{u.lang={locale!r};}}
           u.rate=RATE;u.pitch=PITCH;u.volume=1;
           var done=function(){{
             b.dataset.on='0';b.textContent=IDLE;}};
@@ -337,7 +403,7 @@ def verse_media(
           speechSynthesis.cancel();
           try{{speechSynthesis.resume();}}catch(e){{}}
           speechSynthesis.speak(u);
-          b.dataset.on='1';b.textContent='\u25A0 Arr\u00EAter';
+          b.dataset.on='1';b.textContent='\u25A0 ' + {json.dumps(t("ui.stop"), ensure_ascii=False)};
         }});
         """
 
@@ -368,28 +434,46 @@ def tts_settings() -> None:
     - **Débit / hauteur** : injectés dans chaque lecteur des versets ;
     - **choix de la voix** : le sélecteur est rempli par le navigateur
       lui-même (fini la « voix anglophone » qui épeille les lettres) ; le
-      choix est mémorisé dans ``localStorage``, partagé par les iframes
-      ``srcdoc`` non sandboxés du même onglet.
+      choix est mémorisé dans ``localStorage`` (une clé par langue), partagé
+      par les iframes ``srcdoc`` non sandboxés du même onglet.
     """
-    with st.expander("Paramètres de la synthèse vocale"):
+    with st.expander(t("ui.tts_settings")):
         st.slider(
-            "Débit", 0.5, 1.5, 1.0, 0.05, key="tts_rate",
-            help="Vitesse de lecture : 1.0 = normale.",
+            t("ui.rate"), 0.5, 1.5, 1.0, 0.05, key="tts_rate",
+            help=t("ui.rate_help"),
         )
         st.slider(
-            "Hauteur (ton)", 0.5, 2.0, 1.0, 0.05, key="tts_pitch",
-            help="Gravité de la voix : 1.0 = normale.",
+            t("ui.pitch"), 0.5, 2.0, 1.0, 0.05, key="tts_pitch",
+            help=t("ui.pitch_help"),
         )
-        st.caption(
-            "Si la lecture épeille les lettres, sélectionnez une voix "
-            "francophone ci-dessous puis cliquez *Appliquer*."
-        )
+        st.caption(t("ui.voice_hint", lang=_lang_name()))
         _voice_picker()
 
 
 def _voice_picker() -> None:
-    """Sélecteur de voix rempli par le navigateur, persistant par localStorage."""
+    """Sélecteur de voix rempli par le navigateur, persistant par localStorage.
+
+    La clé de stockage et les voix préférées suivent la langue d'interface
+    active (``ql_tts_voice_fr`` / ``ql_tts_voice_en``) : on ne mélange jamais
+    une voix francophone avec une lecture anglophone et inversement.
+    """
     pal = _palette()
+    lg = i18n.lang()
+    lname = _lang_name(lg)
+    ls_key = f"ql_tts_voice_{lg}"
+    label = t("ui.vl_label", lang=lname)
+    apply = json.dumps(t("ui.apply"), ensure_ascii=False)
+    auto = json.dumps(t("ui.auto"), ensure_ascii=False)
+    auto_opt = json.dumps(t("ui.auto_opt", lang=lname), ensure_ascii=False)
+    other = json.dumps(t("ui.other_voices"), ensure_ascii=False)
+    loading = json.dumps(t("ui.loading_voices"), ensure_ascii=False)
+    no_tts = json.dumps(t("ui.no_tts"), ensure_ascii=False)
+    found_tpl = json.dumps(t("ui.voices_found", n="{n}", lang=lname), ensure_ascii=False)
+    selected = json.dumps(t("ui.voice_selected", name="{name}"), ensure_ascii=False)
+    unavailable = json.dumps(t("ui.unavailable"), ensure_ascii=False)
+    then = json.dumps(
+        t("ui.then_listen", label=t("ui.tts_button")), ensure_ascii=False
+    )
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;
@@ -404,50 +488,56 @@ def _voice_picker() -> None:
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
       #info{{font-size:11px;color:{pal['fg2']};margin-top:3px;line-height:1.35;}}
     </style></head><body>
-      <label for="vl">Voix de synthèse (francophone de préférence)</label>
+      <label for="vl">{html.escape(label)}</label>
       <select id="vl"></select>
       <div>
-        <button id="ap">Appliquer</button>
-        <button id="au">Auto</button>
+        <button id="ap">{t("ui.apply")}</button>
+        <button id="au">{t("ui.auto")}</button>
       </div>
-      <div id="info">Chargement des voix…</div>
+      <div id="info">{t("ui.loading_voices")}</div>
       <script>
         var sel=document.getElementById('vl'),info=document.getElementById('info');
+        var LS_KEY={json.dumps(ls_key)};
         var ALL=[];
-        function read(){{try{{return window.localStorage.getItem('ql_tts_voice')||'';}}
+        function read(){{try{{return window.localStorage.getItem(LS_KEY)||'';}}
           catch(e){{return '';}}}}
-        function write(n){{try{{window.localStorage.setItem('ql_tts_voice',n);}}
+        function write(n){{try{{window.localStorage.setItem(LS_KEY,n);}}
           catch(e){{}}}}
-        function fr(v){{var l=(v.lang||'').replace(/_/g,'-').toLowerCase();
-          return l.indexOf('fr')===0||
-            (v.name||'').toLowerCase().indexOf('fran')>=0||
-            (v.name||'').toLowerCase().indexOf('french')>=0;}}
+        function matchLang(v){{var l=(v.lang||'').replace(/_/g,'-').toLowerCase();
+          return l.indexOf({json.dumps(_LG_MATCH.get(lg, 'fr'))})===0||
+            ({json.dumps(list(_LG_SUBS.get(lg, _LG_SUBS['fr'])))}).some(function(s){{
+              return (v.name||'').toLowerCase().indexOf(s)>=0;}});}}
+        var FOUND={found_tpl}, SEL={selected}, UNAV={unavailable},
+          THEN={then}, NO_TTS={no_tts}, AUTO={auto_opt},
+          OTHERS={other}, LOADING={loading};
+        function setInfo(n,selName){{info.textContent=
+          FOUND.replace('{{n}}',String(n))+(selName?
+          SEL.replace('{{name}}',selName):'')+THEN;}}
         function render(){{
           var curv=read();
           sel.innerHTML='';
           var auto=document.createElement('option');
-          auto.value='';auto.textContent='Auto (meilleure voix française)';
+          auto.value='';auto.textContent=AUTO;
           sel.appendChild(auto);
-          var frs=ALL.filter(fr).sort(function(a,b){{return (a.name||'')<(b.name||'')?-1:1;}});
-          var rest=ALL.filter(function(v){{return !fr(v);}})
+          var ls=ALL.filter(matchLang)
             .sort(function(a,b){{return (a.name||'')<(b.name||'')?-1:1;}});
-          frs.forEach(function(v){{var o=document.createElement('option');
+          var rest=ALL.filter(function(v){{return !matchLang(v);}})
+            .sort(function(a,b){{return (a.name||'')<(b.name||'')?-1:1;}});
+          ls.forEach(function(v){{var o=document.createElement('option');
             o.value=v.name;o.textContent=v.name+' \u2014 '+(v.lang||'');sel.appendChild(o);}});
           if(rest.length){{var g=document.createElement('optgroup');
-            g.label='Autres voix';rest.forEach(function(v){{
+            g.label=OTHERS;rest.forEach(function(v){{
               var o=document.createElement('option');
               o.value=v.name;o.textContent=v.name+' \u2014 '+(v.lang||'');g.appendChild(o);}});
             sel.appendChild(g);}}
           if(curv){{try{{sel.value=curv;}}catch(e){{}}}}
-          var selName=curv&&frs.some(function(v){{return v.name===curv;}})
-            ?curv:(curv?'(introuvable)':'Auto');
-          info.textContent=frs.length+' voix francophone(s) d\u00E9tect\u00E9e(s)'
-            +(curv?' \u2014 s\u00E9lectionn\u00E9e : '+selName:'')
-            +'. Puis \u00AB \u00C9couter en fran\u00E7ais \u00BB dans un verset.';
+          var selName=(curv&&ls.some(function(v){{return v.name===curv;}}))
+            ?curv:(curv?UNAV:'');
+          setInfo(ls.length,selName);
         }}
         function load(){{
           if(!('speechSynthesis' in window)){{
-            info.textContent='Synth\u00E8se vocale indisponible dans ce navigateur.';return;}}
+            info.textContent=NO_TTS;return;}}
           ALL=window.speechSynthesis.getVoices()||[];
           if(!ALL.length){{setTimeout(load,250);return;}}
           render();
@@ -478,27 +568,28 @@ def render_verse(
     puis, systématiquement, les traductions empilées.
 
     Si les préférences l'autorisent, un **lecteur de récitation** (verset) et un
-    **unique** bouton **de synthèse vocale en français** (voix ``fr-FR``)
-    sont ajoutés, regroupés en un seul composant. ``audio=False`` permet de
-    désactiver la récitation (ex. versets de contexte).
+    **unique** bouton **de synthèse vocale dans la langue active** (voix
+    ``fr-FR`` ou ``en-US``) sont ajoutés, regroupés en un seul composant.
+    ``audio=False`` permet de désactiver la récitation (ex. versets de contexte).
     """
     names = surah_names()
     ref = f"{sura}:{aya}"
     name = names.get(sura, "")
     show_audio = bool(audio) and st.session_state.get("show_quran_audio", True)
     show_tts = st.session_state.get("show_tts", True)
+    trans = translations_for_lang(translations)
     st.markdown(f"**{label or (f'{ref} — {name}' if name else ref)}**")
     st.markdown(
         f"<div dir='rtl' lang='ar' style='font-size:{font_size};"
         f"line-height:2.2;margin:.2rem 0 .5rem 0'>{text_uthmani}</div>",
         unsafe_allow_html=True,
     )
-    if show_audio or (show_tts and translations):
-        verse_media(sura, aya, translations)
-    if not translations:
-        st.caption("Aucune traduction disponible.")
-    for t in translations:
-        st.markdown(f"**{t['author']}** — {t['text']}")
+    if show_audio or (show_tts and trans):
+        verse_media(sura, aya, trans)
+    if not trans:
+        st.caption(t("ui.no_translation"))
+    for tr in trans:
+        st.markdown(f"**{tr['author']}** — {tr['text']}")
     if caption:
         st.caption(caption)
     st.divider()
@@ -516,16 +607,21 @@ def render_verses(con, refs) -> None:
 def render_root_results(con, res, limit_note: str | None = None) -> None:
     """Résumé + occurrences d'une racine (un expander par verset, formes listées)."""
     if not res.get("found"):
-        st.warning(f"Racine introuvable : {res.get('input', '')}")
+        st.warning(t("ui.root_notfound", q=res.get("input", "")))
         return
     st.markdown(
-        f"**Racine {res['root_arabic']}** `[{res['root_buckwalter']}]` — "
-        f"{res['count']} occurrence(s) dans {res['verses_count']} verset(s)"
+        t(
+            "ui.root_header",
+            ar=res["root_arabic"],
+            bw=res["root_buckwalter"],
+            n=res["count"],
+            v=res["verses_count"],
+        )
     )
     if limit_note:
         st.caption(limit_note)
     elif res["count"] >= 1000:
-        st.caption("Limite atteinte : 1000 premières occurrences affichées.")
+        st.caption(t("ui.limit_1000"))
 
     refs = [(o["sura"], o["aya"]) for o in res["occurrences"]]
     for o in res["occurrences"]:
@@ -559,8 +655,13 @@ def render_root_results(con, res, limit_note: str | None = None) -> None:
                 data.get("text_uthmani", occs[0]["text_uthmani"]),
                 data.get("translations", []),
                 caption=" · ".join(
-                    f"{o['form_arabic']} ({o['transliteration']}, {o['pos']}, "
-                    f"lemme {o['lemma_buckwalter']})"
+                    t(
+                        "ui.lemma_fmt",
+                        form=o["form_arabic"],
+                        trans=o["transliteration"],
+                        pos=o["pos"],
+                        lemma=o["lemma_buckwalter"],
+                    )
                     for o in occs
                 ),
             )
@@ -652,9 +753,10 @@ def occurrence_summary(con, query: str) -> dict | None:
 
 def counter_label(summary: dict) -> str:
     """Phrase du compteur : « N occurrence(s) trouvée(s) dans Y verset(s) »."""
-    return (
-        f"{summary['occurrences']} occurrence(s) trouvée(s) "
-        f"dans {summary['verses']} verset(s)"
+    return t(
+        "ui.counter",
+        n=summary["occurrences"],
+        v=summary["verses"],
     )
 
 
@@ -679,7 +781,7 @@ def _render_rows(con, rows) -> None:
 def universal_search(
     con,
     section_key: str,
-    placeholder: str = "Rechercher en français ou en arabe (ex. miséricorde / رحمة)…",
+    placeholder: str | None = None,
     default_limit: int = 50,
 ) -> None:
     """Champ de recherche universel réutilisé par tous les modules.
@@ -690,64 +792,62 @@ def universal_search(
     contextualisés dans la charte visuelle courante.
     """
     q = st.text_input(
-        "Recherche universelle (français ou arabe)",
+        t("ui.uni_label"),
         key=f"uni_{section_key}",
-        placeholder=placeholder,
+        placeholder=placeholder or t("ui.uni_placeholder"),
         label_visibility="collapsed",
     )
     if not q:
         return
 
-    with st.spinner("Recherche dans tout le Coran…"):
+    with st.spinner(t("ui.spinner")):
         summary = occurrence_summary(con, q)
 
     has_hits = summary and (
         summary["props"] or summary["ar_rows"] or summary["fr_rows"]
     )
     if not has_hits:
-        st.warning(
-            f"Aucune correspondance trouvée pour « {q} ». Essayez un autre mot "
-            "(français ou arabe) ou une racine (ex. رحم ou rHm)."
-        )
+        st.warning(t("ui.no_match", q=q))
         return
 
     # --- Compteur d'occurrences : toujours affiché ------------------------
     if summary["kind"] == "text":
-        st.success(
-            f"**{counter_label(summary)}** pour « {summary['query']} » "
-            f"(recherche textuelle arabe)."
-        )
+        st.success(t("ui.success_text", count=counter_label(summary), q=summary["query"]))
     elif summary["occurrences"]:
         st.success(
-            f"**{counter_label(summary)}** — à partir de "
-            f"{summary['roots']} racine(s) associée(s) à « {summary['query']} »."
+            t(
+                "ui.success_bridge",
+                count=counter_label(summary),
+                roots=summary["roots"],
+                q=summary["query"],
+            )
         )
     else:
         st.info(
-            f"Aucune racine associée automatiquement, mais « {summary['query']} » "
-            f"apparaît dans {summary['fr_verses']} verset(s) (traductions)."
+            t(
+                "ui.success_no_root",
+                q=summary["query"],
+                n=summary["fr_verses"],
+            )
         )
     if summary["fr_verses"]:
-        st.caption(
-            f"« {summary['query']} » figure aussi dans les traductions de "
-            f"{summary['fr_verses']} verset(s)."
-        )
+        st.caption(t("ui.also_trans", q=summary["query"], n=summary["fr_verses"]))
 
     # --- Correspondances (français → racines) -----------------------------
     if summary["props"]:
         with st.expander(
-            f"Correspondances français → arabe ({len(summary['props'])})",
+            t("ui.bridge_expander", n=len(summary["props"])),
             expanded=(summary["kind"] == "bridge"),
         ):
             html_table(
                 [
                     {
-                        "français": p["fr"],
-                        "racine": p["root_ar"],
-                        "buckwalter": p["root_bw"],
-                        "versets": p["verses"],
-                        "occurrences": p["occurrences"],
-                        "source": p["source"],
+                        t("ui.table_fr"): p["fr"],
+                        t("ui.table_root"): p["root_ar"],
+                        t("ui.table_bw"): p["root_bw"],
+                        t("ui.table_verses"): p["verses"],
+                        t("ui.table_occ"): p["occurrences"],
+                        t("ui.table_source"): p["source"],
                     }
                     for p in summary["props"]
                 ]
@@ -759,40 +859,43 @@ def universal_search(
         _render_rows(con, summary["ar_rows"])
         if summary["verses"] > len(summary["ar_rows"]):
             st.caption(
-                f"Limite atteinte : {len(summary['ar_rows'])} versets affichés "
-                f"sur {summary['verses']}."
+                t(
+                    "ui.limit_rows",
+                    shown=len(summary["ar_rows"]),
+                    total=summary["verses"],
+                )
             )
     elif summary["props"]:
         # Racine (arabe directe) ou passerelle française : explorer une racine.
         pick = st.selectbox(
-            "Racine à explorer",
+            t("ui.pick_root"),
             list(range(len(summary["props"]))),
             format_func=lambda i: (
                 f"{summary['props'][i]['root_ar']} "
                 f"[{summary['props'][i]['root_bw']}] — "
-                f"{summary['props'][i]['verses']} versets"
+                f"{summary['props'][i]['verses']} {t('app.word_verses')}"
             ),
             key=f"uni_pick_{section_key}",
         )
         limit = st.slider(
-            "Occurrences à afficher",
+            t("ui.occ_limit"),
             10, 500, default_limit,
             key=f"uni_limit_{section_key}",
         )
         res = search.search_root(con, summary["props"][pick]["root_bw"], limit=limit)
         note = None
         if res.get("found") and res["count"] >= limit:
-            note = (
-                f"Premières {res['count']} occurrences "
-                f"(limite réglée à {limit})."
-            )
+            note = t("ui.limit_props", n=res["count"], limit=limit)
         render_root_results(con, res, limit_note=note)
 
-    # --- Occurrences dans les traductions françaises -----------------------
+    # --- Occurrences dans les traductions de la langue active --------------
     if summary["fr_rows"]:
         with st.expander(
-            f"Versets où « {summary['query']} » figure dans les traductions "
-            f"({summary['fr_verses']})"
+            t(
+                "ui.verses_where",
+                q=summary["query"],
+                n=summary["fr_verses"],
+            )
         ):
             _render_rows(con, summary["fr_rows"])
 
@@ -813,7 +916,7 @@ def verse_picker(
     surahs = sorted(names) or list(range(1, 115))
     col_s, col_a = st.columns([3, 2])
     sura = col_s.selectbox(
-        "Sourate",
+        t("ui.surah"),
         surahs,
         index=surahs.index(default_sura) if default_sura in surahs else 0,
         format_func=lambda n: f"{n}. {names.get(n, '')}",
@@ -825,7 +928,7 @@ def verse_picker(
     default = default_aya if sura == default_sura else 1
     default = min(int(default), int(max_aya))
     aya = col_a.number_input(
-        "Verset",
+        t("ui.verse"),
         1,
         int(max_aya),
         default,
