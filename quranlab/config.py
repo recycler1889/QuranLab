@@ -229,3 +229,33 @@ MORPHOLOGY_URL = (
     "https://raw.githubusercontent.com/cltk/arabic_morphology_quranic-corpus"
     "/master/quranic-corpus-morphology-0.4.txt"
 )
+
+
+# --- Apprentissage : répétition espacée (SRS) + progression --------------
+# Fonctionnalité d'apprentissage du vocabulaire coranique (répétition espacée
+# type Anki, quiz de contexte, analyse des racines). La progression est
+# enregistrée localement dans ``data/learning.json`` (ignoré par git, comme les
+# favoris) : chaque déploiement garde la sienne, aucune donnée n'est envoyée
+# ailleurs. Mettre LEARN_ENABLED à False pour masquer l'onglet « Apprendre ».
+LEARN_ENABLED = True
+
+# Fichier de progression (cartes SRS, objectifs, journal quotidien).
+LEARNING_PATH = DATA_DIR / "learning.json"
+
+# Taille du lexique fréquent servant de référence au taux de maîtrise (%).
+LEARN_TOP_ROOTS = 300
+
+# Une carte est considérée « maîtrisée » après ce nombre de révisions réussies
+# en état « review » (échéance espacée).
+LEARN_MASTERY_REPS = 2
+
+# Intervalles d'apprentissage (minutes) pour une carte nouvellement introduite,
+# avant son passage en révision espacée (cf. ``srs.review``).
+LEARN_STEPS = (1, 10)
+
+# Objectifs quotidiens par défaut (paramétrables dans l'interface).
+LEARN_DEFAULT_DAILY_NEW = 5
+LEARN_DEFAULT_DAILY_REVIEW = 20
+
+# Nombre de propositions (bonne réponse + leurres) dans les quiz.
+LEARN_QUIZ_CHOICES = 4

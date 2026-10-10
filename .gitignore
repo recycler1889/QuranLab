@@ -21,6 +21,8 @@ data/raw/
 data/quran.db
 # Favoris (versets mis de côté), propres à chaque instance.
 data/bookmarks.json
+# Progression d'apprentissage (cartes SRS, objectifs), propre à chaque instance.
+data/learning.json
 # Modèles de voix Piper (~20-60 Mo chacune), téléchargés à la demande.
 data/piper/
 

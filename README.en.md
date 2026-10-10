@@ -286,3 +286,26 @@ Three palettes, applied dynamically by CSS injection (variables `--ql-*`):
 The CSS styles backgrounds, text, sidebar, tabs, fields, expanders and internal
 HTML tables (`table.ql`). Tables are generated in HTML (`html_table()`) rather
 than with `st.dataframe`, whose *canvas* view does not follow the themes.
+
+## 13. Learning — spaced repetition (*Learn* tab)
+
+Memorise **Qur'anic vocabulary** through spaced repetition (Anki-style), with no
+external dependency. Progress is stored locally in `data/learning.json` (git
+ignored, like bookmarks).
+
+- **Dashboard**: cards due, reviews and new cards today, day streak, mastered
+  roots and **frequent-lexicon coverage** (share of the `LEARN_TOP_ROOTS` most
+  common roots already mastered).
+- **Spaced repetition** (`quranlab/srs.py`): simplified SM-2
+  (`again` / `hard` / `good` / `easy`), states `new` → `learning` → `review`.
+  `quranlab/learning.py` persists cards, goals and the daily log.
+- **Context quiz** (`quranlab/quiz.py`): the target word is highlighted in its
+  verse; pick the right gloss among distractors. A second exercise asks to
+  **recognise the root** of a form. Answering updates the SRS.
+- **Word card / clickable words**: enabling *Clickable words* in the sidebar
+  makes every word in a verse clickable; the card shows form, root, lemma, part
+  of speech, Qur'anic **frequency** and gloss (`quranlab/vocab.py`).
+- **Configurable daily goals** (new words, reviews) and reminders.
+
+Can be disabled via `config.LEARN_ENABLED = False`.
+

@@ -293,3 +293,27 @@ La CSS habille les fonds, le texte, la sidebar, les onglets, les champs, les
 expanders et les tableaux HTML internes (`table.ql`). Les tableaux sont générés
 en HTML (`html_table()`) plutôt qu'avec `st.dataframe`, dont la vue *canvas* ne
 suit pas les thèmes.
+
+## 13. Apprentissage — répétition espacée (onglet *Apprendre*)
+
+Mémorisation du **vocabulaire coranique** par répétition espacée (type Anki),
+sans dépendance externe. La progression est stockée localement dans
+`data/learning.json` (ignoré par git, comme les favoris).
+
+- **Tableau de bord** : cartes à réviser, révisions et nouveautés du jour, série
+  de jours, racines maîtrisées et **couverture du lexique fréquent** (part des
+  `LEARN_TOP_ROOTS` racines les plus courantes déjà maîtrisées).
+- **Révision espacée** (`quranlab/srs.py`) : algorithme SM-2 simplifié
+  (`again` / `hard` / `good` / `easy`), états `new` → `learning` → `review`.
+  `quranlab/learning.py` persiste les cartes, les objectifs et le journal.
+- **Quiz de contexte** (`quranlab/quiz.py`) : le mot cible est surligné dans son
+  verset ; il faut choisir la bonne glose parmi des leurres. Un second exercice
+  fait **reconnaître la racine** d'une forme. Répondre met à jour le SRS.
+- **Fiche mot / mots cliquables** : en activant *Mots cliquables* dans la barre
+  latérale, chaque mot d'un verset devient cliquable ; la fiche affiche forme,
+  racine, lemme, catégorie grammaticale, **fréquence** coranique et glose
+  (`quranlab/vocab.py`).
+- **Objectifs quotidiens paramétrables** (nouveaux mots, révisions) et rappels.
+
+Désactivable via `config.LEARN_ENABLED = False`.
+

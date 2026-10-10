@@ -8,7 +8,7 @@ import sqlite3
 
 import streamlit as st
 
-from quranlab import bookmarks, config, db, i18n, onboarding, search, ui
+from quranlab import bookmarks, config, db, i18n, learn_ui, onboarding, search, ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -57,6 +57,16 @@ with st.sidebar:
     if st.session_state.get("show_tts", True):
         ui.tts_settings()
 
+    if config.LEARN_ENABLED:
+        st.subheader(t("app.tab.learn"))
+        st.checkbox(
+            t("learn.words_clickable"),
+            value=False,
+            key="learn_clickable",
+            help=t("learn.words_clickable_help"),
+        )
+        learn_ui.learning_settings()
+
     st.divider()
     st.caption(t("app.caption_scope"))
     st.divider()
@@ -103,6 +113,11 @@ try:
 except Exception as exc:  # noqa: BLE001
     st.error(f"{t('app.con')}: {exc}")
     st.stop()
+
+# Fiche du mot sélectionné (clic sur un mot cliquable) — au-dessus des onglets,
+# afin d'être visible quelle que soit la section consultée.
+if config.LEARN_ENABLED:
+    learn_ui.word_inspector(con)
 
 
 # --------------------------------------------------------------------------
@@ -160,7 +175,7 @@ with st.sidebar:
     )
 
 
-tab_read, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, tab_cross, tab_bm = st.tabs(
+tab_read, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, tab_cross, tab_bm, tab_learn = st.tabs(
     [
         t("app.tab.read"),
         t("app.tab.root"),
@@ -171,6 +186,7 @@ tab_read, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, 
         t("app.tab.concord"),
         t("app.tab.cross"),
         t("app.tab.bookmarks"),
+        t("app.tab.learn"),
     ]
 )
 
@@ -225,10 +241,12 @@ with tab_read:
     ui.continuous_player(_verses)
 
     _per_media = (_hi - _lo + 1) <= 50 or _force_media
+    _clickable = bool(st.session_state.get("learn_clickable")) and config.LEARN_ENABLED
     for _v in _verses:
         render_verse(
             _v["sura"], _v["aya"], _v["text_uthmani"], _v["translations"],
             bookmark=True, media=_per_media,
+            interactive=_clickable, con=con,
         )
 
 
@@ -1000,3 +1018,7 @@ with tab_bm:
             bookmarks.clear()
             st.success(t("app.bm_cleared"))
             st.rerun()
+
+# ---------------------------------------------------------------- Apprendre
+with tab_learn:
+    learn_ui.render_tab(con)

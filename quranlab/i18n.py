@@ -436,6 +436,82 @@ _FR = {
         "Le soutien est facultatif et n'ouvre accès à aucun contenu "
         "supplémentaire."
     ),
+    "app.tab.learn": "Apprendre",
+    "learn.title": "Apprendre le vocabulaire du Coran",
+    "learn.caption": (
+        "Répétition espacée : mémorisez les racines les plus fréquentes et "
+        "révisez-les au bon moment."
+    ),
+    "learn.disabled": "Le module d'apprentissage est désactivé.",
+    "learn.dashboard": "Tableau de bord",
+    "learn.m_due": "À réviser",
+    "learn.m_reviews_today": "Révisions aujourd'hui",
+    "learn.m_new_today": "Nouveaux aujourd'hui",
+    "learn.m_streak": "Jours d'affilée",
+    "learn.m_mastered": "Racines maîtrisées",
+    "learn.m_coverage": "Couverture du lexique fréquent",
+    "learn.coverage_fmt": "{n} / {total} racines fréquentes maîtrisées",
+    "learn.coverage_na": "Couverture non disponible.",
+    "learn.goals_header": "Objectifs quotidiens",
+    "learn.goal_new": "Nouveaux mots par jour",
+    "learn.goal_review": "Révisions par jour",
+    "learn.reminders": "Activer les rappels",
+    "learn.reminders_help": "Affiche un rappel quand des cartes sont à réviser.",
+    "learn.settings_saved": "Objectifs enregistrés.",
+    "learn.start": "Commencer la révision",
+    "learn.reviewing": "Révision en cours",
+    "learn.progress": "Carte {i} / {n}",
+    "learn.show_answer": "Voir la réponse",
+    "learn.answer": "Réponse",
+    "learn.again": "À revoir",
+    "learn.hard": "Difficile",
+    "learn.good": "Bien",
+    "learn.easy": "Facile",
+    "learn.no_due": (
+        "Aucune carte à réviser pour l'instant. Revenez plus tard ou lancez "
+        "un quiz."
+    ),
+    "learn.next_due": "Prochaine échéance : {when}",
+    "learn.queue_empty": (
+        "Aucune carte disponible. Ajoutez des mots depuis la lecture."
+    ),
+    "learn.finished": "Session terminée. Bravo !",
+    "learn.quiz_title": "Quiz de contexte",
+    "learn.quiz_intro": (
+        "Choisissez le sens de la racine surlignée dans ce verset."
+    ),
+    "learn.quiz_root_title": "Reconnaissance de racine",
+    "learn.quiz_root_intro": "À quelle racine appartient cette forme ?",
+    "learn.quiz_root_prompt": "Racine de la forme {form} ({tr}) ?",
+    "learn.quiz_context_prompt": "Sens de la racine {root} surlignée ?",
+    "learn.quiz_submit": "Valider",
+    "learn.quiz_correct": "Correct !",
+    "learn.quiz_wrong": "Incorrect. Réponse : {ans}",
+    "learn.quiz_another": "Autre question",
+    "learn.quiz_none": "Pas assez de données pour générer un quiz.",
+    "learn.add_card": "Ajouter à la révision",
+    "learn.added": "Ajouté à la révision.",
+    "learn.inspect_title": "Mot sélectionné",
+    "learn.inspect_form": "Forme",
+    "learn.inspect_root": "Racine",
+    "learn.inspect_lemma": "Lemme",
+    "learn.inspect_pos": "Catégorie grammaticale",
+    "learn.inspect_gloss": "Glose",
+    "learn.inspect_freq_form": "Cette forme : {n} fois",
+    "learn.inspect_freq_lemma": "Ce lemme : {n} fois",
+    "learn.inspect_freq_root": "Racine : {n} occurrences dans {v} versets",
+    "learn.inspect_root_forms": "Autres formes de la racine",
+    "learn.close": "Fermer",
+    "learn.click_hint": (
+        "Astuce : cliquez un mot d'un verset pour voir sa racine et sa "
+        "fréquence."
+    ),
+    "learn.sort_verses": "Versets",
+    "learn.words_clickable": "Mots cliquables",
+    "learn.words_clickable_help": (
+        "Rendre chaque mot des versets cliquable (ouvre la fiche du mot)."
+    ),
+    "learn.no_vocab": "Lexique indisponible.",
 }
 
 _EN = {
@@ -815,6 +891,80 @@ _EN = {
     "app.donate_note": (
         "Support is optional and grants access to no additional content."
     ),
+    "app.tab.learn": "Learn",
+    "learn.title": "Learn Qur'anic vocabulary",
+    "learn.caption": (
+        "Spaced repetition: memorise the most frequent roots and review them "
+        "at the right time."
+    ),
+    "learn.disabled": "The learning module is disabled.",
+    "learn.dashboard": "Dashboard",
+    "learn.m_due": "Due",
+    "learn.m_reviews_today": "Reviews today",
+    "learn.m_new_today": "New today",
+    "learn.m_streak": "Day streak",
+    "learn.m_mastered": "Mastered roots",
+    "learn.m_coverage": "Frequent-lexicon coverage",
+    "learn.coverage_fmt": "{n} / {total} frequent roots mastered",
+    "learn.coverage_na": "Coverage unavailable.",
+    "learn.goals_header": "Daily goals",
+    "learn.goal_new": "New words per day",
+    "learn.goal_review": "Reviews per day",
+    "learn.reminders": "Enable reminders",
+    "learn.reminders_help": "Show a reminder when cards are due.",
+    "learn.settings_saved": "Goals saved.",
+    "learn.start": "Start review",
+    "learn.reviewing": "Review in progress",
+    "learn.progress": "Card {i} / {n}",
+    "learn.show_answer": "Show answer",
+    "learn.answer": "Answer",
+    "learn.again": "Again",
+    "learn.hard": "Hard",
+    "learn.good": "Good",
+    "learn.easy": "Easy",
+    "learn.no_due": (
+        "No cards due right now. Come back later or take a quiz."
+    ),
+    "learn.next_due": "Next due: {when}",
+    "learn.queue_empty": (
+        "No card available. Add words from reading."
+    ),
+    "learn.finished": "Session complete. Well done!",
+    "learn.quiz_title": "Context quiz",
+    "learn.quiz_intro": (
+        "Choose the meaning of the highlighted root in this verse."
+    ),
+    "learn.quiz_root_title": "Root recognition",
+    "learn.quiz_root_intro": "Which root does this form belong to?",
+    "learn.quiz_root_prompt": "Root of the form {form} ({tr})?",
+    "learn.quiz_context_prompt": "Meaning of the highlighted root {root}?",
+    "learn.quiz_submit": "Submit",
+    "learn.quiz_correct": "Correct!",
+    "learn.quiz_wrong": "Wrong. Answer: {ans}",
+    "learn.quiz_another": "Another question",
+    "learn.quiz_none": "Not enough data to build a quiz.",
+    "learn.add_card": "Add to review",
+    "learn.added": "Added to review.",
+    "learn.inspect_title": "Selected word",
+    "learn.inspect_form": "Form",
+    "learn.inspect_root": "Root",
+    "learn.inspect_lemma": "Lemma",
+    "learn.inspect_pos": "Part of speech",
+    "learn.inspect_gloss": "Gloss",
+    "learn.inspect_freq_form": "This form: {n} times",
+    "learn.inspect_freq_lemma": "This lemma: {n} times",
+    "learn.inspect_freq_root": "Root: {n} occurrences in {v} verses",
+    "learn.inspect_root_forms": "Other forms of the root",
+    "learn.close": "Close",
+    "learn.click_hint": (
+        "Tip: click a word in a verse to see its root and frequency."
+    ),
+    "learn.sort_verses": "Verses",
+    "learn.words_clickable": "Clickable words",
+    "learn.words_clickable_help": (
+        "Make every word in verses clickable (opens the word card)."
+    ),
+    "learn.no_vocab": "Lexicon unavailable.",
 }
 
 # --- API ------------------------------------------------------------------

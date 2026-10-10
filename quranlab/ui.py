@@ -928,6 +928,19 @@ def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
         st.rerun()
 
 
+def _word_link(sura: int, aya: int, word_index: int, form: str) -> str:
+    """Un mot d'un verset rendu comme lien vers l'inspecteur (query param)."""
+    href = f"?appw={int(sura)}:{int(aya)}:{int(word_index)}"
+    style = (
+        "color:inherit;text-decoration:none;"
+        "border-bottom:1px dotted currentColor;cursor:pointer"
+    )
+    return (
+        f"<a class='ql-word' href='{href}' target='_self' style='{style}'>"
+        f"{html.escape(form)}</a>"
+    )
+
+
 def render_verse(
     sura: int,
     aya: int,
@@ -939,6 +952,8 @@ def render_verse(
     audio: bool = True,
     bookmark: bool = False,
     media: bool = True,
+    interactive: bool = False,
+    con=None,
 ) -> None:
     """Affiche un verset : référence (avec nom de sourate), texte arabe uthmani
     puis, systématiquement, les traductions empilées.
@@ -948,6 +963,9 @@ def render_verse(
     ``fr-FR`` ou ``en-US``) sont ajoutés, regroupés en un seul composant.
     ``audio=False`` permet de désactiver la récitation (ex. versets de contexte).
     ``bookmark=True`` ajoute un bouton d'ajout / retrait des favoris.
+    ``interactive=True`` (avec ``con`` fourni) rend chaque mot du verset
+    **cliquable** : un clic ouvre la fiche du mot (racine, fréquence, glose)
+    via le paramètre d'URL ``appw``.
     """
     names = surah_names()
     ref = f"{sura}:{aya}"
@@ -956,9 +974,22 @@ def render_verse(
     show_tts = st.session_state.get("show_tts", True)
     trans = translations_for_lang(translations)
     st.markdown(f"**{label or (f'{ref} — {name}' if name else ref)}**")
+
+    tokens = []
+    if interactive and con is not None:
+        from . import vocab as vocab_mod  # import local : évite tout cycle
+
+        tokens = vocab_mod.verse_tokens(con, sura, aya)
+    if tokens:
+        body = " ".join(
+            _word_link(sura, aya, t["word_index"], t["form_arabic"])
+            for t in tokens
+        )
+    else:
+        body = html.escape(text_uthmani)
     st.markdown(
         f"<div dir='rtl' lang='ar' style='font-size:{font_size};"
-        f"line-height:2.2;margin:.2rem 0 .5rem 0'>{text_uthmani}</div>",
+        f"line-height:2.2;margin:.2rem 0 .5rem 0'>{body}</div>",
         unsafe_allow_html=True,
     )
     if media and (show_audio or (show_tts and trans)):
