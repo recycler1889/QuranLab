@@ -98,9 +98,14 @@ def audio_url(edition: str, sura: int, aya: int) -> str:
 
 
 # --- Suggestions d'amélioration ------------------------------------------
-# Laisser vide pour n'afficher qu'un texte d'invitation ; y placer l'URL du
-# dépôt (ou d'un formulaire) pour proposer un lien cliquable.
-SUGGESTIONS_URL = ""
+# Adresse e-mail de contact pour recueillir les propositions d'amélioration.
+SUGGESTIONS_EMAIL = "kylemarks5522@gmail.com"
+# Lien d'action affiché : mailto pré-rempli. Une URL de dépôt ou de formulaire
+# peut aussi être utilisée ici.
+SUGGESTIONS_URL = (
+    f"mailto:{SUGGESTIONS_EMAIL}"
+    "?subject=Suggestion%20d%27am%C3%A9lioration%20pour%20QuranLab"
+)
 
 
 # --- Morphologie / racines (Quranic Arabic Corpus, Kais Dukes) -----------

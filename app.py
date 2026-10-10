@@ -64,7 +64,10 @@ with st.sidebar:
             "d'ergonomie : **faites-nous en part**."
         )
         if config.SUGGESTIONS_URL:
-            st.markdown(f"[Proposer une amélioration]({config.SUGGESTIONS_URL})")
+            st.markdown(
+                f"[Écrivez-nous : {config.SUGGESTIONS_EMAIL}]"
+                f"({config.SUGGESTIONS_URL})"
+            )
         else:
             st.caption(
                 "Voir la section du même nom dans le guide de démarrage."

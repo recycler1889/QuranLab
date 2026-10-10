@@ -135,7 +135,10 @@ def css(name: str) -> str:
     sel_bg = _rgba(p["accent"], 0.28)
     return f"""
 <style>
-:root {{
+:root, html, body, .stApp,
+[data-testid="stApp"], [data-testid="stAppViewContainer"],
+[data-testid="stSidebar"] {{
+    /* Palette QuranLab : composants internes (bandeau, tableaux, ornements) */
     --ql-bg: {p['bg']};
     --ql-bg2: {p['bg2']};
     --ql-field: {p['field']};
@@ -146,6 +149,23 @@ def css(name: str) -> str:
     --ql-ornament: url("{ornament}");
     --ql-font: {FONT_STACK};
     --ql-font-ar: {ARABIC_STACK};
+
+    /* Remappage des variables NATIVES de Streamlit (préfixe `--st-`, cf.
+       Streamlit 1.58). Tout composant natif — fenêtres modales (st.dialog),
+       menus, expanders, alertes, saisies, titres — tire désormais fond ET
+       texte de la MÊME palette : contraste garanti sur les trois modes. C'est
+       le mécanisme officiel de personnalisation du thème. */
+    --st-background-color: {p['bg']} !important;
+    --st-secondary-background-color: {p['bg2']} !important;
+    --st-text-color: {p['fg']} !important;
+    --st-heading-color: {p['fg']} !important;
+    --st-primary-color: {p['accent']} !important;
+    --st-link-color: {p['accent']} !important;
+    --st-border-color: {p['border']} !important;
+    --st-code-background-color: {p['bg2']} !important;
+    --st-code-text-color: {p['fg']} !important;
+    --st-font: {FONT_STACK} !important;
+    --st-heading-font: {FONT_STACK} !important;
 }}
 
 /* Typographie : la police est posée sur le conteneur puis héritée. On évite
@@ -178,15 +198,19 @@ def css(name: str) -> str:
     background-color: var(--ql-bg2) !important;
 }}
 
-/* Texte */
-.stApp, .stApp p, .stApp li, .stApp label,
-.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
-.stApp .stMarkdown, [data-testid="stSidebar"] {{
-    color: var(--ql-fg);
-}}
-.stApp h1, .stApp h2, .stApp h3 {{ color: var(--ql-fg) !important; }}
+/* Accents uniquement, complétés par un recolorage du TEXTE du contenu : la
+   coloration du texte Streamlit vient d'un thème JS (pas de variables CSS),
+   on force donc explicitement la couleur du contenu, TOUJOURS en cohérence
+   avec le fond forcé (clair/sombre), pour un contraste garanti. */
 a, a:visited {{ color: var(--ql-accent) !important; }}
 ::selection {{ background: {sel_bg}; }}
+
+/* Texte du contenu principal (hors dialogues) */
+.stApp p, .stApp li, .stApp label, .stApp caption,
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+.stApp .stMarkdown, .stApp [data-testid="stMarkdownContainer"] {{
+    color: var(--ql-fg);
+}}
 
 /* Champs de saisie et sélecteurs */
 input, textarea,
@@ -196,7 +220,6 @@ input, textarea,
     color: var(--ql-fg) !important;
     border-color: var(--ql-border) !important;
 }}
-[data-baseweb="select"] * {{ color: var(--ql-fg) !important; }}
 [data-baseweb="popover"], [role="listbox"], [role="option"] {{
     background-color: var(--ql-bg2) !important;
     color: var(--ql-fg) !important;
@@ -272,8 +295,7 @@ table.ql th, table.ql td {{
 table.ql th {{ background-color: var(--ql-bg2); }}
 table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
 
-/* Tableaux de données natifs (repli, la vue canvas reste limitée) */
-[data-testid="stDataFrame"] {{ color: var(--ql-fg) !important; }}
+/* Tableaux de données natifs : rien à forcer, le texte suit --text-color. */
 
 /* --- Bandeau d'en-tête (banner) à l'esprit calligraphique ---------------- */
 .ql-banner {{
@@ -322,26 +344,28 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     padding-bottom: .25rem;
 }}
 
-/* --- Modale st.dialog : couleurs du thème courant (jamais texte sombre sur
-   fond sombre ou clair sur clair, quel que soit le mode) ----------------- */
-[data-testid*="Dialog"], [class*="stDialog"] {{
-    color: var(--ql-fg) !important;
-    background-color: var(--ql-bg) !important;
-}}
-[data-testid*="Dialog"] p, [data-testid*="Dialog"] li, [data-testid*="Dialog"] label,
-[data-testid*="Dialog"] span, [data-testid*="Dialog"] h1, [data-testid*="Dialog"] h2,
-[data-testid*="Dialog"] h3, [data-testid*="Dialog"] h4, [data-testid*="Dialog"] .stMarkdown,
-[data-testid*="Dialog"] code, [data-testid*="Dialog"] caption {{
+/* --- Modale st.dialog ---
+   Streamlit colore la fenêtre (panneau `[data-testid="stDialog"]`) avec le
+   thème JS ; on remplace fond ET texte de la palette courante, appariés, pour
+   un contraste garanti quel que soit le mode (Clair / Intermédiaire / Sombre).
+   `background` (raccourci) l'emporte sur le fond natif du panneau. */
+[data-testid="stDialog"] {{
+    background: var(--ql-bg) !important;
     color: var(--ql-fg) !important;
 }}
-[data-testid*="Dialog"] [data-testid="stExpander"] {{
+[data-testid="stDialog"] p, [data-testid="stDialog"] li,
+[data-testid="stDialog"] label, [data-testid="stDialog"] caption,
+[data-testid="stDialog"] h1, [data-testid="stDialog"] h2,
+[data-testid="stDialog"] h3, [data-testid="stDialog"] h4,
+[data-testid="stDialog"] h5, [data-testid="stDialog"] h6,
+[data-testid="stDialog"] .stMarkdown,
+[data-testid="stDialog"] [data-testid="stMarkdownContainer"] {{
+    color: var(--ql-fg) !important;
+}}
+[data-testid="stDialog"] [data-testid="stExpander"] {{
     background-color: var(--ql-bg2) !important;
     color: var(--ql-fg) !important;
 }}
-[data-testid*="Dialog"] input, [data-testid*="Dialog"] textarea {{
-    color: var(--ql-fg) !important;
-    background-color: var(--ql-field) !important;
-}}
-[data-testid*="Dialog"] hr {{ border-color: var(--ql-border) !important; }}
+[data-testid="stDialog"] hr {{ border-color: var(--ql-border) !important; }}
 </style>
 """

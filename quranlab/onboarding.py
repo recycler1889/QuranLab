@@ -139,8 +139,8 @@ AUDIO = {
 SUGGESTIONS = (
     "**Suggestions d'amélioration** — QuranLab évolue au fil des usages. "
     "Idées, incohérences, sources à ajouter, nouveaux récitateurs ou langues, "
-    "améliorations d'ergonomie : **faites-nous en part**. Cette section "
-    "accueille vos propositions."
+    "améliorations d'ergonomie : **faites-nous en part** par "
+    "**kylemarks5522@gmail.com**."
 )
 
 
