@@ -141,6 +141,47 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
     st.iframe(comp, height=36)
 
 
+_TTS_VOICE_JS = r"""
+var VOICES = window.speechSynthesis ? (window.speechSynthesis.getVoices() || []) : [];
+if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = function() {
+    VOICES = window.speechSynthesis.getVoices() || VOICES;
+  };
+}
+function qlFr(v) {
+  if (!v) { return false; }
+  var l = (v.lang || '').replace(/_/g, '-').toLowerCase();
+  return l.indexOf('fr') === 0 ||
+    (v.name || '').toLowerCase().indexOf('fran') >= 0 ||
+    (v.name || '').toLowerCase().indexOf('french') >= 0;
+}
+function qlPick() {
+  var chosen = null;
+  try { chosen = window.localStorage.getItem('ql_tts_voice') || null; }
+  catch (e) { chosen = null; }
+  if (chosen) {
+    var m = VOICES.filter(function(v) { return v.name === chosen; });
+    if (m.length) { return m[0]; }
+  }
+  var fr = VOICES.filter(qlFr);
+  if (!fr.length) { return null; }
+  var PREF = ['google franc', 'microso', 'hortense', 'julie', 'denise',
+    'aurore', 'pauline', 'amelie', 'am', 'virginie', 'audrey', 'samantha'];
+  for (var j = 0; j < PREF.length; j++) {
+    var h = fr.filter(function(v) {
+      return (v.name || '').toLowerCase().indexOf(PREF[j]) >= 0;
+    });
+    if (h.length) { return h[0]; }
+  }
+  var exact = fr.filter(function(v) {
+    return (v.lang || '').replace(/_/g, '-').toLowerCase() === 'fr-fr';
+  });
+  if (exact.length) { return exact[0]; }
+  return fr[0];
+}
+"""
+
+
 def tts(text: str, language: str = "fr") -> None:
     """Bouton de synthèse vocale (Web Speech API du navigateur) d'un texte.
 
@@ -151,6 +192,8 @@ def tts(text: str, language: str = "fr") -> None:
     """
     pal = _palette()
     locale = config.tts_locale(language)
+    rate = float(st.session_state.get("tts_rate", 1.0))
+    pitch = float(st.session_state.get("tts_pitch", 1.0))
     # json.dumps → littéral JS sûr ; « < » échappé pour ne pas clore </script>.
     payload = json.dumps(text or "", ensure_ascii=False).replace("<", "\\u003c")
     comp = f"""
@@ -166,18 +209,24 @@ def tts(text: str, language: str = "fr") -> None:
       <button id="b" title="Lire à voix haute ({locale})">
         &#9654; Lire</button>
       <script>
+        var RATE={rate!r};var PITCH={pitch!r};
+        {_TTS_VOICE_JS}
         var b=document.getElementById('b'),t={payload};
+        var IDLE='\u25B6 Lire';
         b.addEventListener('click',function(){{
           if(!('speechSynthesis' in window)){{
             b.textContent='TTS indisponible';return;}}
           if(b.dataset.on==='1'){{
-            speechSynthesis.cancel();
-            b.dataset.on='0';b.textContent='\u25B6 Lire';return;}}
+            speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
           var u=new SpeechSynthesisUtterance(t);
-          u.lang='{locale}';u.rate=0.98;
-          u.onend=function(){{
-            b.dataset.on='0';b.textContent='\u25B6 Lire';}};
-          speechSynthesis.cancel();speechSynthesis.speak(u);
+          var v=null;try{{v=qlPick();}}catch(e){{}}
+          if(v){{u.voice=v;u.lang=v.lang||{locale!r};}}else{{u.lang={locale!r};}}
+          u.rate=RATE;u.pitch=PITCH;u.volume=1;
+          var done=function(){{b.dataset.on='0';b.textContent=IDLE;}};
+          u.onend=done;u.onerror=done;
+          speechSynthesis.cancel();
+          try{{speechSynthesis.resume();}}catch(e){{}}
+          speechSynthesis.speak(u);
           b.dataset.on='1';b.textContent='\u25A0 Stop';
         }});
       </script>
@@ -223,6 +272,8 @@ def verse_media(
 
     pal = _palette()
     reciter = reciter or active_reciter()
+    rate = float(st.session_state.get("tts_rate", 1.0))
+    pitch = float(st.session_state.get("tts_pitch", 1.0))
 
     rows = []
     listeners = ""
@@ -259,35 +310,27 @@ def verse_media(
             "▶ Écouter en français</button></div>"
         )
         listeners += f"""
+        var RATE={rate!r};var PITCH={pitch!r};
+        {_TTS_VOICE_JS}
         var b=document.getElementById('speak');
+        var IDLE='\u25B6 \u00C9couter en fran\u00E7ais';
         b.addEventListener('click',function(){{
           if(!('speechSynthesis' in window)){{
             b.textContent='TTS indisponible';return;}}
           if(b.dataset.on==='1'){{
-            speechSynthesis.cancel();b.dataset.on='0';
-            b.textContent='\u25B6 \u00C9couter en fran\u00E7ais';return;}}
+            speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
           var u=new SpeechSynthesisUtterance({payload});
-          u.lang='fr-FR';u.rate=0.98;u.pitch=1;
-          var vs=speechSynthesis.getVoices();
-          var v=vs.find(function(x){{
-            return x.lang&&x.lang.toLowerCase()==='fr-fr';}})
-            || vs.find(function(x){{
-              return x.lang&&x.lang.toLowerCase().indexOf('fr')===0;}})
-            || null;
-          if(v){{u.voice=v;}}
+          var v=null;try{{v=qlPick();}}catch(e){{}}
+          if(v){{u.voice=v;u.lang=v.lang||'fr-FR';}}else{{u.lang='fr-FR';}}
+          u.rate=RATE;u.pitch=PITCH;u.volume=1;
           var done=function(){{
-            b.dataset.on='0';
-            b.textContent='\u25B6 \u00C9couter en fran\u00E7ais';}};
+            b.dataset.on='0';b.textContent=IDLE;}};
           u.onend=done;u.onerror=done;
           speechSynthesis.cancel();
-          speechSynthesis.resume();
+          try{{speechSynthesis.resume();}}catch(e){{}}
           speechSynthesis.speak(u);
           b.dataset.on='1';b.textContent='\u25A0 Arr\u00EAter';
         }});
-        if(speechSynthesis.onvoiceschanged!==undefined){{
-          speechSynthesis.onvoiceschanged=function(){{
-            speechSynthesis.getVoices();}};
-        }}
         """
 
     comp = f"""
@@ -309,6 +352,108 @@ def verse_media(
       </script>
     </body></html>"""
     st.iframe(comp, height=34 + len(rows) * 27)
+
+
+def tts_settings() -> None:
+    """Réglages accessibles de la synthèse vocale (sidebar).
+
+    - **Débit / hauteur** : injectés dans chaque lecteur des versets ;
+    - **choix de la voix** : le sélecteur est rempli par le navigateur
+      lui-même (fini la « voix anglophone » qui épeille les lettres) ; le
+      choix est mémorisé dans ``localStorage``, partagé par les iframes
+      ``srcdoc`` non sandboxés du même onglet.
+    """
+    with st.expander("Paramètres de la synthèse vocale"):
+        st.slider(
+            "Débit", 0.5, 1.5, 1.0, 0.05, key="tts_rate",
+            help="Vitesse de lecture : 1.0 = normale.",
+        )
+        st.slider(
+            "Hauteur (ton)", 0.5, 2.0, 1.0, 0.05, key="tts_pitch",
+            help="Gravité de la voix : 1.0 = normale.",
+        )
+        st.caption(
+            "Si la lecture épeille les lettres, sélectionnez une voix "
+            "francophone ci-dessous puis cliquez *Appliquer*."
+        )
+        _voice_picker()
+
+
+def _voice_picker() -> None:
+    """Sélecteur de voix rempli par le navigateur, persistant par localStorage."""
+    pal = _palette()
+    comp = f"""
+    <!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      html,body{{margin:0;padding:0;background:transparent;
+        font-family:system-ui,"Segoe UI",sans-serif;}}
+      label{{display:block;font-size:11px;color:{pal['fg2']};margin:2px 0;}}
+      select{{width:100%;height:26px;font-size:12px;color:{pal['fg']};
+        background:{pal['field']};border:1px solid {pal['border']};
+        border-radius:6px;padding:0 4px;margin-bottom:4px;}}
+      button{{cursor:pointer;height:24px;padding:0 9px;font-size:11.5px;
+        border:1px solid {pal['border']};border-radius:999px;
+        background:{pal['field']};color:{pal['fg']};margin:1px 2px 1px 0;}}
+      button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
+      #info{{font-size:11px;color:{pal['fg2']};margin-top:3px;line-height:1.35;}}
+    </style></head><body>
+      <label for="vl">Voix de synthèse (francophone de préférence)</label>
+      <select id="vl"></select>
+      <div>
+        <button id="ap">Appliquer</button>
+        <button id="au">Auto</button>
+      </div>
+      <div id="info">Chargement des voix…</div>
+      <script>
+        var sel=document.getElementById('vl'),info=document.getElementById('info');
+        var ALL=[];
+        function read(){{try{{return window.localStorage.getItem('ql_tts_voice')||'';}}
+          catch(e){{return '';}}}}
+        function write(n){{try{{window.localStorage.setItem('ql_tts_voice',n);}}
+          catch(e){{}}}}
+        function fr(v){{var l=(v.lang||'').replace(/_/g,'-').toLowerCase();
+          return l.indexOf('fr')===0||
+            (v.name||'').toLowerCase().indexOf('fran')>=0||
+            (v.name||'').toLowerCase().indexOf('french')>=0;}}
+        function render(){{
+          var curv=read();
+          sel.innerHTML='';
+          var auto=document.createElement('option');
+          auto.value='';auto.textContent='Auto (meilleure voix française)';
+          sel.appendChild(auto);
+          var frs=ALL.filter(fr).sort(function(a,b){{return (a.name||'')<(b.name||'')?-1:1;}});
+          var rest=ALL.filter(function(v){{return !fr(v);}})
+            .sort(function(a,b){{return (a.name||'')<(b.name||'')?-1:1;}});
+          frs.forEach(function(v){{var o=document.createElement('option');
+            o.value=v.name;o.textContent=v.name+' \u2014 '+(v.lang||'');sel.appendChild(o);}});
+          if(rest.length){{var g=document.createElement('optgroup');
+            g.label='Autres voix';rest.forEach(function(v){{
+              var o=document.createElement('option');
+              o.value=v.name;o.textContent=v.name+' \u2014 '+(v.lang||'');g.appendChild(o);}});
+            sel.appendChild(g);}}
+          if(curv){{try{{sel.value=curv;}}catch(e){{}}}}
+          var selName=curv&&frs.some(function(v){{return v.name===curv;}})
+            ?curv:(curv?'(introuvable)':'Auto');
+          info.textContent=frs.length+' voix francophone(s) d\u00E9tect\u00E9e(s)'
+            +(curv?' \u2014 s\u00E9lectionn\u00E9e : '+selName:'')
+            +'. Puis \u00AB \u00C9couter en fran\u00E7ais \u00BB dans un verset.';
+        }}
+        function load(){{
+          if(!('speechSynthesis' in window)){{
+            info.textContent='Synth\u00E8se vocale indisponible dans ce navigateur.';return;}}
+          ALL=window.speechSynthesis.getVoices()||[];
+          if(!ALL.length){{setTimeout(load,250);return;}}
+          render();
+        }}
+        if(window.speechSynthesis&&window.speechSynthesis.onvoiceschanged!==undefined){{
+          window.speechSynthesis.onvoiceschanged=load;}}
+        load();
+        document.getElementById('ap').addEventListener('click',function(){{
+          write(sel.value);render();}});
+        document.getElementById('au').addEventListener('click',function(){{
+          write('');render();}});
+      </script>
+    </body></html>"""
+    st.iframe(comp, height=172)
 
 
 def render_verse(

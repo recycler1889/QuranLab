@@ -46,8 +46,10 @@ with st.sidebar:
     st.checkbox(
         "Synthèse vocale (TTS)", value=True, key="show_tts",
         help="Lit chaque traduction à voix haute via le moteur du navigateur "
-        "(voix française ou anglaise selon la traduction).",
+        "(voix sélectionnable et réglages dans les paramètres TTS).",
     )
+    if st.session_state.get("show_tts", True):
+        ui.tts_settings()
 
     st.divider()
     st.caption(
