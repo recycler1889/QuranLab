@@ -196,6 +196,14 @@ affichés contextualisés (sélecteur de racine + limite d'affichage, ou liste
 textuelle pour l'arabe), avec un repli dépliable reprenant les occurrences
 françaises dans les traductions.
 
+La barre accepte aussi une **référence directe de verset** : tapez `2:255` ou
+`2 255` (deux-points ou espace) pour afficher immédiatement le verset
+correspondant — texte arabe, translittération phonétique et traductions de la
+langue active — sans passer par la recherche textuelle (`search.parse_ref()`,
+regex `^\s*\d{1,3}\s*[: ]\s*\d{1,3}\s*$`). Une saisie qui n'est pas une
+référence valide (hors bornes, verset inexistant… ou simple texte) retombe
+automatiquement sur la recherche classique.
+
 Les composants de vue (`html_table`, `render_verse`, `render_verses`,
 `render_root_results`, `universal_search`, `verse_picker`) sont **mutualisés dans
 `quranlab/ui.py`** ; `app.py` ne fait plus qu'orchestrer les onglets. Aucun

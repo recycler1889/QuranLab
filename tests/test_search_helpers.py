@@ -34,5 +34,28 @@ class TestFrenchHelpers(unittest.TestCase):
         self.assertIn("la", forms)
 
 
+class TestParseRef(unittest.TestCase):
+    def test_colon(self):
+        self.assertEqual(search.parse_ref("2:255"), (2, 255))
+
+    def test_space_separator(self):
+        self.assertEqual(search.parse_ref("2 255"), (2, 255))
+
+    def test_whitespace_around(self):
+        self.assertEqual(search.parse_ref("  2 : 255  "), (2, 255))
+
+    def test_last_sura(self):
+        self.assertEqual(search.parse_ref("114:6"), (114, 6))
+
+    def test_not_a_ref(self):
+        for bad in ("", "2", "2:255:1", "abc", "2:35x", "2255", "2,255"):
+            self.assertIsNone(search.parse_ref(bad), bad)
+
+    def test_out_of_bounds(self):
+        self.assertIsNone(search.parse_ref("0:5"))
+        self.assertIsNone(search.parse_ref("115:1"))
+        self.assertIsNone(search.parse_ref("2:0"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -900,17 +900,12 @@ def continuous_player(verses: list, reciter: dict | None = None) -> None:
 
 
 def parse_ref(text: str) -> tuple[int, int] | None:
-    """Analyse une référence « sourate:verset » → (sura, aya) ou None."""
-    if not text or ":" not in text:
-        return None
-    left, _, right = text.strip().partition(":")
-    try:
-        sura, aya = int(left), int(right)
-    except ValueError:
-        return None
-    if 1 <= sura <= 114 and aya >= 1:
-        return sura, aya
-    return None
+    """Analyse une référence « sourate:verset » → (sura, aya) ou None.
+
+    Délègue au moteur de recherche : accepte « 2:255 », « 2 255 » ou
+    « 2 : 255 » (deux-points ou espace, blancs autour tolérés).
+    """
+    return search.parse_ref(text)
 
 
 def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
@@ -1185,6 +1180,35 @@ def _render_rows(con, rows) -> None:
         )
 
 
+def _render_ref(con, sura: int, aya: int) -> None:
+    """Affiche directement un verset à partir d'une référence « sourate:verset ».
+
+    Texte arabe, translittération phonétique (mot à mot) et traductions dans
+    la langue active — sans passer par la recherche textuelle.
+    """
+    verse = search.get_verse(con, sura, aya)
+    if verse is None:
+        st.warning(t("ui.ref_missing", ref=f"{sura}:{aya}"))
+        return
+    st.success(t("ui.ref_detected", ref=f"{sura}:{aya}"))
+    parts = [
+        (w.get("transliteration") or "").strip()
+        for w in verse.get("words") or []
+    ]
+    phonetics = " ".join(p for p in parts if p)
+    if phonetics:
+        pal = _palette()
+        st.markdown(
+            f"<div style='font-size:1.05rem;line-height:1.8;color:{pal['fg2']};"
+            f"font-style:italic;margin-bottom:.2rem'>{html.escape(phonetics)}</div>",
+            unsafe_allow_html=True,
+        )
+    render_verse(
+        sura, aya, verse["text_uthmani"], verse["translations"],
+        label=t("ui.ref_label", ref=f"{sura}:{aya}"),
+    )
+
+
 # --------------------------------------------------------------------------
 # Barre de recherche universelle (français **ou** arabe) — chaque onglet
 # --------------------------------------------------------------------------
@@ -1208,6 +1232,13 @@ def universal_search(
         label_visibility="collapsed",
     )
     if not q:
+        return
+
+    # Référence directe « sourate:verset » (ou « sourate verset ») : on
+    # affiche le verset lui-même au lieu de lancer une recherche textuelle.
+    ref = search.parse_ref(q)
+    if ref is not None:
+        _render_ref(con, ref[0], ref[1])
         return
 
     with st.spinner(t("ui.spinner")):

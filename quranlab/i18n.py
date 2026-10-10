@@ -329,6 +329,9 @@ _FR = {
     "ui.uni_label": "Recherche universelle (français ou arabe)",
     "ui.uni_placeholder": "Rechercher en français ou en arabe (ex. miséricorde / رحمة)…",
     "ui.spinner": "Recherche dans tout le Coran…",
+    "ui.ref_detected": "Référence directe reconnue — affichage du verset {ref}.",
+    "ui.ref_label": "Verset {ref} (référence directe)",
+    "ui.ref_missing": "Verset {ref} introuvable dans le corpus.",
     "ui.no_match": (
         "Aucune correspondance trouvée pour « {q} ». Essayez un autre mot "
         "(français ou arabe) ou une racine (ex. رحم ou rHm)."
@@ -788,6 +791,9 @@ _EN = {
     "ui.uni_label": "Universal search (French or Arabic)",
     "ui.uni_placeholder": "Search in French or Arabic (e.g. mercy / رحمة)…",
     "ui.spinner": "Searching the whole Qur'an…",
+    "ui.ref_detected": "Direct reference recognized — displaying verse {ref}.",
+    "ui.ref_label": "Verse {ref} (direct reference)",
+    "ui.ref_missing": "Verse {ref} not found in the corpus.",
     "ui.no_match": (
         "No match found for “{q}”. Try another word (French or Arabic) or a "
         "root (e.g. رحم or rHm)."

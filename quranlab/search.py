@@ -8,6 +8,7 @@ Plus une agrégation thématique (racines + termes) définie dans themes.json.
 """
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -23,6 +24,11 @@ _THEMES_PATH = Path(__file__).resolve().parent / "themes.json"
 _THEMES_EN_PATH = Path(__file__).resolve().parent / "themes_en.json"
 _CONTROVERSIES_PATH = Path(__file__).resolve().parent / "controversies.json"
 _CONTROVERSIES_EN_PATH = Path(__file__).resolve().parent / "controversies_en.json"
+
+# Référence directe « sourate:verset » (deux-points ou espace comme séparateur,
+# blancs tolérés autour). L'entrée ENTIÈRE doit correspondre, sinon la
+# recherche textuelle normale prend le relais.
+_REF_RE = re.compile(r"^\s*(\d{1,3})\s*[: ]\s*(\d{1,3})\s*$")
 
 # Cache en mémoire du fichier de thèmes (invalidé si le fichier change).
 _THEMES_CACHE: dict | None = None
@@ -256,6 +262,27 @@ def search_root(
 # --------------------------------------------------------------------------
 # Lecture de versets / contexte
 # --------------------------------------------------------------------------
+def parse_ref(text: str | None) -> tuple[int, int] | None:
+    """Analyse une référence « sourate:verset » saisie par l'utilisateur.
+
+    L'entrée **entière** doit suivre le format `[sourate]:[verset]`, séparés
+    par un deux-points ou un simple espace : « 2:255 », « 2 255 »,
+    « 2 : 255 »… (blancs tolérés autour). Tout autre contenu renvoie
+    ``None`` : la recherche textuelle classique prend alors le relais.
+    Les bornes plausibles (sourate 1–114, verset ≥ 1) sont vérifiées ici ;
+    l'existence effective du verset est contrôlée par ``get_verse``.
+    """
+    if not text:
+        return None
+    m = _REF_RE.match(str(text))
+    if m is None:
+        return None
+    sura, aya = int(m.group(1)), int(m.group(2))
+    if sura < 1 or sura > 114 or aya < 1:
+        return None
+    return sura, aya
+
+
 def get_verse(con: sqlite3.Connection, sura: int, aya: int) -> dict | None:
     v = con.execute(
         "SELECT sura, aya, text_uthmani, text_simple FROM verses "

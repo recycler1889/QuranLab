@@ -191,6 +191,13 @@ target roots is counted only once. The verses are then displayed with context
 (root selector + display limit, or a textual list for Arabic), with a collapsible
 fallback listing the French occurrences in the translations.
 
+The bar also accepts a **direct verse reference**: type `2:255` or `2 255`
+(colon or space) to immediately display the matching verse — Arabic text,
+phonetic transliteration and the translations of the active language — without
+going through the textual search (`search.parse_ref()`, regex
+`^\s*\d{1,3}\s*[: ]\s*\d{1,3}\s*$`). Any input that is not a valid reference
+(out of bounds, missing verse… or plain text) falls back to the classic search.
+
 The view components (`html_table`, `render_verse`, `render_verses`,
 `render_root_results`, `universal_search`, `verse_picker`) are **shared in
 `quranlab/ui.py`**; `app.py` only orchestrates the tabs. No extra visual theme
