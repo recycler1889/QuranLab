@@ -7,6 +7,8 @@ avec un affichage comparatif de traductions (françaises et anglaises).
 Aucun tafsir, aucun hadith, aucune interprétation traditionnelle
 post-coranique : le Coran est éclairé par le Coran.
 
+Français · [**English**](README.en.md)
+
 ---
 
 ## 1. Structure du projet
@@ -16,6 +18,7 @@ quran-lab/
 ├─ app.py                     # Interface web locale (Streamlit)
 ├─ requirements.txt           # Streamlit (le reste = bibliothèque standard)
 ├─ README.md
+├─ README.en.md               # documentation en anglais
 ├─ data/                      # créé par `init`
 │  ├─ raw/                    # sources brutes téléchargées (JSON + morphologie)
 │  └─ quran.db                # base SQLite générée

@@ -45,5 +45,21 @@ class TestTranslationFiltering(unittest.TestCase):
         self.assertEqual([x["text"] for x in out], ["a"])
 
 
+class TestLanguageName(unittest.TestCase):
+    def test_lang_name_is_never_a_raw_key(self):
+        """ui.lang.<code> doit être traduit dans les deux sens (rétroaction)."""
+        for lg in ("fr", "en"):
+            i18n.set_lang(lg)
+            name = ui._lang_name(lg)
+            self.assertNotIn(
+                "ui.lang", name, f"_lang_name('{lg}') a renvoyé une clé brute"
+            )
+            self.assertTrue(name.strip(), f"_lang_name('{lg}') vide")
+
+    def test_lang_name_default_follows_selector(self):
+        i18n.set_lang("fr")
+        self.assertEqual(ui._lang_name(), ui._lang_name("fr"))
+
+
 if __name__ == "__main__":
     unittest.main()

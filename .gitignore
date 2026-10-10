@@ -19,6 +19,8 @@ data/raw/
 # Pour un démarrage instantané en ligne, commentez la ligne ci-dessous et
 # versionnez data/quran.db (Streamlit Cloud le clonera tel quel).
 data/quran.db
+# Favoris (versets mis de côté), propres à chaque instance.
+data/bookmarks.json
 
 # --- Streamlit ------------------------------------------------------------
 .streamlit/secrets.toml

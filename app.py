@@ -4,9 +4,11 @@ Lancement :
     streamlit run app.py
 """
 
+import sqlite3
+
 import streamlit as st
 
-from quranlab import config, db, i18n, onboarding, search, ui
+from quranlab import bookmarks, config, db, i18n, onboarding, search, ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -67,6 +69,9 @@ with st.sidebar:
         else:
             st.caption(t("app.suggest_see_guide"))
 
+    # Section de don : préparée mais masquée tant que DONATIONS_ENABLED est False.
+    ui.donation_section()
+
 st.markdown(theme_mod.css(theme_name), unsafe_allow_html=True)
 
 ui.page_header("quranlab", t("app.subtitle"))
@@ -121,6 +126,17 @@ def theme_counts_cached(fingerprint: int) -> dict:
     return search.theme_counts(db.connect())
 
 
+@st.cache_data(show_spinner=False, hash_funcs={sqlite3.Connection: lambda c: id(c)})
+def read_verses_cached(con, sura: int, lo: int, hi: int) -> list:
+    """Versets du lecteur (onglet « Lire ») — mis en cache entre les rendus.
+
+    Bouger le curseur de plage provoque un nouveau rendu du script sans que la
+    requête SQL ne soit rejouée pour une plage déjà affichée. La connexion
+    unique (``get_con``, ``check_same_thread=False``) est hachée par son identité.
+    """
+    return search.surah_verses(con, sura, lo, hi)
+
+
 with st.sidebar:
     st.header(t("app.corpus"))
     stats = corpus_stats()
@@ -141,20 +157,76 @@ with st.sidebar:
     )
 
 
-tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord = st.tabs(
+tab_read, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, tab_cross, tab_bm = st.tabs(
     [
+        t("app.tab.read"),
         t("app.tab.root"),
         t("app.tab.search"),
         t("app.tab.verse"),
         t("app.tab.theme"),
         t("app.tab.controv"),
         t("app.tab.concord"),
+        t("app.tab.cross"),
+        t("app.tab.bookmarks"),
     ]
 )
 
 
 def _lang_label(code: str) -> str:
     return t("ui.lang.fr") if code == "fr" else t("ui.lang.ar")
+
+
+# ---------------------------------------------------------------- Lire le Coran
+with tab_read:
+    st.subheader(t("app.read_title"))
+    st.caption(t("app.read_caption"))
+
+    _surahs = search.surah_list(con)
+    _by_num = {s["number"]: s for s in _surahs}
+    _labels = {
+        s["number"]: t(
+            "app.read_surah_fmt",
+            n=s["number"],
+            name=s["name_translit"],
+            count=s["verses_count"],
+        )
+        for s in _surahs
+    }
+    _sura = st.selectbox(
+        t("app.read_surah"),
+        [s["number"] for s in _surahs],
+        format_func=lambda n: _labels[n],
+        key="read_sura",
+    )
+    _last = _by_num[_sura]["verses_count"]
+    _lo, _hi = st.slider(
+        t("app.read_range"),
+        1,
+        _last,
+        (1, min(_last, 20)),
+        key=f"read_range_{_sura}",
+    )
+    st.caption(t("app.read_showing", a=_lo, b=_hi, n=_last))
+
+    _verses = read_verses_cached(con, _sura, _lo, _hi)
+
+    _force_media = st.checkbox(
+        t("app.read_media"),
+        value=False,
+        key="read_media",
+        help=t("app.read_media_help"),
+    )
+
+    st.markdown(f"**{t('app.read_continuous')}**")
+    st.caption(t("app.read_continuous_help"))
+    ui.continuous_player(_verses)
+
+    _per_media = (_hi - _lo + 1) <= 50 or _force_media
+    for _v in _verses:
+        render_verse(
+            _v["sura"], _v["aya"], _v["text_uthmani"], _v["translations"],
+            bookmark=True, media=_per_media,
+        )
 
 
 # --------------------------------------------------- Rendu partagé : racine
@@ -474,13 +546,11 @@ with tab_theme:
         con, "theme",
         placeholder=t("app.theme_placeholder"),
     )
-    note = search.load_themes().get("_meta", {}).get("note", "")
-    if note and lang() == "fr":
+    note = search.themes_meta(lang()).get("note", "")
+    if note:
         st.caption(note)
-    elif lang() == "en":
-        st.caption(t("app.data_en_note"))
 
-    grouped = search.themes_by_category()
+    grouped = search.themes_by_category(lang())
     total = sum(len(v) for v in grouped.values())
     counts = theme_counts_cached(search.themes_fingerprint())
 
@@ -500,7 +570,7 @@ with tab_theme:
     )
 
     filtered = search.filter_themes(
-        query, None if category == "all" else category
+        query, None if category == "all" else category, lang()
     )
     shown = sum(counts.get(k, 0) for _, k, _ in filtered)
     st.caption(
@@ -533,7 +603,7 @@ with tab_theme:
         if key is None:
             st.info(t("app.theme_pick_wait"))
         else:
-            res = search.theme(con, key)
+            res = search.theme(con, key, lang=lang())
             st.markdown(f"### {res['label']}")
             st.markdown(res["description"])
             extra = ""
@@ -592,14 +662,11 @@ with tab_controv:
         con, "controv",
         placeholder=t("app.controv_placeholder"),
     )
-    meta = search.load_controversies().get("_meta", {})
-    if lang() == "fr":
-        st.info(meta.get("disclaimer", ""))
-        st.caption(t("app.controv_method", m=meta.get("method", "")))
-    else:
-        st.info(t("app.data_en_note"))
+    meta = search.controversy_meta(lang())
+    st.info(meta.get("disclaimer", ""))
+    st.caption(t("app.controv_method", m=meta.get("method", "")))
 
-    topics = search.controversy_topics()
+    topics = search.controversy_topics(lang())
     st.caption(t("app.controv_count", n=len(topics)))
     key = st.selectbox(
         t("app.controv_pick"), sorted(topics),
@@ -611,7 +678,7 @@ with tab_controv:
     if key is None:
         st.info(t("app.controv_wait"))
     elif key:
-        res = search.controversy(con, key)
+        res = search.controversy(con, key, lang=lang())
         st.markdown(f"### {res['label']}")
         st.markdown(t("app.controv_question", q=res["question"]))
         st.markdown(t("app.controv_framing", f=res["framing"]))
@@ -782,3 +849,151 @@ with tab_concord:
                 render_verse(v["sura"], v["aya"], v["text_uthmani"], v["translations"])
         elif value:
             st.warning(t("app.no_result"))
+
+# ------------------------------------------------------------- Croisement
+with tab_cross:
+    st.subheader(t("app.cross_title"))
+    st.caption(t("app.cross_caption"))
+
+    _cmode = st.radio(
+        t("app.mode"),
+        ["pair", "co"],
+        horizontal=True,
+        key="cross_mode",
+        format_func=lambda m: (
+            t("app.cross_mode_pair") if m == "pair" else t("app.cross_mode_co")
+        ),
+    )
+
+    if _cmode == "pair":
+        _c1, _c2, _c3 = st.columns(3)
+        _a = _c1.text_input(
+            t("app.cross_root_a"), key="cross_a", placeholder=t("app.cross_ph")
+        )
+        _b = _c2.text_input(
+            t("app.cross_root_b"), key="cross_b", placeholder=t("app.cross_ph")
+        )
+        _c = _c3.text_input(
+            t("app.cross_root_c"), key="cross_c", placeholder=t("app.cross_ph")
+        )
+        _roots = [r for r in (_a, _b, _c) if r and r.strip()]
+        if not _roots:
+            st.caption(t("app.cross_need_root"))
+        else:
+            _res = search.verses_with_all_roots(con, _roots)
+            if not _res.get("found"):
+                st.warning(t("app.cross_notfound", r=_res.get("input", "")))
+            else:
+                st.markdown(
+                    t(
+                        "app.cross_result",
+                        roots=" · ".join(_res["roots_arabic"]),
+                        n=_res["verses_count"],
+                    )
+                )
+                if not _res["verses"]:
+                    st.info(t("app.cross_none"))
+                for _v in _res["verses"]:
+                    render_verse(
+                        _v["sura"], _v["aya"], _v["text_uthmani"],
+                        _v["translations"], bookmark=True,
+                    )
+    else:
+        _r = st.text_input(
+            t("app.cross_co_root"), key="cross_co", placeholder=t("app.cross_ph")
+        )
+        if _r:
+            _res = search.co_roots(con, _r, top=25)
+            if not _res.get("found"):
+                st.warning(t("app.cross_notfound", r=_r))
+            else:
+                st.markdown(
+                    t("app.cross_co_result", root=_res["root_arabic"])
+                )
+                if not _res["co_roots"]:
+                    st.info(t("app.cross_co_none"))
+                else:
+                    html_table(
+                        [
+                            {
+                                t("ui.table_root"): row["root_arabic"],
+                                t("ui.table_bw"): row["root_buckwalter"],
+                                t("ui.table_verses"): row["n"],
+                            }
+                            for row in _res["co_roots"]
+                        ]
+                    )
+
+# ---------------------------------------------------------------- Favoris
+with tab_bm:
+    st.subheader(t("app.bm_title"))
+    st.caption(t("app.bm_caption"))
+
+    _entries = bookmarks.all_entries()
+    st.markdown(t("app.bm_count", n=len(_entries)))
+
+    _c1, _c2 = st.columns([3, 1])
+    _ref = _c1.text_input(
+        t("app.bm_add_ref"), key="bm_ref", placeholder=t("app.bm_ref_ph")
+    )
+    if _c2.button(t("app.bm_add_btn")):
+        _parsed = ui.parse_ref(_ref)
+        if _parsed is None:
+            st.warning(t("app.bm_bad_ref"))
+        elif search.get_verse(con, _parsed[0], _parsed[1]) is None:
+            st.warning(t("app.bm_missing", ref=_ref))
+        else:
+            bookmarks.add(_parsed[0], _parsed[1])
+            st.success(t("app.bm_added", ref=f"{_parsed[0]}:{_parsed[1]}"))
+            st.rerun()
+
+    if not _entries:
+        st.info(t("app.bm_empty"))
+    else:
+        for _e in _entries:
+            _sura, _aya = _e["sura"], _e["aya"]
+            _verse = search.get_verse(con, _sura, _aya)
+            if _verse is None:
+                continue
+            render_verse(
+                _sura, _aya, _verse["text_uthmani"], _verse["translations"],
+                bookmark=True,
+            )
+            with st.expander(t("app.bm_note") + f" — {_sura}:{_aya}"):
+                _note = st.text_area(
+                    t("app.bm_note"),
+                    value=_e.get("note", ""),
+                    key=f"bmnote_{_sura}_{_aya}",
+                    placeholder=t("app.bm_note_ph"),
+                )
+                if st.button(
+                    t("app.bm_save_note"), key=f"bmsave_{_sura}_{_aya}"
+                ):
+                    bookmarks.set_note(_sura, _aya, _note)
+                    st.success(t("app.bm_save_note"))
+
+        _lines = []
+        for _e in _entries:
+            _verse = search.get_verse(con, _e["sura"], _e["aya"])
+            _frag = f"## {_e['sura']}:{_e['aya']}"
+            if _e.get("note"):
+                _frag += f" — {_e['note']}"
+            _lines.append(_frag)
+            if _verse:
+                _lines.append(_verse["text_uthmani"])
+                for _tr in ui.translations_for_lang(_verse["translations"]):
+                    _lines.append(f"[{_tr['author']}] {_tr['text']}")
+            _lines.append("")
+        _payload = "\n".join(_lines)
+
+        _b1, _b2 = st.columns(2)
+        _b1.download_button(
+            t("app.bm_export"),
+            _payload,
+            file_name="favoris.txt",
+            key="bm_download",
+        )
+        if _b2.button(t("app.bm_clear")):
+            bookmarks.clear()
+            st.success(t("app.bm_cleared"))
+            st.rerun()

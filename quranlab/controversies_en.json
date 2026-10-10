@@ -1,0 +1,91 @@
+{
+  "_meta": {
+    "title": "Textual analysis: misconceptions, controversies and Qur'anic practices",
+    "disclaimer": "This section is STRICTLY descriptive and intra-Qur'anic. It lists lexical occurrences and verses, with their context, and formulates NO doctrinal, legal or theological conclusion. No tafsir, hadith or traditional opinion is used. The 'notes' only indicate what to observe in the text (recurrences, co-occurrences, polysemy, formulations): reading and interpretation remain the reader's task, verse by verse and in context.",
+    "method": "For each topic: (1) identify the roots and terms; (2) count their occurrences across the whole corpus; (3) observe polysemy (all the forms of a given root and their contexts); (4) compare the verses where they co-appear; (5) read each verse within its sura and surrounding passage."
+  },
+
+  "femme_genre": {
+    "label": "Status of women and gender relations",
+    "question": "How does the text speak of women, men and their relations?",
+    "context_hint": "Read notably sura 4 (verses 1-35) and 2:221-237 continuously.",
+    "framing": "Observe the distribution of the terms (النِّساء / امْرَأَة / رِجال / أُنثى / ذَكَر) and their contexts: inheritance (4:7-11), marital relations (2:228, 4:34), spiritual equivalence (33:35, 16:97), shared dignity (4:1, 49:13). Compare the formulations without isolating a verse from its passage."
+  },
+
+  "correction_conjugale": {
+    "label": "Marital correction (4:34) and the root ḍ-r-b",
+    "question": "What is the textual use of the root ḍ-r-b throughout the Qur'an?",
+    "context_hint": "Read 4:34-35 continuously, then compare with 30:21 and 4:19.",
+    "framing": "The root ض-ر-ب is used in the Qur'an in varied senses (to strike, to set forth a parable 'ضرب مثل', to journey 'ضرب في الأرض', to mark/seal...). Observe all its forms and their contexts before reading 4:34, whose passage continues with arbitration (4:35). Compare with the ideal of the marital bond: 'He has put between you affection and mercy' (30:21) and 'live with them in kindness' (4:19)."
+  },
+
+  "contrainte_liberte": {
+    "label": "Constraint, freedom and responsibility",
+    "question": "Does the text mention constraint in matters of belief?",
+    "context_hint": "Read 2:256 within 2:253-257, and 18:29 within 18:27-31.",
+    "framing": "Enumerate the root ك-ر-ه (displeasure / constraint) and the expression 'لا إكراه'. Compare with the verses on will (10:99, 18:29), individual burden (2:286) and change conditioned on people's effort (13:11). Observe the vocabulary of personal responsibility."
+  },
+
+  "esclavage_servitude": {
+    "label": "Servitude and emancipation (fakk raqaba)",
+    "question": "What vocabulary does the text use around servitude and emancipation?",
+    "context_hint": "Read 90:11-18 (the steep path) and 24:33 in its passage.",
+    "framing": "Identify the root ر-ق-ب (nape) and the expression 'فك رقبة' (to free a nape). Observe the contexts where emancipation appears: as an act of piety (90:13, 2:177), as expiation (4:92, 5:89, 58:3). Note the formula 'ما ملكت أيمانكم' and the context of reforming relations (24:33). Compare the domains of use of the lexical field of mastery (م-ل-ك)."
+  },
+
+  "mariage_age": {
+    "label": "Marriage, maturity and age (rushd)",
+    "question": "Does the text set a numerical age, or criteria of maturity?",
+    "context_hint": "Read 4:6 within 4:1-10 and 6:152 within 6:151-153.",
+    "framing": "Observe the terms ن-ك-ح (marriage), ب-ل-غ (to reach) and ر-ش-د (maturity / right guidance). Compare 4:6 ('reaching marriage' + 'maturity' for managing property) with 6:152 (maturity linked to responsibility) and 24:32-33 (conditions and abstention). Note that the text associates union with capacity/discernment, without stating a number."
+  },
+
+  "priere_modalites": {
+    "label": "Modalities of prayer (aṣ-ṣalāt): postures and recitation",
+    "question": "Which postures and which recitation instruction does the text state?",
+    "context_hint": "Read 4:102 (prayer in a state of fear) and 73:1-20 continuously.",
+    "framing": "Identify the postures via the roots: ق-و-م (to stand / establish), ر-ك-ع (to bow), س-ج-د (to prostrate), and recitation via ق-ر-أ. Observe the instruction 'فَاقْرَءُوا مَا تَيَسَّرَ مِنْهُ' (73:20: 'recite what is easy for you') and the mentions of postures in 2:43, 3:43, 22:26, 4:102. Compare the verses with one another to see which postures and what latitude of recitation are explicitly stated."
+  },
+
+  "guerre_paix": {
+    "label": "War, peace and self-defence",
+    "question": "How does the text formulate war and peace?",
+    "context_hint": "Read 2:190-193 continuously, 9:4-6 continuously, and 60:8-9.",
+    "framing": "Enumerate ق-ت-ل, س-ل-م and the vocabulary of the limit (اعتداء / حدود). Compare the verses that frame combat with conditions (2:190-193), those that call for peace (8:61) and goodwill toward non-belligerents (60:8), and the principle of life (5:32). Observe that combat verses (9:5) are inserted within passages governed by clauses (9:4, 9:6): read the whole."
+  },
+
+  "peines_legales": {
+    "label": "Penalties and punishments",
+    "question": "Which terms does the text use for sanctions?",
+    "context_hint": "Read 24:2-9 continuously and 5:38-39.",
+    "framing": "Identify س-ر-ق, ز-ن-ي, ق-ط-ع, ج-ل-د and the vocabulary of proof (شهداء / أربعة). Compare the sanction verses with their clauses (repentance 5:39, 24:5; proofs 24:4) and the logic of reform. Observe the constant co-presence of sanction / reparation / proof."
+  },
+
+  "vetement_pudeur": {
+    "label": "Clothing and modesty: khumur (24:31) and jalabib (33:59)",
+    "question": "What vocabulary for clothing, modesty and the gaze?",
+    "context_hint": "Read 24:30-31 continuously and 33:59 within 33:53-59.",
+    "framing": "Observe the vocabulary: خ-م-ر (to cover → خُمُر, veils) in 24:31, ج-ل-ب-ب (جَلَابِيب, cloaks) in 33:59, ز-ي-ن (adornment) and ح-ج-ب (separation). Compare 24:30 and 24:31: both address the gaze first; 33:59 motivates by recognition/identification. Note that the text speaks of covering and of being recognized, without describing a single uniform."
+  },
+
+  "liberte_croyance": {
+    "label": "Freedom of belief and apostasy",
+    "question": "What does the text say about choosing to believe or not?",
+    "context_hint": "Read 2:256 in its passage and 109 in its entirety.",
+    "framing": "Compare the verses that establish the absence of constraint (2:256), the freedom to choose (18:29, 109:6), the limit of the messenger's role (88:22, 6:107) and those that mention turning back (4:137). Observe the tension between individual freedom and warning: note the vocabulary of will and responsibility."
+  },
+
+  "gens_du_livre": {
+    "label": "People of the Book and other beliefs",
+    "question": "How does the text situate other traditions?",
+    "context_hint": "Read 2:62 within 2:62-66 and 5:48 within 5:44-50.",
+    "framing": "Enumerate the designations (أهل الكتاب, اليهود, النصارى, الصابئين) and the stated criteria (2:62, 5:69: faith + works). Compare with 3:199 (recognition of uprightness) and 5:48 (plurality of ways). Observe the verses that distinguish beliefs and conduct."
+  },
+
+  "alcool_substances": {
+    "label": "Alcohol, gambling and substances",
+    "question": "What vocabulary for alcohol and gambling?",
+    "context_hint": "Read 5:90-91 continuously and compare with 2:219.",
+    "framing": "Identify خ-م-ر (to cover/alcohol) and م-ي-س-ر (gambling). Compare 2:219 (presenting the pros and cons) and 5:90-91 (formulation of the prohibition and its aim: to distance from remembrance and prayer). Observe the gradation of the formulations between the two passages."
+  }
+}

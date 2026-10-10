@@ -246,6 +246,7 @@ _FR = {
     "ui.type.term": "terme",
     "ui.lang.fr": "Français",
     "ui.lang.ar": "Arabe",
+    "ui.lang.en": "Anglais",
     # --- TTS (lecteurs audio / synthèse vocale) -----------------------------
     "ui.listen": "Écouter",
     "ui.pause": "Pause",
@@ -269,6 +270,24 @@ _FR = {
     "ui.vl_label": "Voix de synthèse (francophone de préférence)",
     "ui.apply": "Appliquer",
     "ui.test_voice": "Tester",
+    "ui.voice_none": (
+        "Aucune voix « {lang} » détectée dans ce navigateur : le texte risque "
+        "d'être mal prononcé ou épelé lettre à lettre."
+    ),
+    "ui.voice_few": (
+        "Une seule voix « {lang} » détectée. Pour un rendu plus naturel, ouvrez "
+        "le site dans Microsoft Edge (voix « Natural » en ligne, gratuites) ou "
+        "installez d'autres voix dans Windows : Paramètres → Heure et langue → "
+        "Parole."
+    ),
+    "ui.voice_tip": (
+        "Astuce : Microsoft Edge propose des voix « Natural » françaises très "
+        "fluides, sans rien installer."
+    ),
+    "ui.tts_external_on": (
+        "Synthèse vocale fournie par un service externe configuré (voix "
+        "hors navigateur)."
+    ),
     "ui.sample_fr": (
         "Bonjour. Ceci est un test de lecture en français : le Coran "
         "s'explique par le Coran."
@@ -323,6 +342,85 @@ _FR = {
     "ui.occ_limit": "Occurrences à afficher",
     "ui.surah": "Sourate",
     "ui.verse": "Verset",
+    "ui.bookmark_add": "☆ Ajouter aux favoris",
+    "ui.bookmark_remove": "★ En favori",
+    "app.tab.read": "Lire",
+    "app.read_title": "Lire le Coran de A à Z",
+    "app.read_caption": (
+        "Sourate par sourate, verset par verset — texte arabe, traductions et "
+        "récitation."
+    ),
+    "app.read_surah": "Sourate",
+    "app.read_surah_fmt": "{n}. {name} — {count} versets",
+    "app.read_from": "Du verset",
+    "app.read_to": "au verset",
+    "app.read_range": "Plage de versets à afficher",
+    "app.read_prev": "Précédents",
+    "app.read_next": "Suivants",
+    "app.read_all": "Toute la sourate",
+    "app.read_showing": "Versets {a} à {b} sur {n}.",
+    "app.read_continuous": "Lecture continue de la sourate",
+    "app.read_continuous_help": "Enchaîne la récitation verset par verset.",
+    "app.read_media": "Lecteurs audio par verset",
+    "app.read_media_help": (
+        "Force l'affichage des lecteurs audio par verset, même pour les grandes "
+        "plages (l'interface les masque au-delà de 50 versets pour rester réactive)."
+    ),
+    "app.read_playing": "Verset {a} en cours…",
+    "app.read_stop": "Arrêter",
+    "app.tab.bookmarks": "Favoris",
+    "app.bm_title": "Versets mis de côté",
+    "app.bm_caption": "Favoris conservés sur cet appareil (data/bookmarks.json).",
+    "app.bm_count": "{n} verset(s) en favori.",
+    "app.bm_empty": (
+        "Aucun favori pour l'instant. Ajoutez-en depuis l'onglet Lire ou avec "
+        "une référence."
+    ),
+    "app.bm_add_ref": "Ajouter une référence",
+    "app.bm_ref_ph": "ex. 2:255",
+    "app.bm_add_btn": "Ajouter",
+    "app.bm_added": "{ref} ajouté aux favoris.",
+    "app.bm_bad_ref": "Référence invalide (format sourate:verset).",
+    "app.bm_missing": "{ref} introuvable dans la base.",
+    "app.bm_note": "Note",
+    "app.bm_note_ph": "note personnelle (optionnel)",
+    "app.bm_save_note": "Enregistrer la note",
+    "app.bm_remove": "Retirer",
+    "app.bm_removed": "{ref} retiré des favoris.",
+    "app.bm_clear": "Vider les favoris",
+    "app.bm_cleared": "Favoris vidés.",
+    "app.bm_export": "Exporter en texte",
+    "app.tab.cross": "Croisement",
+    "app.cross_title": "Croisement de racines",
+    "app.cross_caption": "Deux notions : où le texte les réunit-il ?",
+    "app.cross_root_a": "Première racine",
+    "app.cross_root_b": "Seconde racine",
+    "app.cross_root_c": "Troisième racine (optionnel)",
+    "app.cross_ph": "arabe ou Buckwalter",
+    "app.cross_run": "Croiser",
+    "app.cross_mode_pair": "Croiser deux racines",
+    "app.cross_mode_co": "Racines co-occurrentes",
+    "app.cross_result": "Versets réunissant les racines {roots} : {n}",
+    "app.cross_none": "Aucun verset ne réunit ces racines.",
+    "app.cross_notfound": "Racine introuvable : {r}",
+    "app.cross_co_title": "Racines co-occurrentes",
+    "app.cross_co_caption": "Avec quoi une racine apparaît-elle le plus souvent ?",
+    "app.cross_co_root": "Racine",
+    "app.cross_co_result": "Racines les plus souvent associées à {root}",
+    "app.cross_co_none": "Aucune co-occurrence.",
+    "app.cross_need_root": "Indiquez au moins une racine.",
+    "app.donate_title": "Soutenir le projet",
+    "app.donate_intro": (
+        "Ce service est libre, sans publicité ni traçage. Un don, entièrement "
+        "facultatif, aide à couvrir l'hébergement et le développement."
+    ),
+    "app.donate_paypal": "Faire un don via PayPal",
+    "app.donate_card": "Don par carte bancaire",
+    "app.donate_bitcoin": "Don en Bitcoin (BTC)",
+    "app.donate_note": (
+        "Le soutien est facultatif et n'ouvre accès à aucun contenu "
+        "supplémentaire."
+    ),
 }
 
 _EN = {
@@ -521,6 +619,7 @@ _EN = {
     "ui.type.term": "term",
     "ui.lang.fr": "French",
     "ui.lang.ar": "Arabic",
+    "ui.lang.en": "English",
     "ui.listen": "Listen",
     "ui.pause": "Pause",
     "ui.stop": "Stop",
@@ -540,6 +639,23 @@ _EN = {
     "ui.vl_label": "Speech voice (prefer {lang} voices)",
     "ui.apply": "Apply",
     "ui.test_voice": "Test",
+    "ui.voice_none": (
+        'No "{lang}" voice found in this browser: the text may be '
+        "mispronounced or spelled out letter by letter."
+    ),
+    "ui.voice_few": (
+        'Only one "{lang}" voice detected. For a more natural result, open the '
+        "site in Microsoft Edge (free online “Natural” voices) or install more "
+        "voices in Windows: Settings → Time & language → Speech."
+    ),
+    "ui.voice_tip": (
+        "Tip: Microsoft Edge provides very smooth French “Natural” voices, with "
+        "no installation."
+    ),
+    "ui.tts_external_on": (
+        "Speech synthesis provided by a configured external service (voice "
+        "outside the browser)."
+    ),
     "ui.sample_fr": (
         "Bonjour. Ceci est un test de lecture en français : le Coran "
         "s'explique par le Coran."
@@ -592,6 +708,83 @@ _EN = {
     "ui.occ_limit": "Occurrences to show",
     "ui.surah": "Surah",
     "ui.verse": "Verse",
+    "ui.bookmark_add": "☆ Add to bookmarks",
+    "ui.bookmark_remove": "★ Bookmarked",
+    "app.tab.read": "Read",
+    "app.read_title": "Read the Qur'an from A to Z",
+    "app.read_caption": (
+        "Surah by surah, verse by verse — Arabic text, translations and "
+        "recitation."
+    ),
+    "app.read_surah": "Surah",
+    "app.read_surah_fmt": "{n}. {name} — {count} verses",
+    "app.read_from": "From verse",
+    "app.read_to": "to verse",
+    "app.read_range": "Verse range to display",
+    "app.read_prev": "Previous",
+    "app.read_next": "Next",
+    "app.read_all": "Whole surah",
+    "app.read_showing": "Verses {a} to {b} of {n}.",
+    "app.read_continuous": "Continuous recitation of the surah",
+    "app.read_continuous_help": "Plays the recitation verse by verse.",
+    "app.read_media": "Per-verse audio players",
+    "app.read_media_help": (
+        "Force the per-verse audio players to show even on large ranges (the UI "
+        "hides them beyond 50 verses to stay responsive)."
+    ),
+    "app.read_playing": "Verse {a} playing…",
+    "app.read_stop": "Stop",
+    "app.tab.bookmarks": "Bookmarks",
+    "app.bm_title": "Verses set aside",
+    "app.bm_caption": "Bookmarks kept on this device (data/bookmarks.json).",
+    "app.bm_count": "{n} bookmarked verse(s).",
+    "app.bm_empty": (
+        "No bookmark yet. Add one from the Read tab or with a reference."
+    ),
+    "app.bm_add_ref": "Add a reference",
+    "app.bm_ref_ph": "e.g. 2:255",
+    "app.bm_add_btn": "Add",
+    "app.bm_added": "{ref} added to bookmarks.",
+    "app.bm_bad_ref": "Invalid reference (format sura:verse).",
+    "app.bm_missing": "{ref} not found in the database.",
+    "app.bm_note": "Note",
+    "app.bm_note_ph": "personal note (optional)",
+    "app.bm_save_note": "Save the note",
+    "app.bm_remove": "Remove",
+    "app.bm_removed": "{ref} removed from bookmarks.",
+    "app.bm_clear": "Clear bookmarks",
+    "app.bm_cleared": "Bookmarks cleared.",
+    "app.bm_export": "Export as text",
+    "app.tab.cross": "Crossing",
+    "app.cross_title": "Root crossing",
+    "app.cross_caption": "Two notions: where does the text bring them together?",
+    "app.cross_root_a": "First root",
+    "app.cross_root_b": "Second root",
+    "app.cross_root_c": "Third root (optional)",
+    "app.cross_ph": "Arabic or Buckwalter",
+    "app.cross_run": "Cross",
+    "app.cross_mode_pair": "Cross two roots",
+    "app.cross_mode_co": "Co-occurring roots",
+    "app.cross_result": "Verses bringing together the roots {roots}: {n}",
+    "app.cross_none": "No verse brings these roots together.",
+    "app.cross_notfound": "Root not found: {r}",
+    "app.cross_co_title": "Co-occurring roots",
+    "app.cross_co_caption": "What does a root most often appear with?",
+    "app.cross_co_root": "Root",
+    "app.cross_co_result": "Roots most often associated with {root}",
+    "app.cross_co_none": "No co-occurrence.",
+    "app.cross_need_root": "Provide at least one root.",
+    "app.donate_title": "Support the project",
+    "app.donate_intro": (
+        "This service is free, with no advertising and no tracking. A donation, "
+        "entirely optional, helps cover hosting and development."
+    ),
+    "app.donate_paypal": "Donate via PayPal",
+    "app.donate_card": "Donate by card",
+    "app.donate_bitcoin": "Donate in Bitcoin (BTC)",
+    "app.donate_note": (
+        "Support is optional and grants access to no additional content."
+    ),
 }
 
 # --- API ------------------------------------------------------------------

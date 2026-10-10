@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import html
 import json
+from urllib.parse import quote
 
 import streamlit as st
 
-from . import config, db, i18n, search
+from . import bookmarks, config, db, i18n, search
 from . import theme as theme_mod
 from .buckwalter import is_arabic
 
@@ -177,18 +178,33 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
 # Gabarit du sélecteur de voix : les marqueurs __*__ sont remplacés par
 # ``_tts_voice_js`` selon la langue (fr-FR / en-US), la liste des préférences de
 # voix et la clé localStorage propre à la langue.
+#
+# Deux listes distinctes :
+#   * SUBS : marqueurs d'APPARTENANCE à la langue (pour filtrer les voix du
+#     navigateur). On n'y met QUE des indices linguistiques — jamais un nom de
+#     marque (« google », « microsoft »), sinon les voix anglaises seraient
+#     considérées comme françaises.
+#   * PREFS : indices de QUALITÉ/préférence (classement des voix déjà filtrées).
+#     Les voix « Natural / Neural / Online » (Microsoft Edge, gratuites et très
+#     naturelles) sont classées en tête, puis Google (Chrome), puis les voix
+#     locales du système.
 _LG_MATCH = {"fr": "fr", "en": "en"}
-_LG_SUBS = {"fr": ("fran", "french"), "en": ("eng",)}
+_LG_SUBS = {
+    "fr": ("fran", "french", "français", "francais"),
+    "en": ("english", "eng"),
+}
 _LG_PREFS = {
     "fr": [
-        "google franc", "microso", "hortense", "julie", "denise",
-        "aurore", "pauline", "amelie", "amé", "virginie", "audrey",
-        "samantha", "siri", "google",
+        "natural", "neural", "online", "google franc", "google français",
+        "microsoft denise", "microsoft henri", "microsoft vivienne",
+        "microsoft hortense", "microsoft julie", "microsoft pauline",
+        "hortense", "julie", "pauline", "denise", "vivienne",
+        "amelie", "amélie", "thomas", "google", "microsoft",
     ],
     "en": [
-        "google us", "google uk", "microso", "samantha", "susan", "daniel",
-        "karen", "moira", "sonia", "aaron", "alex", "fred", "zira",
-        "david", "mark", "siri", "google",
+        "natural", "neural", "online", "google us", "google uk",
+        "microsoft aria", "microsoft jenny", "microsoft guy",
+        "samantha", "zira", "david", "mark", "google", "microsoft",
     ],
 }
 
@@ -199,6 +215,8 @@ if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefin
     VOICES = window.speechSynthesis.getVoices() || VOICES;
   };
 }
+/* Appartenance à la langue : par la locale (fr-FR, fr-CA, fr-BE, fr-CH…) ou par
+   un indice linguistique du nom (French, français…). */
 function qlMatch(v) {
   if (!v) { return false; }
   var l = (v.lang || '').replace(/_/g, '-').toLowerCase();
@@ -209,6 +227,32 @@ function qlMatch(v) {
   }
   return false;
 }
+/* Score de QUALITÉ : favorise les voix neuronales/en ligne (naturelles) et
+   pénalise les anciennes voix « Desktop/Compact » du système (souvent
+   saccadées). */
+function qlQuality(v) {
+  var n = (v.name || '').toLowerCase(), q = 0;
+  if (v.localService === false) { q += 35; }
+  if (n.indexOf('natural') >= 0) { q += 60; }
+  if (n.indexOf('neural') >= 0) { q += 55; }
+  if (n.indexOf('online') >= 0) { q += 30; }
+  if (n.indexOf('premium') >= 0) { q += 25; }
+  if (n.indexOf('enhanced') >= 0) { q += 25; }
+  if (n.indexOf('google') >= 0) { q += 30; }
+  if (n.indexOf('desktop') >= 0) { q -= 20; }
+  if (n.indexOf('compact') >= 0) { q -= 20; }
+  return q;
+}
+/* Rang de préférence : plus petit = préféré (index dans la liste PREFS). */
+function qlPrefRank(v) {
+  var n = (v.name || '').toLowerCase(), PREF = __PREFS__;
+  for (var i = 0; i < PREF.length; i++) {
+    if (n.indexOf(PREF[i]) >= 0) { return i; }
+  }
+  return PREF.length;
+}
+/* Choix automatique : 1) voix mémorisée, 2) meilleur couple
+   (préférence, qualité) parmi les voix de la bonne langue. */
 function qlPick() {
   var chosen = null;
   try { chosen = window.localStorage.getItem(__LS_KEY__) || null; }
@@ -219,21 +263,20 @@ function qlPick() {
   }
   var match = VOICES.filter(qlMatch);
   if (!match.length) { return null; }
-  var PREF = __PREFS__;
-  for (var j = 0; j < PREF.length; j++) {
-    var h = match.filter(function(v) {
-      return (v.name || '').toLowerCase().indexOf(PREF[j]) >= 0;
-    });
-    if (h.length) { return h[0]; }
+  var best = null, bestRank = 1e9, bestQ = -1e9;
+  for (var i = 0; i < match.length; i++) {
+    var r = qlPrefRank(match[i]), q = qlQuality(match[i]);
+    if (r < bestRank || (r === bestRank && q > bestQ)) {
+      best = match[i]; bestRank = r; bestQ = q;
+    }
   }
-  var exact = match.filter(function(v) {
-    return (v.lang || '').replace(/_/g, '-').toLowerCase() === __LGEXACT__;
-  });
-  if (exact.length) { return exact[0]; }
-  return match[0];
+  return best;
 }
 function qlNorm(s) { return (s || '').replace(/_/g, '-'); }
 function qlSpeak(text, voiceName, langTag, rate, pitch) {
+  if (window.speechSynthesis && (!VOICES || !VOICES.length)) {
+    try { VOICES = window.speechSynthesis.getVoices() || VOICES; } catch (e) {}
+  }
   var u = new SpeechSynthesisUtterance(text);
   var v = null;
   if (voiceName) {
@@ -253,6 +296,7 @@ function qlSpeak(text, voiceName, langTag, rate, pitch) {
 """
 
 
+
 def _tts_voice_js(lg: str) -> str:
     """Gabarit JS de choix de voix paramétré pour la langue ``lg``."""
     tag = _LG_MATCH.get(lg, _LG_MATCH["fr"])
@@ -260,20 +304,43 @@ def _tts_voice_js(lg: str) -> str:
     prefs = json.dumps(list(_LG_PREFS.get(lg, _LG_PREFS["fr"])), ensure_ascii=False)
     return (
         _TTS_VOICE_JS
-        .replace("__LGEXACT__", f"{tag}-{tag.upper()}")
-        .replace("__LG__", tag)
+        .replace("__LG__", json.dumps(tag))
         .replace("__SUBS__", subs)
         .replace("__PREFS__", prefs)
-        .replace("__LS_KEY__", f"ql_tts_voice_{tag}")
+        .replace("__LS_KEY__", json.dumps(f"ql_tts_voice_{tag}"))
+    )
+
+
+def _tts_external_url(text: str, locale: str) -> str:
+    """URL audio d'un fournisseur TTS externe (vide si non configuré).
+
+    Le gabarit ``config.TTS_HTTP_URL`` contient ``{text}`` et ``{lang}``,
+    remplacés par le texte et la locale encodés. Renvoie "" si aucun
+    fournisseur n'est configuré (repli : Web Speech API du navigateur).
+    """
+    tpl = (getattr(config, "TTS_HTTP_URL", "") or "").strip()
+    if not tpl:
+        return ""
+    return tpl.replace("{text}", quote(text or "", safe="")).replace(
+        "{lang}", quote(locale or "", safe="")
     )
 
 
 def tts(text: str, language: str = "fr") -> None:
-    """Bouton de synthèse vocale (Web Speech API du navigateur) d'un texte.
+    """Bouton de synthèse vocale d'un texte.
 
-    La langue lue suit ``language`` (``fr`` → fr-FR, ``en`` → en-US) tandis que
-    les libellés du bouton suivent la langue d'**interface** active. Composant
-    autonome : bascule entre lire/arrêter. Aucune clé/API externe n'est requise.
+    Deux fonctionnements, selon la configuration :
+
+    * **Voix du navigateur** (défaut) : Web Speech API — voix « Natural » de
+      Microsoft Edge, voix Google de Chrome ou voix système. Un moteur de choix
+      privilégie les voix françaises neuronales/en ligne et évite l'épellation
+      lettre à lettre.
+    * **Fournisseur externe** (si ``config.TTS_HTTP_URL`` est renseigné) : le
+      texte est lu depuis le flux audio du service configuré (aucune voix
+      locale requise).
+
+    Les libellés suivent la langue d'**interface** active ; la langue lue suit
+    ``language``. Composant autonome (bascule lire/arrêter).
     """
     pal = _palette()
     locale = config.tts_locale(language)
@@ -285,6 +352,34 @@ def tts(text: str, language: str = "fr") -> None:
     stop = json.dumps(t("ui.stop"), ensure_ascii=False)
     unavail = json.dumps(t("ui.tts_unavail"), ensure_ascii=False)
     title = html.escape(t("ui.tts_title", locale=locale))
+
+    external = _tts_external_url(text or "", locale)
+    if external:
+        button_js = f"""
+        var au=document.getElementById('ext');var PLAY='\\u25B6 ' + {play};
+        var STOP='\\u25A0 ' + {stop};
+        if(au){{
+          if(b.dataset.on==='1'){{au.pause();au.currentTime=0;
+            b.dataset.on='0';b.textContent=PLAY;return;}}
+          au.play();b.dataset.on='1';b.textContent=STOP;
+          au.onended=function(){{b.dataset.on='0';b.textContent=PLAY;}};
+        }} else {{ b.textContent={unavail}; }}
+        """
+        audio_tag = f'<audio id="ext" preload="none" src="{html.escape(external)}"></audio>'
+    else:
+        button_js = f"""
+        if(!('speechSynthesis' in window)){{ b.textContent={unavail};return; }}
+        if(b.dataset.on==='1'){{
+          speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
+        var u=qlSpeak({payload},'',{locale!r},RATE,PITCH);
+        var done=function(){{b.dataset.on='0';b.textContent=IDLE;}};
+        u.onend=done;u.onerror=done;
+        b.dataset.on='1';b.textContent='\\u25A0 ' + {stop};
+        """
+        audio_tag = ""
+    voice_js = "" if external else _tts_voice_js(language)
+    idle_js = "" if external else f"var IDLE='\\u25B6 ' + {play};"
+
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;}}
@@ -297,20 +392,14 @@ def tts(text: str, language: str = "fr") -> None:
     </style></head><body>
       <button id="b" title="{title}">
         &#9654; {t("ui.play")}</button>
+      {audio_tag}
       <script>
         var RATE={rate!r};var PITCH={pitch!r};
-        {_tts_voice_js(language)}
+        {voice_js}
         var b=document.getElementById('b'),t={payload};
-        var IDLE='\u25B6 ' + {play};
+        {idle_js}
         b.addEventListener('click',function(){{
-          if(!('speechSynthesis' in window)){{
-            b.textContent={unavail};return;}}
-          if(b.dataset.on==='1'){{
-            speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
-          var u=qlSpeak(t,'',{locale!r},RATE,PITCH);
-          var done=function(){{b.dataset.on='0';b.textContent=IDLE;}};
-          u.onend=done;u.onerror=done;
-          b.dataset.on='1';b.textContent='\u25A0 ' + {stop};
+          {button_js}
         }});
       </script>
     </body></html>"""
@@ -388,30 +477,53 @@ def verse_media(
         )
 
     if tts_text:
-        payload = json.dumps(tts_text, ensure_ascii=False).replace("<", "\\u003c")
         tts_button = t("ui.tts_button")
-        rows.append(
-            '<div class="row">'
-            f'<button id="speak" title="{html.escape(t("ui.speak_tooltip", locale=locale))}">'
-            f'\u25B6 {tts_button}</button></div>'
-        )
-        listeners += f"""
-        var RATE={rate!r};var PITCH={pitch!r};
-        {_tts_voice_js(lg)}
-        var b=document.getElementById('speak');
-        var IDLE='\u25B6 ' + {json.dumps(tts_button, ensure_ascii=False)};
-        b.addEventListener('click',function(){{
-          if(!('speechSynthesis' in window)){{
-            b.textContent={json.dumps(t("ui.tts_unavail"), ensure_ascii=False)};return;}}
-          if(b.dataset.on==='1'){{
-            speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
-          var u=qlSpeak({payload},'',{locale!r},RATE,PITCH);
-          var done=function(){{
-            b.dataset.on='0';b.textContent=IDLE;}};
-          u.onend=done;u.onerror=done;
-          b.dataset.on='1';b.textContent='\u25A0 ' + {json.dumps(t("ui.stop"), ensure_ascii=False)};
-        }});
-        """
+        external = _tts_external_url(tts_text, locale)
+        if external:
+            rows.append(
+                '<div class="row">'
+                f'<button id="speak" title="{html.escape(t("ui.speak_tooltip", locale=locale))}">'
+                f'\u25B6 {tts_button}</button>'
+                f'<audio id="exttts" preload="none" src="{html.escape(external)}"></audio>'
+                "</div>"
+            )
+            listeners += f"""
+            var ext=document.getElementById('exttts');
+            var b=document.getElementById('speak');
+            var TIDLE='\u25B6 ' + {json.dumps(tts_button, ensure_ascii=False)};
+            var TSTOP='\u25A0 ' + {json.dumps(t("ui.stop"), ensure_ascii=False)};
+            b.addEventListener('click',function(){{
+              if(b.dataset.on==='1'){{
+                ext.pause();ext.currentTime=0;b.dataset.on='0';
+                b.textContent=TIDLE;return;}}
+              ext.play();b.dataset.on='1';b.textContent=TSTOP;
+              ext.onended=function(){{b.dataset.on='0';b.textContent=TIDLE;}};
+            }});
+            """
+        else:
+            payload = json.dumps(tts_text, ensure_ascii=False).replace("<", "\\u003c")
+            rows.append(
+                '<div class="row">'
+                f'<button id="speak" title="{html.escape(t("ui.speak_tooltip", locale=locale))}">'
+                f'\u25B6 {tts_button}</button></div>'
+            )
+            listeners += f"""
+            var RATE={rate!r};var PITCH={pitch!r};
+            {_tts_voice_js(lg)}
+            var b=document.getElementById('speak');
+            var IDLE='\u25B6 ' + {json.dumps(tts_button, ensure_ascii=False)};
+            b.addEventListener('click',function(){{
+              if(!('speechSynthesis' in window)){{
+                b.textContent={json.dumps(t("ui.tts_unavail"), ensure_ascii=False)};return;}}
+              if(b.dataset.on==='1'){{
+                speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
+              var u=qlSpeak({payload},'',{locale!r},RATE,PITCH);
+              var done=function(){{
+                b.dataset.on='0';b.textContent=IDLE;}};
+              u.onend=done;u.onerror=done;
+              b.dataset.on='1';b.textContent='\u25A0 ' + {json.dumps(t("ui.stop"), ensure_ascii=False)};
+            }});
+            """
 
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -452,8 +564,12 @@ def tts_settings() -> None:
             t("ui.pitch"), 0.5, 2.0, 1.0, 0.05, key="tts_pitch",
             help=t("ui.pitch_help"),
         )
-        st.caption(t("ui.voice_hint", lang=_lang_name()))
-        _voice_picker()
+        if _tts_external_url("test", i18n.ui_locale()):
+            st.caption(t("ui.tts_external_on"))
+        else:
+            st.caption(t("ui.voice_hint", lang=_lang_name()))
+            _voice_picker()
+            st.caption(t("ui.voice_tip"))
 
 
 def _voice_picker() -> None:
@@ -484,6 +600,8 @@ def _voice_picker() -> None:
     then = json.dumps(
         t("ui.then_listen", label=t("ui.tts_button")), ensure_ascii=False
     )
+    voice_none = json.dumps(t("ui.voice_none", lang=lname), ensure_ascii=False)
+    voice_few = json.dumps(t("ui.voice_few", lang=lname), ensure_ascii=False)
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;
@@ -497,7 +615,8 @@ def _voice_picker() -> None:
         background:{pal['field']};color:{pal['fg']};margin:1px 2px 1px 0;}}
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
       #test{{border-style:dashed;}}
-      #info{{font-size:11px;color:{pal['fg2']};margin-top:3px;line-height:1.35;}}
+      #info{{font-size:11px;color:{pal['fg2']};margin-top:3px;line-height:1.35;
+        white-space:pre-line;}}
     </style></head><body>
       <label for="vl">{html.escape(label)}</label>
       <select id="vl"></select>
@@ -525,10 +644,13 @@ def _voice_picker() -> None:
               return (v.name||'').toLowerCase().indexOf(s)>=0;}});}}
         var FOUND={found_tpl}, SEL={selected}, UNAV={unavailable},
           THEN={then}, NO_TTS={no_tts}, AUTO={auto_opt},
-          OTHERS={other};
-        function setInfo(n,selName){{info.textContent=
-          FOUND.replace('{{n}}',String(n))+(selName?
-          SEL.replace('{{name}}',selName):'')+THEN;}}
+          OTHERS={other}, VNONE={voice_none}, VFEW={voice_few};
+        function setInfo(n,selName){{
+          if(n===0){{info.textContent=VNONE;return;}}
+          var s=FOUND.replace('{{n}}',String(n))+(selName?
+            SEL.replace('{{name}}',selName):'')+THEN;
+          if(n<=1){{s=s+'\\n'+VFEW;}}
+          info.textContent=s;}}
         function render(){{
           var curv=read();
           sel.innerHTML='';
@@ -569,7 +691,94 @@ def _voice_picker() -> None:
           try{{ qlSpeak(SAMPLE,sel.value,LOCALE,RATE,PITCH); }}catch(e){{}}}});
       </script>
     </body></html>"""
-    st.iframe(comp, height=172)
+    st.iframe(comp, height=196)
+
+
+def continuous_player(verses: list, reciter: dict | None = None) -> None:
+    """Lecteur de **récitation en continu** : enchaîne les versets fournis.
+
+    ``verses`` : liste de dicts ``{"sura": int, "aya": int}`` dans l'ordre de
+    lecture. Un seul élément audio enchaîne les fichiers MP3 du récitateur
+    choisi (everyayah) ; un bandeau indique le verset en cours. Les boutons
+    Lecture / Arrêt sont traduits selon la langue active.
+    """
+    if not verses:
+        return
+    reciter = reciter or active_reciter()
+    pal = _palette()
+    items = [
+        {
+            "sura": int(v["sura"]),
+            "aya": int(v["aya"]),
+            "url": config.audio_url(reciter["edition"], v["sura"], v["aya"]),
+        }
+        for v in verses
+    ]
+    payload = json.dumps(items, ensure_ascii=False)
+    play = json.dumps(t("ui.listen"), ensure_ascii=False)
+    stop = json.dumps(t("ui.stop"), ensure_ascii=False)
+    playing = json.dumps(t("app.read_playing"), ensure_ascii=False)
+    meta = html.escape(f"{reciter['label']} · {len(items)} {t('ui.verse')}")
+    comp = f"""
+    <!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      html,body{{margin:0;padding:0;background:transparent;}}
+      .wrap{{display:flex;align-items:center;gap:8px;
+        font-family:system-ui,"Segoe UI",sans-serif;flex-wrap:wrap;}}
+      button{{cursor:pointer;border:1px solid {pal['border']};
+        background:{pal['field']};color:{pal['fg']};border-radius:999px;
+        height:30px;padding:0 12px;font-size:13px;display:inline-flex;
+        align-items:center;gap:6px;transition:.15s;}}
+      button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
+      .pos{{font-size:12.5px;color:{pal['fg2']};min-width:150px;}}
+      .meta{{font-size:11px;color:{pal['fg2']};}}
+    </style></head><body>
+      <div class="wrap">
+        <button id="pp">&#9654; {t("ui.listen")}</button>
+        <button id="st">&#9632; {t("ui.stop")}</button>
+        <span class="pos" id="pos">{meta}</span>
+        <audio id="au" preload="none"></audio>
+      </div>
+      <script>
+        const ITEMS = {payload};
+        const au = document.getElementById('au');
+        const pos = document.getElementById('pos');
+        const pp = document.getElementById('pp');
+        const PLAY = {play}, STOP = {stop}, tmpl = {playing};
+        let idx = 0, playing = false;
+        function show(i){{pos.textContent = tmpl.replace('{{a}}', ITEMS[i].sura + ':' + ITEMS[i].aya);}}
+        function load(i){{au.src = ITEMS[i].url; show(i);}}
+        function next(){{ idx++; if(idx >= ITEMS.length){{ stop(); return; }} load(idx); au.play(); }}
+        function start(){{ playing = true; pp.textContent = STOP; if(!au.src) load(0); au.play(); }}
+        function stop(){{ playing = false; pp.textContent = PLAY; au.pause(); idx = 0; au.removeAttribute('src'); pos.textContent = {json.dumps(meta)}; }}
+        pp.addEventListener('click', function(){{ if(playing) stop(); else start(); }});
+        document.getElementById('st').addEventListener('click', stop);
+        au.addEventListener('ended', function(){{ if(playing) next(); }});
+      </script>
+    </body></html>"""
+    st.iframe(comp, height=64)
+
+
+def parse_ref(text: str) -> tuple[int, int] | None:
+    """Analyse une référence « sourate:verset » → (sura, aya) ou None."""
+    if not text or ":" not in text:
+        return None
+    left, _, right = text.strip().partition(":")
+    try:
+        sura, aya = int(left), int(right)
+    except ValueError:
+        return None
+    if 1 <= sura <= 114 and aya >= 1:
+        return sura, aya
+    return None
+
+
+def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
+    """Petit bouton d'ajout / retrait d'un verset aux favoris."""
+    saved = bookmarks.contains(sura, aya)
+    label = t("ui.bookmark_remove") if saved else t("ui.bookmark_add")
+    if st.button(label, key=f"{key_prefix}_{sura}_{aya}"):
+        bookmarks.toggle(sura, aya)
+        st.rerun()
 
 
 def render_verse(
@@ -581,6 +790,8 @@ def render_verse(
     caption: str | None = None,
     font_size: str = "1.45rem",
     audio: bool = True,
+    bookmark: bool = False,
+    media: bool = True,
 ) -> None:
     """Affiche un verset : référence (avec nom de sourate), texte arabe uthmani
     puis, systématiquement, les traductions empilées.
@@ -589,6 +800,7 @@ def render_verse(
     **unique** bouton **de synthèse vocale dans la langue active** (voix
     ``fr-FR`` ou ``en-US``) sont ajoutés, regroupés en un seul composant.
     ``audio=False`` permet de désactiver la récitation (ex. versets de contexte).
+    ``bookmark=True`` ajoute un bouton d'ajout / retrait des favoris.
     """
     names = surah_names()
     ref = f"{sura}:{aya}"
@@ -602,7 +814,7 @@ def render_verse(
         f"line-height:2.2;margin:.2rem 0 .5rem 0'>{text_uthmani}</div>",
         unsafe_allow_html=True,
     )
-    if show_audio or (show_tts and trans):
+    if media and (show_audio or (show_tts and trans)):
         verse_media(sura, aya, trans)
     if not trans:
         st.caption(t("ui.no_translation"))
@@ -610,6 +822,8 @@ def render_verse(
         st.markdown(f"**{tr['author']}** — {tr['text']}")
     if caption:
         st.caption(caption)
+    if bookmark:
+        bookmark_button(sura, aya)
     st.divider()
 
 
@@ -953,4 +1167,32 @@ def verse_picker(
         key=f"vp_aya_{key}",
     )
     return int(sura), int(aya)
+
+
+# --------------------------------------------------------------------------
+# Dons / soutien (PRÉPARÉ, désactivé par défaut — voir config.DONATIONS_ENABLED)
+# --------------------------------------------------------------------------
+def donation_section() -> None:
+    """Section « Soutenir le projet » (PayPal, carte, Bitcoin).
+
+    N'est rendue que si ``config.DONATIONS_ENABLED`` est vrai et qu'au moins un
+    moyen de paiement est renseigné. Le module est prêt mais **inactif** tant
+    que le drapeau reste à False : aucune donnée ni lien n'est exposé.
+    """
+    if not getattr(config, "DONATIONS_ENABLED", False):
+        return
+    links = getattr(config, "DONATIONS", {}) or {}
+    if not any((links.get("paypal"), links.get("card"), links.get("bitcoin"))):
+        return
+
+    with st.expander(t("app.donate_title")):
+        st.markdown(t("app.donate_intro"))
+        if links.get("paypal"):
+            st.link_button(t("app.donate_paypal"), links["paypal"])
+        if links.get("card"):
+            st.link_button(t("app.donate_card"), links["card"])
+        if links.get("bitcoin"):
+            st.markdown(f"**{t('app.donate_bitcoin')}**")
+            st.code(links["bitcoin"])
+        st.caption(t("app.donate_note"))
 

@@ -68,6 +68,22 @@ def tts_locale(language: str) -> str:
     """Locale de lecture pour une langue de traduction (repli : français)."""
     return TTS_LOCALES.get((language or "").lower(), "fr-FR")
 
+
+# --- Fournisseur de synthèse vocale EXTERNE (optionnel, désactivé) --------
+# Par défaut, la synthèse vocale utilise la Web Speech API du navigateur (voix
+# « Natural » de Microsoft Edge, voix Google de Chrome, ou voix installées dans
+# le système) : aucune clé, aucun coût.
+#
+# Pour garantir une voix française naturelle même quand le navigateur n'expose
+# aucune voix de qualité, on peut brancher un service HTTP renvoyant un flux
+# audio pour un texte donné (ex. serveur Piper local, gateway TTS, Azure/Google
+# TTS auto-hébergé…). Renseigner une URL MODÈLE, par exemple :
+#   TTS_HTTP_URL = "http://localhost:5000/api/tts?lang={lang}&text={text}"
+# « {text} » et « {lang} » sont remplacés (valeur encodée pour l'URL). Laisser
+# vide pour n'utiliser que les voix du navigateur (aucun appel réseau).
+TTS_HTTP_URL = ""
+
+
 # --- Récitateurs audio (récitation verset par verset) --------------------
 # Audio public hébergé par EveryAyah (fichiers « SSSAAA.mp3 », S=sourate,
 # A=verset, zéro-padded). Indépendant du reste : aucune donnée locale.
@@ -90,11 +106,41 @@ RECITERS = [
      "edition": "Husary_128kbps"},
     {"key": "minshawy", "label": "Mohamed Al-Minshawi",
      "edition": "Minshawy_Murattal_128kbps"},
+    {"key": "shatri",   "label": "Abu Bakr Al-Shatri",
+     "edition": "Abu_Bakr_Ash-Shaatree_128kbps"},
+    {"key": "hudhaify", "label": "Ali Al-Hudhaify",
+     "edition": "Hudhaify_128kbps"},
+    {"key": "qatami",   "label": "Nasser Al-Qatami",
+     "edition": "Nasser_Alqatami_128kbps"},
+    {"key": "dussary",  "label": "Yasser Al-Dossari",
+     "edition": "Yasser_Ad-Dussary_128kbps"},
+    {"key": "budair",   "label": "Salah Al-Budair",
+     "edition": "Salah_Al_Budair_128kbps"},
+    {"key": "bukhatir", "label": "Salaah Bukhatir",
+     "edition": "Salaah_AbdulRahman_Bukhatir_128kbps"},
+    {"key": "husary_m", "label": "Al-Husary (mujawwad)",
+     "edition": "Husary_Mujawwad_64kbps"},
+    {"key": "basit_m",  "label": "Abdul Basit (mujawwad)",
+     "edition": "Abdul_Basit_Mujawwad_128kbps"},
+    {"key": "minshawy_t", "label": "Al-Minshawi (enseignement)",
+     "edition": "Minshawy_Teacher_128kbps"},
 ]
 
 # URL audio d'un verset pour une édition (dossier) de récitateur donné.
 def audio_url(edition: str, sura: int, aya: int) -> str:
     return f"{AUDIO_BASE}/{edition}/{int(sura):03d}{int(aya):03d}.mp3"
+
+
+def reciter_edition(key: str | None) -> str:
+    """Édition audio (dossier everyayah) d'un récitateur, par sa clé.
+
+    Repli sur le premier récitateur de la liste si la clé est inconnue.
+    """
+    items = RECITERS or [{"key": None, "edition": "Alafasy_128kbps"}]
+    for r in items:
+        if r.get("key") == key:
+            return r["edition"]
+    return items[0]["edition"]
 
 
 # --- Suggestions d'amélioration ------------------------------------------
@@ -106,6 +152,29 @@ SUGGESTIONS_URL = (
     f"mailto:{SUGGESTIONS_EMAIL}"
     "?subject=Suggestion%20d%27am%C3%A9lioration%20pour%20QuranLab"
 )
+
+
+# --- Dons / soutien financier --------------------------------------------
+# Fonctionnalité PRÉPARÉE mais DÉSACTIVÉE : passer DONATIONS_ENABLED à True
+# (et renseigner les liens ci-dessous) pour l'activer. Tant que le drapeau
+# vaut False, aucune section de don n'apparaît dans l'interface.
+DONATIONS_ENABLED = False
+
+# Renseigner les liens une fois les comptes créés. Laisser une valeur vide
+# pour masquer le bouton correspondant.
+#
+#   paypal     : lien « Donate » ou « PayPal.Me » (ex.
+#                "https://www.paypal.com/donate/?hosted_button_id=XXXXXXXX")
+#   card       : lien de paiement carte bancaire (Stripe Payment Link,
+#                SumUp, Mollie, ou le bouton carte de PayPal, ex.
+#                "https://buy.stripe.com/XXXXXXXX")
+#   bitcoin    : adresse BTC ou lien de paiement (ex. "bc1q...")
+DONATIONS = {
+    "paypal": "",
+    "card": "",
+    "bitcoin": "",
+}
+
 
 
 # --- Morphologie / racines (Quranic Arabic Corpus, Kais Dukes) -----------
