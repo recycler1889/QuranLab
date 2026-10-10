@@ -99,7 +99,9 @@ indexing; `segments.features` preserves the full corpus annotation.
 > distributed. The selected translations are literal and without a doctrinal
 > apparatus. A local translation (file `{chapter, verse, text}`) can be added by
 > registering it in `config.TRANSLATIONS`; its `language` (`fr` / `en`) also
-> drives the text-to-speech voice.
+> drives the text-to-speech voice (Piper: **6 French** and 4 English voices to
+> choose from — male, female, neutral — plus speed in the TTS settings; falls
+> back to the browser voices if Piper is not installed).
 
 ## 6. Thematic mapping (`quranlab/themes.json`)
 

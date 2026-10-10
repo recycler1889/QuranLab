@@ -11,3 +11,9 @@ streamlit>=1.30,<2
 
 # Dépendance de Streamlit, utilisée par st.dataframe (analyse mot-à-mot).
 pandas>=2.0
+
+# Synthèse vocale neuronale hors-ligne (voix françaises multiples, sans clé).
+# Fournit le moteur Piper ; onnxruntime est tiré automatiquement. Si l'import
+# échoue, l'app se rabat sur les voix du navigateur (Web Speech API).
+piper-tts>=1.2
+

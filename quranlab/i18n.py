@@ -288,6 +288,21 @@ _FR = {
         "Synthèse vocale fournie par un service externe configuré (voix "
         "hors navigateur)."
     ),
+    "ui.piper_engine": (
+        "Moteur : Piper — voix neuronales hors-ligne, plusieurs voix au choix."
+    ),
+    "ui.piper_voice": "Voix",
+    "ui.piper_voice_help": (
+        "Choisissez parmi plusieurs voix françaises, puis cliquez *Tester*."
+    ),
+    "ui.piper_first_use": (
+        "La première utilisation télécharge le modèle (quelques Mo)."
+    ),
+    "ui.piper_unavailable": (
+        "Piper n'est pas installé : lecture via les voix du navigateur."
+    ),
+    "ui.tts_generating": "Génération de la voix…",
+    "ui.tts_fail": "Échec de la synthèse : {err}",
     "ui.sample_fr": (
         "Bonjour. Ceci est un test de lecture en français : le Coran "
         "s'explique par le Coran."
@@ -656,6 +671,21 @@ _EN = {
         "Speech synthesis provided by a configured external service (voice "
         "outside the browser)."
     ),
+    "ui.piper_engine": (
+        "Engine: Piper — offline neural voices, several to choose from."
+    ),
+    "ui.piper_voice": "Voice",
+    "ui.piper_voice_help": (
+        "Pick one of several voices, then click *Test*."
+    ),
+    "ui.piper_first_use": (
+        "First use downloads the model (a few MB)."
+    ),
+    "ui.piper_unavailable": (
+        "Piper is not installed: reading through the browser voices."
+    ),
+    "ui.tts_generating": "Generating voice…",
+    "ui.tts_fail": "Synthesis failed: {err}",
     "ui.sample_fr": (
         "Bonjour. Ceci est un test de lecture en français : le Coran "
         "s'explique par le Coran."

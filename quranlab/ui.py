@@ -19,6 +19,7 @@ import streamlit as st
 
 from . import bookmarks, config, db, i18n, search
 from . import theme as theme_mod
+from . import tts as tts_mod
 from .buckwalter import is_arabic
 
 t = i18n.t
@@ -326,6 +327,62 @@ def _tts_external_url(text: str, locale: str) -> str:
     )
 
 
+def _tts_engine(language: str) -> str:
+    """Moteur de synthèse actif : ``"piper"`` (hors-ligne) ou ``"browser"``.
+
+    ``config.TTS_PROVIDER`` = "auto" (Piper si installé), "piper" ou "browser".
+    Repli transparent sur le navigateur si Piper est absent.
+    """
+    prov = str(getattr(config, "TTS_PROVIDER", "auto") or "auto").lower()
+    if prov == "browser":
+        return "browser"
+    if tts_mod.available():
+        return "piper"
+    return "browser"
+
+
+def _piper_voice_key(language: str) -> str:
+    """Clé courte de la voix Piper choisie (1re voix par défaut)."""
+    opts = config.piper_voices(language)
+    if not opts:
+        return ""
+    default = opts[0]["key"]
+    return st.session_state.get(f"piper_voice_{language}", default) or default
+
+
+@st.cache_data(show_spinner=False)
+def _piper_synth_cached(text: str, voice_name: str, rate: float) -> bytes:
+    """Synthèse Piper mémoïsée (mêmes texte/voix/vitesse = mêmes octets)."""
+    return tts_mod.synthesize_wav(text, voice_name, rate)
+
+
+def _piper_player(text: str, language: str, key: str) -> None:
+    """Bouton + lecteur audio de synthèse Piper pour un texte.
+
+    La génération est déclenchée par un clic (un modèle lourd ne doit pas être
+    synthétisé pour chaque verset rendu), puis mémoïsée : le WAV reste affiché
+    pour la même session et n'est pas régénéré au prochain *rerun*.
+    """
+    voice_name = config.piper_voice_name(_piper_voice_key(language), language)
+    if not voice_name:
+        return
+    rate = float(st.session_state.get("tts_rate", 1.0))
+    btn_key = f"piperbtn_{key}"
+    audio_key = f"piperaudio_{key}"
+    if st.button(t("ui.listen"), key=btn_key, help=t("ui.tts_button")):
+        with st.spinner(t("ui.tts_generating")):
+            try:
+                st.session_state[audio_key] = _piper_synth_cached(
+                    text, voice_name, rate
+                )
+            except Exception as exc:  # noqa: BLE001 — erreur réseau/modèle
+                st.session_state.pop(audio_key, None)
+                st.error(t("ui.tts_fail", err=str(exc)[:140]))
+    data = st.session_state.get(audio_key)
+    if data:
+        st.audio(data, format="audio/wav")
+
+
 def tts(text: str, language: str = "fr") -> None:
     """Bouton de synthèse vocale d'un texte.
 
@@ -342,6 +399,9 @@ def tts(text: str, language: str = "fr") -> None:
     Les libellés suivent la langue d'**interface** active ; la langue lue suit
     ``language``. Composant autonome (bascule lire/arrêter).
     """
+    if _tts_engine(language) == "piper":
+        _piper_player(text, language, key=f"tts_{language}_{abs(hash(text)) % 10**8}")
+        return
     pal = _palette()
     locale = config.tts_locale(language)
     rate = float(st.session_state.get("tts_rate", 1.0))
@@ -436,6 +496,10 @@ def verse_media(
             (tr["text"] for tr in active_trans if tr.get("text")), ""
         )
 
+    engine = _tts_engine(lg)
+    piper_text = tts_text if (engine == "piper" and tts_text) else ""
+    iframe_tts = "" if piper_text else tts_text
+
     if not show_audio and not tts_text:
         return
 
@@ -476,9 +540,9 @@ def verse_media(
             json.dumps(t("ui.pause"), ensure_ascii=False),
         )
 
-    if tts_text:
+    if iframe_tts:
         tts_button = t("ui.tts_button")
-        external = _tts_external_url(tts_text, locale)
+        external = _tts_external_url(iframe_tts, locale)
         if external:
             rows.append(
                 '<div class="row">'
@@ -501,7 +565,7 @@ def verse_media(
             }});
             """
         else:
-            payload = json.dumps(tts_text, ensure_ascii=False).replace("<", "\\u003c")
+            payload = json.dumps(iframe_tts, ensure_ascii=False).replace("<", "\\u003c")
             rows.append(
                 '<div class="row">'
                 f'<button id="speak" title="{html.escape(t("ui.speak_tooltip", locale=locale))}">'
@@ -543,7 +607,11 @@ def verse_media(
         {listeners}
       </script>
     </body></html>"""
-    st.iframe(comp, height=34 + len(rows) * 27)
+    if rows:
+        st.iframe(comp, height=34 + len(rows) * 27)
+
+    if piper_text:
+        _piper_player(piper_text, lg, key=f"verse_{lg}_{sura}_{aya}")
 
 
 def tts_settings() -> None:
@@ -566,10 +634,52 @@ def tts_settings() -> None:
         )
         if _tts_external_url("test", i18n.ui_locale()):
             st.caption(t("ui.tts_external_on"))
+        elif _tts_engine(i18n.lang()) == "piper":
+            st.caption(t("ui.piper_engine"))
+            _piper_voice_picker()
         else:
             st.caption(t("ui.voice_hint", lang=_lang_name()))
             _voice_picker()
             st.caption(t("ui.voice_tip"))
+            if not tts_mod.available():
+                st.caption(t("ui.piper_unavailable"))
+
+
+def _piper_voice_picker() -> None:
+    """Sélecteur de voix Piper (hors-ligne) + aperçu sonore.
+
+    Propose **plusieurs voix françaises** (ou anglaises) ; le choix est mémorisé
+    par langue et utilisé par tous les lecteurs de versets. Le bouton « Tester »
+    synthétise un court échantillon avec le moteur réel.
+    """
+    lang = i18n.lang()
+    opts = config.piper_voices(lang)
+    keys = [v["key"] for v in opts]
+    labels = {v["key"]: v["label"] for v in opts}
+    st.selectbox(
+        t("ui.piper_voice"),
+        keys,
+        format_func=lambda k: labels.get(k, k),
+        key=f"piper_voice_{lang}",
+        help=t("ui.piper_voice_help"),
+    )
+    st.caption(t("ui.piper_first_use"))
+    sample = t("ui.sample_fr") if lang == "fr" else t("ui.sample_en")
+    if st.button(t("ui.test_voice"), key="piper_test_btn"):
+        voice_name = config.piper_voice_name(_piper_voice_key(lang), lang)
+        with st.spinner(t("ui.tts_generating")):
+            try:
+                st.session_state["piper_test_audio"] = _piper_synth_cached(
+                    sample,
+                    voice_name,
+                    float(st.session_state.get("tts_rate", 1.0)),
+                )
+            except Exception as exc:  # noqa: BLE001 — erreur réseau/modèle
+                st.session_state.pop("piper_test_audio", None)
+                st.error(t("ui.tts_fail", err=str(exc)[:140]))
+    data = st.session_state.get("piper_test_audio")
+    if data:
+        st.audio(data, format="audio/wav")
 
 
 def _voice_picker() -> None:

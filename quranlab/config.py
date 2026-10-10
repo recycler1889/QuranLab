@@ -84,6 +84,51 @@ def tts_locale(language: str) -> str:
 TTS_HTTP_URL = ""
 
 
+# --- Moteur de synthèse vocale : Piper (neuronale, hors-ligne) ------------
+# Piper fournit des voix neuronales naturelles, sans clé ni compte, exécutées
+# en local (onnxruntime). C'est le moteur privilégié : il propose PLUSIEURS voix
+# françaises au choix, ne dépend pas des voix installées dans le système et ne
+# risque jamais d'épeler lettre à lettre. Repli automatique sur la Web Speech
+# API du navigateur si Piper n'est pas installé.
+#
+#   "auto"    : Piper si disponible, sinon navigateur (défaut) ;
+#   "piper"   : force Piper (télécharge le modèle au premier usage) ;
+#   "browser" : force la synthèse du navigateur.
+TTS_PROVIDER = "auto"
+
+# Modèles (~20-60 Mo) téléchargés une seule fois dans données `data/piper/`.
+PIPER_DIR = DATA_DIR / "piper"
+PIPER_VOICES = [
+    {"key": "siwis",  "voice": "fr_FR-siwis-medium", "label": "Siwis — femme (recommandée)", "gender": "F"},
+    {"key": "tom",    "voice": "fr_FR-tom-medium",   "label": "Tom — homme",                 "gender": "M"},
+    {"key": "upmc",   "voice": "fr_FR-upmc-medium",  "label": "UPMC — voix neutre",          "gender": "N"},
+    {"key": "mls",    "voice": "fr_FR-mls-medium",   "label": "MLS — femme (claire)",        "gender": "F"},
+    {"key": "gilles", "voice": "fr_FR-gilles-low",   "label": "Gilles — homme (léger)",      "gender": "M"},
+    {"key": "siwis_l", "voice": "fr_FR-siwis-low",   "label": "Siwis léger — femme",         "gender": "F"},
+]
+PIPER_VOICES_EN = [
+    {"key": "lessac", "voice": "en_US-lessac-medium", "label": "Lessac — female", "gender": "F"},
+    {"key": "ryan",   "voice": "en_US-ryan-medium",   "label": "Ryan — male",     "gender": "M"},
+    {"key": "amy",    "voice": "en_US-amy-medium",    "label": "Amy — female",    "gender": "F"},
+    {"key": "joe",    "voice": "en_US-joe-medium",    "label": "Joe — male",      "gender": "M"},
+]
+
+
+def piper_voices(language: str) -> list:
+    """Voix Piper proposées pour une langue (français par défaut)."""
+    return PIPER_VOICES_EN if (language or "").lower() == "en" else PIPER_VOICES
+
+
+def piper_voice_name(key: str, language: str = "fr") -> str | None:
+    """Nom de modèle Piper pour une clé courte (repli : première voix)."""
+    vs = piper_voices(language)
+    for v in vs:
+        if v["key"] == key:
+            return v["voice"]
+    return vs[0]["voice"] if vs else None
+
+
+
 # --- Récitateurs audio (récitation verset par verset) --------------------
 # Audio public hébergé par EveryAyah (fichiers « SSSAAA.mp3 », S=sourate,
 # A=verset, zéro-padded). Indépendant du reste : aucune donnée locale.

@@ -99,7 +99,10 @@ racine ; `segments.features` conserve l'annotation complète du corpus.
 > distribuables librement. Les traductions retenues sont littérales et sans
 > appareil dogmatique. On peut ajouter une traduction locale (fichier
 > `{chapter, verse, text}`) en l'enregistrant dans `config.TRANSLATIONS` ; sa
-> `language` (`fr` / `en`) pilote aussi la voix de la synthèse vocale.
+> `language` (`fr` / `en`) pilote aussi la voix de la synthèse vocale (Piper :
+> **6 voix françaises** et 4 anglaises au choix — hommes, femmes, neutres —
+> plus la vitesse dans les paramètres TTS ; repli sur les voix du navigateur si
+> Piper n'est pas installé).
 
 ## 6. Cartographie thématique (`quranlab/themes.json`)
 
