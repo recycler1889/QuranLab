@@ -74,10 +74,12 @@ with st.sidebar:
 
     with st.expander(t("app.suggest_title")):
         st.markdown(t("app.suggest_body"))
-        if config.SUGGESTIONS_URL:
+        _suggest_url = getattr(config, "SUGGESTIONS_URL", "") or ""
+        _suggest_email = getattr(config, "SUGGESTIONS_EMAIL", "") or ""
+        if _suggest_url:
             st.markdown(
-                f"[{t('app.write_us', email=config.SUGGESTIONS_EMAIL)}]"
-                f"({config.SUGGESTIONS_URL})"
+                f"[{t('app.write_us', email=_suggest_email)}]"
+                f"({_suggest_url})"
             )
         else:
             st.caption(t("app.suggest_see_guide"))
