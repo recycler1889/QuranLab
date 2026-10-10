@@ -193,9 +193,21 @@ def css(name: str) -> str:
 }}
 
 /* Fonds principaux : aplats solides (aucun filigrane répété ni fond fixé :
-   beaucoup plus léger pour le rendu et le défilement) */
+   beaucoup plus léger pour le rendu et le défilement).
+   Le fond de la PAGE vient d'un thème JS (pas d'une variable CSS) : on force
+   donc explicitement l'aplat de la palette, SINON le fond reste clair alors
+   que le texte forcé est clair → illisible en Sombre/Intermédiaire. */
+html, body,
+[data-testid="stApp"], .stApp,
+[data-testid="stAppViewContainer"] {{
+    background: var(--ql-bg) !important;
+    color: var(--ql-fg) !important;
+}}
+[data-testid="stHeader"] {{ background: var(--ql-bg) !important; }}
+[data-testid="stToolbar"] {{ background: transparent !important; }}
 [data-testid="stSidebar"], [data-testid="stSidebar"] > div {{
     background-color: var(--ql-bg2) !important;
+    color: var(--ql-fg) !important;
 }}
 
 /* Accents uniquement, complétés par un recolorage du TEXTE du contenu : la

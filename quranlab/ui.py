@@ -191,65 +191,104 @@ def verse_media(
     translations: list,
     reciter: dict | None = None,
 ) -> None:
-    """Lecteur unique par verset : **un seul iframe** au lieu d'un par lecteur.
+    """Lecteur unique par verset : **deux actions, jamais de doublon**.
 
-    Regroupe le lecteur de récitation (verset) et un bouton **Lire** par
-    traduction (voix selon la langue de la traduction). Quand de nombreux
-    versets sont affichés, divise par ~6 le nombre de composants embarqués.
+    - une **récitation** du verset par le récitateur choisi ;
+    - un **unique** bouton de synthèse vocale **en français** (voix ``fr-FR``
+      du navigateur), qui lit la première traduction française disponible.
+
+    Tout est regroupé dans un seul iframe ``st.iframe`` (non sandboxé : la Web
+    Speech API s'y active normalement).
     """
     show_audio = st.session_state.get("show_quran_audio", True)
     show_tts = st.session_state.get("show_tts", True)
-    tts_items = [t for t in translations if show_tts and t.get("text")]
-    if not show_audio and not tts_items:
+
+    fr_text = ""
+    if show_tts:
+        fr_text = (
+            next(
+                (t["text"] for t in translations
+                 if t.get("language") == "fr" and t.get("text")),
+                None,
+            )
+            or next(
+                (t["text"] for t in translations if t.get("text")),
+                None,
+            )
+            or ""
+        )
+
+    if not show_audio and not fr_text:
         return
 
     pal = _palette()
     reciter = reciter or active_reciter()
-    items = [
-        {
-            "i": i,
-            "lang": config.tts_locale(t.get("language", "fr")),
-            "author": html.escape(t.get("author", "")),
-            "text": t["text"],
-        }
-        for i, t in enumerate(tts_items)
-    ]
-    payload = json.dumps(
-        [{"t": it["text"], "lang": it["lang"]} for it in items],
-        ensure_ascii=False,
-    ).replace("<", "\\u003c")
 
-    audio_row = ""
-    audio_js = ""
+    rows = []
+    listeners = ""
+
     if show_audio:
         url = config.audio_url(reciter["edition"], sura, aya)
         title = html.escape(f"{reciter['label']} · {sura}:{aya}")
-        audio_row = f"""
-        <div class="row">
-          <button id="pp" title="Lecture / Pause">&#9654; Écouter</button>
-          <button id="st" title="Arrêter">&#9632;</button>
-          <span class="meta">{title}</span>
-          <audio id="au" preload="none" src="{url}"></audio>
-        </div>"""
-        audio_js = """
+        rows.append(
+            '<div class="row">'
+            '<button id="pp" title="Lecture / Pause">▶ Écouter</button>'
+            '<button id="st" title="Arrêter">■</button>'
+            f'<span class="meta">{title}</span>'
+            f'<audio id="au" preload="none" src="{url}"></audio>'
+            "</div>"
+        )
+        listeners += """
         var au=document.getElementById('au');
         document.getElementById('pp').addEventListener('click',function(){
           if(au.paused){au.play();this.textContent='\u275A\u275A Pause';}
-          else{au.pause();this.textContent='\u25B6 Écouter';}
+          else{au.pause();this.textContent='\u25B6 \u00C9couter';}
         });
         document.getElementById('st').addEventListener('click',function(){
           au.pause();au.currentTime=0;
-          document.getElementById('pp').textContent='\u25B6 Écouter';});
+          document.getElementById('pp').textContent='\u25B6 \u00C9couter';});
         au.addEventListener('ended',function(){
-          document.getElementById('pp').textContent='\u25B6 Écouter';});"""
+          document.getElementById('pp').textContent='\u25B6 \u00C9couter';});
+        """
 
-    buttons = "".join(
-        '<div class="row tts">'
-        f'<button id="l{it["i"]}" title="{it["author"]}">'
-        "&#9654; Lire&nbsp;·&nbsp;"
-        f'{it["lang"].split("-")[0]}</button></div>'
-        for it in items
-    )
+    if fr_text:
+        payload = json.dumps(fr_text, ensure_ascii=False).replace("<", "\\u003c")
+        rows.append(
+            '<div class="row">'
+            '<button id="speak" title="Synthèse vocale française (fr-FR)">'
+            "▶ Écouter en français</button></div>"
+        )
+        listeners += f"""
+        var b=document.getElementById('speak');
+        b.addEventListener('click',function(){{
+          if(!('speechSynthesis' in window)){{
+            b.textContent='TTS indisponible';return;}}
+          if(b.dataset.on==='1'){{
+            speechSynthesis.cancel();b.dataset.on='0';
+            b.textContent='\u25B6 \u00C9couter en fran\u00E7ais';return;}}
+          var u=new SpeechSynthesisUtterance({payload});
+          u.lang='fr-FR';u.rate=0.98;u.pitch=1;
+          var vs=speechSynthesis.getVoices();
+          var v=vs.find(function(x){{
+            return x.lang&&x.lang.toLowerCase()==='fr-fr';}})
+            || vs.find(function(x){{
+              return x.lang&&x.lang.toLowerCase().indexOf('fr')===0;}})
+            || null;
+          if(v){{u.voice=v;}}
+          var done=function(){{
+            b.dataset.on='0';
+            b.textContent='\u25B6 \u00C9couter en fran\u00E7ais';}};
+          u.onend=done;u.onerror=done;
+          speechSynthesis.cancel();
+          speechSynthesis.resume();
+          speechSynthesis.speak(u);
+          b.dataset.on='1';b.textContent='\u25A0 Arr\u00EAter';
+        }});
+        if(speechSynthesis.onvoiceschanged!==undefined){{
+          speechSynthesis.onvoiceschanged=function(){{
+            speechSynthesis.getVoices();}};
+        }}
+        """
 
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -261,64 +300,15 @@ def verse_media(
         height:26px;padding:0 10px;font-size:12px;display:inline-flex;
         align-items:center;gap:5px;transition:.15s;}}
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
-      .row.tts button{{color:{pal['fg2']};height:23px;font-size:11.5px;}}
       .meta{{font-size:11px;color:{pal['fg2']};white-space:nowrap;
-        overflow:hidden;text-overflow:ellipsis;max-width:170px;}}
+        overflow:hidden;text-overflow:ellipsis;max-width:180px;}}
     </style></head><body>
-      {audio_row}
-      {buttons}
+      {''.join(rows)}
       <script>
-        var synth=window.speechSynthesis,voices=[];
-        function norm(s){{return (s||'').split('_').join('-').toLowerCase();}}
-        function load(){{voices=synth.getVoices()||[];}}
-        load();if(synth.onvoiceschanged!==undefined){{synth.onvoiceschanged=load;}}
-        function pickVoice(lang,base){{
-          if(!voices.length){{load();}}
-          var pool=voices.filter(function(v){{
-            return norm(v.lang)===lang.toLowerCase();}});
-          if(!pool.length){{pool=voices.filter(function(v){{
-            return norm(v.lang).indexOf(base)===0;}});}}
-          if(!pool.length){{return null;}}
-          var PREF=['google '+base,'microsoft paulina','microsoft hortense',
-            'microsoft julie','microsoft denise','hortense','am\u00e9lie',
-            'amelie','audrey','virginie','google'];
-          for(var j=0;j<PREF.length;j++){{
-            var h=pool.filter(function(v){{
-              return norm(v.name).indexOf(PREF[j])>=0;}});
-            if(h.length){{return h[0];}}
-          }}
-          return pool[0];
-        }}
-        var ITEMS={payload};
-        function speak(i){{
-          var b=document.getElementById('l'+i);
-          if(!('speechSynthesis' in window)){{
-            b.textContent='TTS indisponible';return;}}
-          if(b&&b.dataset.on==='1'){{
-            synth.cancel();b.dataset.on='0';
-            b.textContent='\u25B6 Lire';return;}}
-          var base=ITEMS[i].lang.split('-')[0];
-          var u=new SpeechSynthesisUtterance(ITEMS[i].t);
-          u.lang=ITEMS[i].lang;u.rate=0.95;
-          var v=pickVoice(ITEMS[i].lang,base);
-          if(v){{u.voice=v;}}
-          var done=function(){{
-            if(b){{b.dataset.on='0';b.textContent='\u25B6 Lire';}}}};
-          u.onend=done;u.onerror=done;
-          synth.cancel();
-          setTimeout(function(){{synth.speak(u);}},80);
-          if(b){{b.dataset.on='1';b.textContent='\u25A0 Stop';}}
-        }}
-        {audio_js}
-        for(var k=0;k<ITEMS.length;k++){{
-          (function(i){{
-            document.getElementById('l'+i).addEventListener(
-              'click',function(){{speak(i);}});
-          }})(ITEMS[k].i);
-        }}
+        {listeners}
       </script>
     </body></html>"""
-    st.iframe(comp, height=34 + len(items) * 26)
+    st.iframe(comp, height=34 + len(rows) * 27)
 
 
 def render_verse(
@@ -335,9 +325,9 @@ def render_verse(
     puis, systématiquement, les traductions empilées.
 
     Si les préférences l'autorisent, un **lecteur de récitation** (verset) et un
-    bouton **de synthèse vocale** (voix suivant la langue de la traduction) par
-    traduction sont ajoutés. ``audio=False`` permet de désactiver la récitation
-    (ex. versets de contexte).
+    **unique** bouton **de synthèse vocale en français** (voix ``fr-FR``)
+    sont ajoutés, regroupés en un seul composant. ``audio=False`` permet de
+    désactiver la récitation (ex. versets de contexte).
     """
     names = surah_names()
     ref = f"{sura}:{aya}"
