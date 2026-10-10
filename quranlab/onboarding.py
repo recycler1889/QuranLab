@@ -1,8 +1,9 @@
-"""Tutoriel de première visite et guide de démarrage (bilingue FR/EN).
+"""Tutoriel de démarrage et guide (bilingue FR/EN).
 
 Fournit le contenu pédagogique de QuranLab (rôle de chaque onglet) sous trois
-formes complémentaires, partageant le même jeu de données : une **modale** de
-bienvenue ouverte à la première visite, un **bouton** réutilisable dans la barre
+formes complémentaires, partageant le même jeu de données : une **modale**
+ouverte **uniquement** par le bouton de la barre latérale (jamais
+automatiquement à l'arrivée), ce même **bouton** réutilisable dans la barre
 latérale, et un **accordéon** discret sous l'en-tête pour un rappel permanent.
 
 Le contenu suit la langue d'interface active (``i18n.lang()``) : tout est en
@@ -366,16 +367,18 @@ def sidebar_guide_button() -> None:
 
 
 def init() -> None:
-    """Initialise l'état et ouvre la modale à la **première** visite."""
-    st.session_state.setdefault("ql_guide_seen", False)
+    """Initialise l'état du guide : **masqué par défaut**.
+
+    Contrairement à l'ancien comportement, la modale ne **s'ouvre plus
+    automatiquement** à la première visite. Elle ne s'affiche que lorsque
+    l'utilisateur clique explicitement sur le bouton de la barre latérale
+    (``sidebar_guide_button``), ce qui positionne ``ql_guide_open`` à True.
+    """
     st.session_state.setdefault("ql_guide_open", False)
-    if not st.session_state["ql_guide_seen"]:
-        st.session_state["ql_guide_seen"] = True
-        st.session_state["ql_guide_open"] = True
 
 
 def render() -> None:
-    """Affiche la modale si elle est demandée (première visite ou bouton).
+    """Affiche la modale si elle est demandée (clic sur le bouton latéral).
 
     Le titre du dialogue est évalué **à l'exécution** (et non à l'import) afin
     de suivre la langue d'interface active, qui peut changer entre deux reruns.
