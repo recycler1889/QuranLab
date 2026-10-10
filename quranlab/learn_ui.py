@@ -357,7 +357,7 @@ def _ask(con, q: dict, state_key: str) -> None:
 # --------------------------------------------------------------------------
 def render_tab(con) -> None:
     """Contenu de l'onglet « Apprendre »."""
-    if not getattr(config, "LEARN_ENABLED", True):
+    if not getattr(config, "LEARN_ENABLED", False):
         st.info(t("learn.disabled"))
         return
     st.subheader(t("learn.title"))

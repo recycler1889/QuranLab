@@ -344,18 +344,23 @@ def _dialog_body() -> None:
     guide_body()
     col_go, col_later = st.columns([1, 1])
     if col_go.button(
-        c["BTN_START"], type="primary", use_container_width=True
+        c["BTN_START"], type="primary", use_container_width=True,
+        key="ql_guide_start_btn",
     ):
         st.session_state["ql_guide_open"] = False
         st.rerun()
-    if col_later.button(c["BTN_LATER"], use_container_width=True):
+    if col_later.button(
+        c["BTN_LATER"], use_container_width=True, key="ql_guide_later_btn"
+    ):
         st.session_state["ql_guide_open"] = False
         st.rerun()
 
 
 def sidebar_guide_button() -> None:
     """Bouton de réouverture du guide (à placer dans la barre latérale)."""
-    if st.button(_c()["BTN_OPEN"], use_container_width=True):
+    if st.button(
+        _c()["BTN_OPEN"], use_container_width=True, key="ql_guide_reopen_btn"
+    ):
         st.session_state["ql_guide_open"] = True
         st.rerun()
 

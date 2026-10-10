@@ -1366,9 +1366,13 @@ def donation_section() -> None:
     with st.expander(t("app.donate_title")):
         st.markdown(t("app.donate_intro"))
         if links.get("paypal"):
-            st.link_button(t("app.donate_paypal"), links["paypal"])
+            st.link_button(
+                t("app.donate_paypal"), links["paypal"], key="donate_paypal"
+            )
         if links.get("card"):
-            st.link_button(t("app.donate_card"), links["card"])
+            st.link_button(
+                t("app.donate_card"), links["card"], key="donate_card"
+            )
         if links.get("bitcoin"):
             st.markdown(f"**{t('app.donate_bitcoin')}**")
             st.code(links["bitcoin"])

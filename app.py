@@ -57,7 +57,7 @@ with st.sidebar:
     if st.session_state.get("show_tts", True):
         ui.tts_settings()
 
-    if config.LEARN_ENABLED:
+    if getattr(config, "LEARN_ENABLED", False):
         st.subheader(t("app.tab.learn"))
         st.checkbox(
             t("learn.words_clickable"),
@@ -116,7 +116,7 @@ except Exception as exc:  # noqa: BLE001
 
 # Fiche du mot sélectionné (clic sur un mot cliquable) — au-dessus des onglets,
 # afin d'être visible quelle que soit la section consultée.
-if config.LEARN_ENABLED:
+if getattr(config, "LEARN_ENABLED", False):
     learn_ui.word_inspector(con)
 
 
@@ -241,7 +241,9 @@ with tab_read:
     ui.continuous_player(_verses)
 
     _per_media = (_hi - _lo + 1) <= 50 or _force_media
-    _clickable = bool(st.session_state.get("learn_clickable")) and config.LEARN_ENABLED
+    _clickable = bool(st.session_state.get("learn_clickable")) and getattr(
+        config, "LEARN_ENABLED", False
+    )
     for _v in _verses:
         render_verse(
             _v["sura"], _v["aya"], _v["text_uthmani"], _v["translations"],
@@ -260,7 +262,7 @@ with tab_root:
     st.caption(t("app.root_caption"))
     col1, col2 = st.columns([3, 1])
     root_in = col1.text_input(t("app.root_label"), key="root_in")
-    ctx = col2.number_input(t("app.root_ctx"), 0, 10, 1)
+    ctx = col2.number_input(t("app.root_ctx"), 0, 10, 1, key="root_ctx")
     if root_in:
         res = search.search_root(con, root_in, with_context=int(ctx))
         render_root_results(con, res)
@@ -784,9 +786,11 @@ with tab_concord:
         col_ref, col_opts = st.columns([2, 3])
         ref = col_ref.text_input(t("app.mirror_ref"), key="mirror_ref")
         min_shared = col_opts.slider(
-            t("app.min_shared_mirror"), 1, 6, 2
+            t("app.min_shared_mirror"), 1, 6, 2, key="mirror_min"
         )
-        limit = col_opts.slider(t("app.nb_mirror"), 5, 40, 12)
+        limit = col_opts.slider(
+            t("app.nb_mirror"), 5, 40, 12, key="mirror_limit"
+        )
         if ref and ":" in ref:
             msura = maya = None
             try:
@@ -838,6 +842,7 @@ with tab_concord:
             t("app.criterion"),
             ["root", "term"],
             horizontal=True,
+            key="conc_criterion",
             format_func=lambda k: (
                 t("app.crit_root") if k == "root" else t("app.crit_term")
             ),
@@ -957,7 +962,7 @@ with tab_bm:
     _ref = _c1.text_input(
         t("app.bm_add_ref"), key="bm_ref", placeholder=t("app.bm_ref_ph")
     )
-    if _c2.button(t("app.bm_add_btn")):
+    if _c2.button(t("app.bm_add_btn"), key="bm_add_btn"):
         _parsed = ui.parse_ref(_ref)
         if _parsed is None:
             st.warning(t("app.bm_bad_ref"))
@@ -1014,7 +1019,7 @@ with tab_bm:
             file_name="favoris.txt",
             key="bm_download",
         )
-        if _b2.button(t("app.bm_clear")):
+        if _b2.button(t("app.bm_clear"), key="bm_clear_btn"):
             bookmarks.clear()
             st.success(t("app.bm_cleared"))
             st.rerun()
