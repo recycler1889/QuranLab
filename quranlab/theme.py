@@ -17,7 +17,7 @@ from urllib.parse import quote
 # Chaque palette définit un jeu cohérent de variables.
 PALETTES = {
     "Clair": {
-        "label": "Clair (blanc cassé)",
+        "label": "Clair",
         "bg": "#F7F5F0",       # fond blanc cassé
         "bg2": "#ECE7DD",      # barre latérale / surfaces secondaires
         "field": "#FFFFFF",    # champs de saisie
@@ -29,7 +29,7 @@ PALETTES = {
         "pattern_opacity": "0.06",
     },
     "Intermediaire": {
-        "label": "Intermédiaire (bleu-gris / confort oculaire)",
+        "label": "Intermédiaire (confort oculaire)",
         "bg": "#1E293B",       # ardoise feutrée
         "bg2": "#273449",
         "field": "#243146",
@@ -41,7 +41,7 @@ PALETTES = {
         "pattern_opacity": "0.07",
     },
     "Sombre": {
-        "label": "Sombre (gris-noir profond)",
+        "label": "Sombre",
         "bg": "#16181D",       # pas de noir pur
         "bg2": "#1F232B",
         "field": "#22262E",
@@ -107,14 +107,16 @@ def _mosaic_svg(color: str, opacity: str) -> str:
 
 
 def _ornament_svg(color: str) -> str:
-    """Petit fleuron calligraphique (losange + étoile) pour les titres."""
+    """Fleuron géométrique (étoile à huit branches, façon zellige) pour titres."""
     svg = (
         "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='16' "
         "viewBox='0 0 120 16'>"
-        f"<g fill='none' stroke='{color}' stroke-width='1' opacity='0.75'>"
-        "<path d='M0 8 H44 M76 8 H120'/>"
-        "<rect x='52' y='1' width='14' height='14' transform='rotate(45 59 8)'/>"
-        f"<circle cx='59' cy='8' r='2.4' fill='{color}'/>"
+        f"<g fill='none' stroke='{color}' stroke-width='1' opacity='0.8'>"
+        "<path d='M0 8 H36 M84 8 H120'/>"
+        "<rect x='52' y='2' width='16' height='16' "
+        "transform='rotate(45 60 8)'/>"
+        "<rect x='52' y='2' width='16' height='16'/>"
+        f"<circle cx='60' cy='8' r='2.2' fill='{color}'/>"
         "</g></svg>"
     )
     return "data:image/svg+xml," + quote(svg, safe="")
@@ -133,6 +135,7 @@ def css(name: str) -> str:
     ornament = _ornament_svg(p["pattern"])
     zebra = _rgba(p["bg2"], 0.5)
     sel_bg = _rgba(p["accent"], 0.28)
+    glow = _rgba(p["accent"], 0.10)
     return f"""
 <style>
 :root, html, body, .stApp,
@@ -312,42 +315,98 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
 /* --- Bandeau d'en-tête (banner) à l'esprit calligraphique ---------------- */
 .ql-banner {{
     position: relative;
-    padding: 1.35rem 1.6rem 1.15rem 1.6rem;
+    padding: 1.5rem 1.8rem 1.25rem 1.8rem;
     margin: 0 0 1.1rem 0;
     border: 1px solid var(--ql-border);
     border-radius: 16px;
-    background-color: var(--ql-bg2);
+    background:
+        radial-gradient(120% 95% at 50% -25%, {glow}, transparent 62%),
+        var(--ql-bg2);
+    box-shadow: 0 12px 30px -18px rgba(0,0,0,.35);
     overflow: hidden;
 }}
 .ql-banner::before {{
-    /* filet doré supérieur et inférieur, façon encadrement de mosaïque */
+    /* double filet supérieur : liseré fin + liseré accent, façon encadrement */
     content: "";
     position: absolute;
     left: 0; right: 0; top: 0;
-    height: 4px;
+    height: 3px;
     background: linear-gradient(
         90deg, transparent, var(--ql-accent), transparent
     );
-    opacity: .8;
+    opacity: .85;
+}}
+.ql-banner::after {{
+    /* filet inférieur discret, en écho au liseré supérieur */
+    content: "";
+    position: absolute;
+    left: 18%; right: 18%; bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg, transparent, var(--ql-accent), transparent
+    );
+    opacity: .4;
+}}
+/* cadre intérieur délicat (respect du geste géométrique) */
+.ql-inset {{
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--ql-border);
+    border-radius: 12px;
+    opacity: .55;
+    pointer-events: none;
+}}
+/* fleurons d'angle (équerres fines, façon feuille d'arabesque) */
+.ql-corner {{
+    position: absolute;
+    width: 15px; height: 15px;
+    pointer-events: none;
+}}
+.ql-corner::before, .ql-corner::after {{
+    content: "";
+    position: absolute;
+    background: var(--ql-accent);
+    opacity: .7;
+}}
+.ql-corner::before {{ width: 1.5px; height: 100%; }}
+.ql-corner::after  {{ width: 100%; height: 1.5px; }}
+.ql-c-tl {{ top: 5px; left: 5px; }}
+.ql-c-tr {{ top: 5px; right: 5px; transform: rotate(90deg); }}
+.ql-c-br {{ bottom: 5px; right: 5px; transform: rotate(180deg); }}
+.ql-c-bl {{ bottom: 5px; left: 5px; transform: rotate(-90deg); }}
+/* nappe calligraphique arabe au-dessus du titre */
+.ql-banner .ql-ar {{
+    margin: 0 0 .12rem 0;
+    text-align: center;
+    font-family: var(--ql-font-ar);
+    font-size: 1.12rem;
+    line-height: 1.3;
+    letter-spacing: .01em;
+    color: var(--ql-accent);
+    opacity: .92;
 }}
 .ql-banner .ql-title {{
     margin: 0;
-    font-size: 2.15rem;
+    text-align: center;
+    font-size: 2.05rem;
     font-weight: 700;
-    letter-spacing: .04em;
+    letter-spacing: .14em;
     color: var(--ql-fg);
-}}
-.ql-banner .ql-subtitle {{
-    margin: .35rem 0 0 0;
-    color: var(--ql-fg2);
-    font-size: .96rem;
-    max-width: 62rem;
+    line-height: 1.15;
 }}
 .ql-banner .ql-rule {{
+    width: 120px;
     height: 16px;
-    margin: .7rem 0 .1rem 0;
-    background: var(--ql-ornament) left center/120px 16px no-repeat;
-    opacity: .65;
+    margin: .6rem auto .05rem auto;
+    background: var(--ql-ornament) center/120px 16px no-repeat;
+    opacity: .75;
+}}
+.ql-banner .ql-subtitle {{
+    margin: .4rem auto 0 auto;
+    text-align: center;
+    color: var(--ql-fg2);
+    font-size: .96rem;
+    max-width: 54rem;
 }}
 
 /* Petit habillage des titres Streamlit natifs (hors bandeau) */

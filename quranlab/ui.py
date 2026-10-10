@@ -38,13 +38,21 @@ def surah_names() -> dict:
 # Rendu de base
 # --------------------------------------------------------------------------
 def page_header(title: str, subtitle: str) -> None:
-    """Bandeau de titre orné (motif de mosaïque + fleuron calligraphique).
+    """Bandeau de titre orné (cadre géométrique + nappe calligraphique arabe).
 
     Habille l'en-tête sans recourir à st.title/st.caption, afin de bénéficier
-    de la charte décorative (variables CSS --ql-*, classes .ql-banner).
+    de la charte décorative (variables CSS --ql-*, classes .ql-banner). Le
+    décor est purement SVG/CSS embarqué (data-URI) — aucun fichier réseau,
+    aucun surcoût de performance.
     """
     st.markdown(
         "<div class='ql-banner'>"
+        "<span class='ql-corner ql-c-tl'></span>"
+        "<span class='ql-corner ql-c-tr'></span>"
+        "<span class='ql-corner ql-c-br'></span>"
+        "<span class='ql-corner ql-c-bl'></span>"
+        "<div class='ql-inset'></div>"
+        "<p class='ql-ar' lang='ar' dir='rtl'>القرآن الكريم</p>"
         f"<h1 class='ql-title'>{html.escape(title)}</h1>"
         "<div class='ql-rule'></div>"
         f"<p class='ql-subtitle'>{html.escape(subtitle)}</p>"
