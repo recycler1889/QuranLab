@@ -21,6 +21,9 @@ lang = i18n.lang
 
 st.set_page_config(page_title=t("app.title"), layout="wide")
 
+# Réinitialise les compteurs d'occurrence des clés de widgets (unicité par run).
+ui.begin_run()
+
 # --- Langue d'interface (FR ou EN — jamais de mélange) ----------------------
 with st.sidebar:
     i18n.sidebar_language_selector()

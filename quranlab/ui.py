@@ -24,6 +24,37 @@ from .buckwalter import is_arabic
 
 t = i18n.t
 
+# Clés de widgets : l'appli rend TOUS ses onglets à chaque *rerun*, donc le même
+# verset peut être affiché plusieurs fois (ex. « Lire » ET « Favoris »). Une clé
+# dérivée de (sura, aya) ferait alors planter Streamlit
+# (StreamlitDuplicateElementKey). On ajoute donc un **indice d'occurrence**
+# calculé par *run* (compteur remis à zéro par `begin_run()`, appelé en tête de
+# app.py) : les clés sont uniques dans un run ET identiques au run suivant (le
+# clic se rejoue correctement), et le compteur vit dans `st.session_state` —
+# donc un par session (pas de course entre utilisateurs).
+_OCC_KEY = "__widget_occ"
+
+
+def begin_run() -> None:
+    """Remet à zéro les compteurs d'occurrence (à appeler en tête de app.py)."""
+    try:
+        st.session_state[_OCC_KEY] = {}
+    except Exception:  # noqa: BLE001 — hors contexte Streamlit (tests)
+        pass
+
+
+def unique_key(seed: str) -> str:
+    """Clé de widget **unique par occurrence** pour une graine donnée.
+
+    Deux rendus du même verset produisent ``seed`` puis ``seed#1``… ; la
+    numérotation étant déterministe (même ordre à chaque run), la clé reste
+    stable d'un rerun à l'autre pour un widget donné.
+    """
+    occ = st.session_state.setdefault(_OCC_KEY, {})
+    n = occ.get(seed, 0)
+    occ[seed] = n + 1
+    return seed if n == 0 else f"{seed}#{n}"
+
 # --------------------------------------------------------------------------
 # Noms de sourates (cache paresseux — évite de dépendre d'app.py)
 # --------------------------------------------------------------------------
@@ -367,7 +398,7 @@ def _piper_player(text: str, language: str, key: str) -> None:
     if not voice_name:
         return
     rate = float(st.session_state.get("tts_rate", 1.0))
-    btn_key = f"piperbtn_{key}"
+    btn_key = unique_key(f"piperbtn_{key}")
     audio_key = f"piperaudio_{key}"
     if st.button(t("ui.listen"), key=btn_key, help=t("ui.tts_button")):
         with st.spinner(t("ui.tts_generating")):
@@ -400,7 +431,7 @@ def tts(text: str, language: str = "fr") -> None:
     ``language``. Composant autonome (bascule lire/arrêter).
     """
     if _tts_engine(language) == "piper":
-        _piper_player(text, language, key=f"tts_{language}_{abs(hash(text)) % 10**8}")
+        _piper_player(text, language, key=f"tts_{language}")
         return
     pal = _palette()
     locale = config.tts_locale(language)
@@ -883,10 +914,16 @@ def parse_ref(text: str) -> tuple[int, int] | None:
 
 
 def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
-    """Petit bouton d'ajout / retrait d'un verset aux favoris."""
+    """Petit bouton d'ajout / retrait d'un verset aux favoris.
+
+    Le bouton reçoit une clé **unique par occurrence** (``unique_key``) : le même
+    verset pouvant être rendu dans plusieurs onglets au même *rerun*, une clé
+    brute ``(sura, aya)`` provoquerait ``StreamlitDuplicateElementKey``.
+    ``key_prefix`` distingue les usages multiples d'un même verset.
+    """
     saved = bookmarks.contains(sura, aya)
     label = t("ui.bookmark_remove") if saved else t("ui.bookmark_add")
-    if st.button(label, key=f"{key_prefix}_{sura}_{aya}"):
+    if st.button(label, key=unique_key(f"{key_prefix}_{sura}_{aya}")):
         bookmarks.toggle(sura, aya)
         st.rerun()
 
