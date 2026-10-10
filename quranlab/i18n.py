@@ -362,8 +362,8 @@ _FR = {
     "ui.verse": "Verset",
     "ui.bookmark_add": "☆ Ajouter aux favoris",
     "ui.bookmark_remove": "★ En favori",
-    "app.tab.read": "Lire",
-    "app.read_title": "Lire le Coran de A à Z",
+    "app.tab.read": "Lire le Coran Iqra",
+    "app.read_title": "Lire le Coran Iqra",
     "app.read_caption": (
         "Sourate par sourate, verset par verset — texte arabe, traductions et "
         "récitation."
@@ -377,6 +377,14 @@ _FR = {
     "app.read_next": "Suivants",
     "app.read_all": "Toute la sourate",
     "app.read_showing": "Versets {a} à {b} sur {n}.",
+    "app.read_jump": "Aller à une sourate ou un verset",
+    "app.read_jump_ph": "ex. 2:255 (ou « 2 255 », ou n° de sourate : 2)",
+    "app.read_jump_bad": (
+        "Entrée incomprise : utilisez « sourate:verset » (ex. 2:255) ou un "
+        "numéro de sourate (ex. 2) dans la limite du corpus."
+    ),
+    "app.read_jump_verse": "Verset {ref} affiché (sourate {n}).",
+    "app.read_jump_sura": "Sourate {n} — affichage des versets {a} à {b}.",
     "app.read_continuous": "Lecture continue de la sourate",
     "app.read_continuous_help": "Enchaîne la récitation verset par verset.",
     "app.read_media": "Lecteurs audio par verset",
@@ -391,8 +399,8 @@ _FR = {
     "app.bm_caption": "Favoris conservés sur cet appareil (data/bookmarks.json).",
     "app.bm_count": "{n} verset(s) en favori.",
     "app.bm_empty": (
-        "Aucun favori pour l'instant. Ajoutez-en depuis l'onglet Lire ou avec "
-        "une référence."
+        "Aucun favori pour l'instant. Ajoutez-en avec le bouton sous un verset "
+        "ou via une référence."
     ),
     "app.bm_add_ref": "Ajouter une référence",
     "app.bm_ref_ph": "ex. 2:255",
@@ -822,8 +830,8 @@ _EN = {
     "ui.verse": "Verse",
     "ui.bookmark_add": "☆ Add to bookmarks",
     "ui.bookmark_remove": "★ Bookmarked",
-    "app.tab.read": "Read",
-    "app.read_title": "Read the Qur'an from A to Z",
+    "app.tab.read": "Read the Quran Iqra",
+    "app.read_title": "Read the Quran Iqra",
     "app.read_caption": (
         "Surah by surah, verse by verse — Arabic text, translations and "
         "recitation."
@@ -837,6 +845,14 @@ _EN = {
     "app.read_next": "Next",
     "app.read_all": "Whole surah",
     "app.read_showing": "Verses {a} to {b} of {n}.",
+    "app.read_jump": "Jump to a surah or verse",
+    "app.read_jump_ph": "e.g. 2:255 (or “2 255”, or surah number: 2)",
+    "app.read_jump_bad": (
+        "Unrecognized input: use “surah:verse” (e.g. 2:255) or a surah number "
+        "(e.g. 2) within the corpus bounds."
+    ),
+    "app.read_jump_verse": "Verse {ref} displayed (surah {n}).",
+    "app.read_jump_sura": "Surah {n} — showing verses {a} to {b}.",
     "app.read_continuous": "Continuous recitation of the surah",
     "app.read_continuous_help": "Plays the recitation verse by verse.",
     "app.read_media": "Per-verse audio players",
@@ -851,7 +867,8 @@ _EN = {
     "app.bm_caption": "Bookmarks kept on this device (data/bookmarks.json).",
     "app.bm_count": "{n} bookmarked verse(s).",
     "app.bm_empty": (
-        "No bookmark yet. Add one from the Read tab or with a reference."
+        "No bookmark yet. Add one with the button under a verse or with a "
+        "reference."
     ),
     "app.bm_add_ref": "Add a reference",
     "app.bm_ref_ph": "e.g. 2:255",

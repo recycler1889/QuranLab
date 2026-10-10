@@ -197,7 +197,7 @@ def _lang_label(code: str) -> str:
     return t("ui.lang.fr") if code == "fr" else t("ui.lang.ar")
 
 
-# ---------------------------------------------------------------- Lire le Coran
+# ------------------------------------------------- Lire le Coran Iqra
 with tab_read:
     st.subheader(t("app.read_title"))
     st.caption(t("app.read_caption"))
@@ -213,6 +213,36 @@ with tab_read:
         )
         for s in _surahs
     }
+
+    # --- Barre de recherche / saut rapide (haut de page) ------------------
+    # Accepte « sourate:verset », « sourate verset » ou un simple numéro de
+    # sourate. Positionne directement le sélecteur et le curseur de plage
+    # ci-dessous via l'état de session, posé AVANT la création des widgets :
+    # effet instantané, sans rerun ni conflit de valeur. La dernière saisie
+    # appliquée est mémorisée pour ne pas re-déclencher le saut à chaque run.
+    _jump = st.text_input(
+        t("app.read_jump"),
+        key="read_jump",
+        placeholder=t("app.read_jump_ph"),
+    )
+    _jump_s = (_jump or "").strip()
+    _jtarget = search.jump_target(_jump_s, _by_num)
+    if _jump_s and _jtarget is None:
+        st.warning(t("app.read_jump_bad"))
+    elif _jtarget is not None and _jump_s != st.session_state.get("read_jump_applied"):
+        if _jtarget[0] == "verse":
+            _, _js, _ja = _jtarget
+            st.session_state["read_sura"] = _js
+            st.session_state[f"read_range_{_js}"] = (_ja, _ja)
+            st.success(t("app.read_jump_verse", ref=f"{_js}:{_ja}", n=_js))
+        else:
+            _, _js = _jtarget
+            _jlast = _by_num[_js]["verses_count"]
+            st.session_state["read_sura"] = _js
+            st.session_state[f"read_range_{_js}"] = (1, min(_jlast, 20))
+            st.success(t("app.read_jump_sura", n=_js, a=1, b=min(_jlast, 20)))
+        st.session_state["read_jump_applied"] = _jump_s
+
     _sura = st.selectbox(
         t("app.read_surah"),
         [s["number"] for s in _surahs],
@@ -220,13 +250,13 @@ with tab_read:
         key="read_sura",
     )
     _last = _by_num[_sura]["verses_count"]
-    _lo, _hi = st.slider(
-        t("app.read_range"),
-        1,
-        _last,
-        (1, min(_last, 20)),
-        key=f"read_range_{_sura}",
-    )
+    # Etat d'abord (pattern « session-state-first ») : le saut rapide écrit
+    # read_range_<_sura> AVANT la création du curseur ; sans valeur explicite,
+    # Streamlit reprend l'état de session sans conflit ni fuite visuelle.
+    _range_key = f"read_range_{_sura}"
+    if _range_key not in st.session_state:
+        st.session_state[_range_key] = (1, min(_last, 20))
+    _lo, _hi = st.slider(t("app.read_range"), 1, _last, key=_range_key)
     st.caption(t("app.read_showing", a=_lo, b=_hi, n=_last))
 
     _verses = read_verses_cached(con, _sura, _lo, _hi)

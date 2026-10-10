@@ -57,5 +57,27 @@ class TestParseRef(unittest.TestCase):
         self.assertIsNone(search.parse_ref("2:0"))
 
 
+_BY_NUM = {n: {"verses_count": 286 if n == 2 else 7 if n == 1 else 6}
+           for n in (1, 2, 114)}
+
+
+class TestJumpTarget(unittest.TestCase):
+    def test_verse_ref_colon(self):
+        self.assertEqual(search.jump_target("2:255", _BY_NUM), ("verse", 2, 255))
+
+    def test_verse_ref_space(self):
+        self.assertEqual(search.jump_target("2 255", _BY_NUM), ("verse", 2, 255))
+
+    def test_surah_number(self):
+        self.assertEqual(search.jump_target("2", _BY_NUM), ("sura", 2))
+
+    def test_whitespace_tolerated(self):
+        self.assertEqual(search.jump_target("  2 : 255  ", _BY_NUM), ("verse", 2, 255))
+
+    def test_unknown_input(self):
+        for bad in ("", "abc", "2:35x", "0:5", "2:999", "115", "999"):
+            self.assertIsNone(search.jump_target(bad, _BY_NUM), bad)
+
+
 if __name__ == "__main__":
     unittest.main()

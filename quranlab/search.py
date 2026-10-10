@@ -283,6 +283,33 @@ def parse_ref(text: str | None) -> tuple[int, int] | None:
     return sura, aya
 
 
+def jump_target(text: str | None, by_num: dict) -> tuple | None:
+    """Cible d'un saut rapide de lecture (barre en haut de l'onglet « Lire »).
+
+    Accepte une référence ``sourate:verset`` (ou « sourate verset », blancs
+    tolérés) ou un simple numéro de sourate. ``by_num`` : ``{n°: {sura…,
+    verses_count}}``.
+
+    Renvoie ``("verse", sura, aya)``, ``("sura", sura)`` ou ``None`` si
+    l'entrée est vide / invalide / hors bornes du corpus.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return None
+    ref = parse_ref(raw)
+    if ref is not None:
+        sura, aya = ref
+        count = by_num.get(sura, {}).get("verses_count", 0)
+        if count and 1 <= aya <= count:
+            return ("verse", sura, aya)
+        return None
+    if raw.isdigit():
+        n = int(raw)
+        if n in by_num:
+            return ("sura", n)
+    return None
+
+
 def get_verse(con: sqlite3.Connection, sura: int, aya: int) -> dict | None:
     v = con.execute(
         "SELECT sura, aya, text_uthmani, text_simple FROM verses "

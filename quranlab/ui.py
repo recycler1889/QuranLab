@@ -945,7 +945,7 @@ def render_verse(
     caption: str | None = None,
     font_size: str = "1.45rem",
     audio: bool = True,
-    bookmark: bool = False,
+    bookmark: bool = True,
     media: bool = True,
     interactive: bool = False,
     con=None,
@@ -957,7 +957,12 @@ def render_verse(
     **unique** bouton **de synthèse vocale dans la langue active** (voix
     ``fr-FR`` ou ``en-US``) sont ajoutés, regroupés en un seul composant.
     ``audio=False`` permet de désactiver la récitation (ex. versets de contexte).
-    ``bookmark=True`` ajoute un bouton d'ajout / retrait des favoris.
+    Le **bouton d'ajout / retrait des favoris** est affiché **par défaut** sous
+    chaque verset, à côté des options audio/TTS (``bookmark=False`` pour
+    l'occulter). Sa clé est rendue unique par occurrence via ``unique_key``
+    (``bookmark_button``) : une session donnée, un même verset affiché dans
+    plusieurs onglets produit des clés distinctes et stables — jamais de
+    ``StreamlitDuplicateElementKey``.
     ``interactive=True`` (avec ``con`` fourni) rend chaque mot du verset
     **cliquable** : un clic ouvre la fiche du mot (racine, fréquence, glose)
     via le paramètre d'URL ``appw``.
@@ -989,14 +994,14 @@ def render_verse(
     )
     if media and (show_audio or (show_tts and trans)):
         verse_media(sura, aya, trans)
+    if bookmark:
+        bookmark_button(sura, aya)
     if not trans:
         st.caption(t("ui.no_translation"))
     for tr in trans:
         st.markdown(f"**{tr['author']}** — {tr['text']}")
     if caption:
         st.caption(caption)
-    if bookmark:
-        bookmark_button(sura, aya)
     st.divider()
 
 
