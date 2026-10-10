@@ -268,6 +268,15 @@ _FR = {
     ),
     "ui.vl_label": "Voix de synthèse (francophone de préférence)",
     "ui.apply": "Appliquer",
+    "ui.test_voice": "Tester",
+    "ui.sample_fr": (
+        "Bonjour. Ceci est un test de lecture en français : le Coran "
+        "s'explique par le Coran."
+    ),
+    "ui.sample_en": (
+        "Hello. This is an English reading test: the Qur'an explains itself "
+        "by the Qur'an."
+    ),
     "ui.auto": "Auto",
     "ui.auto_opt": "Auto (meilleure voix {lang})",
     "ui.other_voices": "Autres voix",
@@ -530,6 +539,15 @@ _EN = {
     "ui.voice_hint": "If reading spells out letters, pick a {lang} voice below then click *Apply*.",
     "ui.vl_label": "Speech voice (prefer {lang} voices)",
     "ui.apply": "Apply",
+    "ui.test_voice": "Test",
+    "ui.sample_fr": (
+        "Bonjour. Ceci est un test de lecture en français : le Coran "
+        "s'explique par le Coran."
+    ),
+    "ui.sample_en": (
+        "Hello. This is an English reading test: the Qur'an explains itself "
+        "by the Qur'an."
+    ),
     "ui.auto": "Auto",
     "ui.auto_opt": "Auto (best {lang} voice)",
     "ui.other_voices": "Other voices",
