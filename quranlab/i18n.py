@@ -378,7 +378,7 @@ _FR = {
     "app.read_all": "Toute la sourate",
     "app.read_showing": "Versets {a} à {b} sur {n}.",
     "app.read_jump": "Aller à une sourate ou un verset",
-    "app.read_jump_ph": "ex. 2:255 (ou « 2 255 », ou n° de sourate : 2)",
+    "app.read_jump_ph": "ex. 2:255 · 2.255 · 2/255 · 2 255 (ou n° : 2)",
     "app.read_jump_bad": (
         "Entrée incomprise : utilisez « sourate:verset » (ex. 2:255) ou un "
         "numéro de sourate (ex. 2) dans la limite du corpus."
@@ -846,7 +846,7 @@ _EN = {
     "app.read_all": "Whole surah",
     "app.read_showing": "Verses {a} to {b} of {n}.",
     "app.read_jump": "Jump to a surah or verse",
-    "app.read_jump_ph": "e.g. 2:255 (or “2 255”, or surah number: 2)",
+    "app.read_jump_ph": "e.g. 2:255 · 2.255 · 2/255 · 2 255 (or #: 2)",
     "app.read_jump_bad": (
         "Unrecognized input: use “surah:verse” (e.g. 2:255) or a surah number "
         "(e.g. 2) within the corpus bounds."

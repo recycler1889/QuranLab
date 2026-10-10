@@ -902,8 +902,9 @@ def continuous_player(verses: list, reciter: dict | None = None) -> None:
 def parse_ref(text: str) -> tuple[int, int] | None:
     """Analyse une référence « sourate:verset » → (sura, aya) ou None.
 
-    Délègue au moteur de recherche : accepte « 2:255 », « 2 255 » ou
-    « 2 : 255 » (deux-points ou espace, blancs autour tolérés).
+    Délègue au moteur de recherche : accepte « 2:255 », « 2.255 », « 2/255 »
+    ou « 2 255 » (deux-points, point, barre oblique ou espace ; blancs autour
+    tolérés).
     """
     return search.parse_ref(text)
 

@@ -38,8 +38,23 @@ class TestParseRef(unittest.TestCase):
     def test_colon(self):
         self.assertEqual(search.parse_ref("2:255"), (2, 255))
 
+    def test_dot(self):
+        self.assertEqual(search.parse_ref("22.78"), (22, 78))
+
+    def test_dot_whitespace_around(self):
+        self.assertEqual(search.parse_ref("  22 . 78  "), (22, 78))
+
+    def test_slash(self):
+        self.assertEqual(search.parse_ref("22/78"), (22, 78))
+
+    def test_slash_whitespace_around(self):
+        self.assertEqual(search.parse_ref(" 22 / 78 "), (22, 78))
+
     def test_space_separator(self):
         self.assertEqual(search.parse_ref("2 255"), (2, 255))
+
+    def test_multiple_spaces(self):
+        self.assertEqual(search.parse_ref("22    78"), (22, 78))
 
     def test_whitespace_around(self):
         self.assertEqual(search.parse_ref("  2 : 255  "), (2, 255))
@@ -47,8 +62,13 @@ class TestParseRef(unittest.TestCase):
     def test_last_sura(self):
         self.assertEqual(search.parse_ref("114:6"), (114, 6))
 
+    def test_all_separators(self):
+        for sep in (":", ".", "/", " "):
+            self.assertEqual(search.parse_ref(f"22{sep}78"), (22, 78), repr(sep))
+
     def test_not_a_ref(self):
-        for bad in ("", "2", "2:255:1", "abc", "2:35x", "2255", "2,255"):
+        for bad in ("", "2", "2:255:1", "abc", "2:35x", "2255", "2,255",
+                    "22-78", "22..78", "22//78", "22.35x"):
             self.assertIsNone(search.parse_ref(bad), bad)
 
     def test_out_of_bounds(self):
@@ -68,6 +88,12 @@ class TestJumpTarget(unittest.TestCase):
     def test_verse_ref_space(self):
         self.assertEqual(search.jump_target("2 255", _BY_NUM), ("verse", 2, 255))
 
+    def test_verse_ref_dot(self):
+        self.assertEqual(search.jump_target("2.255", _BY_NUM), ("verse", 2, 255))
+
+    def test_verse_ref_slash(self):
+        self.assertEqual(search.jump_target("2/255", _BY_NUM), ("verse", 2, 255))
+
     def test_surah_number(self):
         self.assertEqual(search.jump_target("2", _BY_NUM), ("sura", 2))
 
@@ -75,7 +101,7 @@ class TestJumpTarget(unittest.TestCase):
         self.assertEqual(search.jump_target("  2 : 255  ", _BY_NUM), ("verse", 2, 255))
 
     def test_unknown_input(self):
-        for bad in ("", "abc", "2:35x", "0:5", "2:999", "115", "999"):
+        for bad in ("", "abc", "2:35x", "0:5", "2:999", "115", "999", "2-255"):
             self.assertIsNone(search.jump_target(bad, _BY_NUM), bad)
 
 

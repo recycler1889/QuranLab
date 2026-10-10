@@ -215,11 +215,12 @@ with tab_read:
     }
 
     # --- Barre de recherche / saut rapide (haut de page) ------------------
-    # Accepte « sourate:verset », « sourate verset » ou un simple numéro de
-    # sourate. Positionne directement le sélecteur et le curseur de plage
-    # ci-dessous via l'état de session, posé AVANT la création des widgets :
-    # effet instantané, sans rerun ni conflit de valeur. La dernière saisie
-    # appliquée est mémorisée pour ne pas re-déclencher le saut à chaque run.
+    # Accepte « sourate:verset » (séparateurs : : . / espace) ou un simple
+    # numéro de sourate. Positionne directement le sélecteur et le curseur de
+    # plage ci-dessous via l'état de session, posé AVANT la création des
+    # widgets : effet instantané, sans rerun ni conflit de valeur. La dernière
+    # saisie appliquée est mémorisée pour ne pas re-déclencher le saut à chaque
+    # run.
     _jump = st.text_input(
         t("app.read_jump"),
         key="read_jump",

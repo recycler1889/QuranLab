@@ -25,10 +25,10 @@ _THEMES_EN_PATH = Path(__file__).resolve().parent / "themes_en.json"
 _CONTROVERSIES_PATH = Path(__file__).resolve().parent / "controversies.json"
 _CONTROVERSIES_EN_PATH = Path(__file__).resolve().parent / "controversies_en.json"
 
-# Référence directe « sourate:verset » (deux-points ou espace comme séparateur,
-# blancs tolérés autour). L'entrée ENTIÈRE doit correspondre, sinon la
-# recherche textuelle normale prend le relais.
-_REF_RE = re.compile(r"^\s*(\d{1,3})\s*[: ]\s*(\d{1,3})\s*$")
+# Référence directe « sourate:verset » — séparateurs acceptés : deux-points,
+# point, barre oblique ou espace (blancs tolérés autour). L'entrée ENTIÈRE doit
+# correspondre, sinon la recherche textuelle normale prend le relais.
+_REF_RE = re.compile(r"^\s*(\d{1,3})\s*[:./\s]\s*(\d{1,3})\s*$")
 
 # Cache en mémoire du fichier de thèmes (invalidé si le fichier change).
 _THEMES_CACHE: dict | None = None
@@ -265,10 +265,11 @@ def search_root(
 def parse_ref(text: str | None) -> tuple[int, int] | None:
     """Analyse une référence « sourate:verset » saisie par l'utilisateur.
 
-    L'entrée **entière** doit suivre le format `[sourate]:[verset]`, séparés
-    par un deux-points ou un simple espace : « 2:255 », « 2 255 »,
-    « 2 : 255 »… (blancs tolérés autour). Tout autre contenu renvoie
-    ``None`` : la recherche textuelle classique prend alors le relais.
+    L'entrée **entière** doit suivre le format `[sourate][séparateur][verset]`,
+    le séparateur pouvant être un **deux-points**, un **point**, une **barre
+    oblique** ou une simple **espace** : « 2:255 », « 2.255 », « 2/255 »,
+    « 2 255 », « 2 : 255 »… (blancs tolérés autour). Tout autre contenu
+    renvoie ``None`` : la recherche textuelle classique prend alors le relais.
     Les bornes plausibles (sourate 1–114, verset ≥ 1) sont vérifiées ici ;
     l'existence effective du verset est contrôlée par ``get_verse``.
     """
@@ -286,9 +287,9 @@ def parse_ref(text: str | None) -> tuple[int, int] | None:
 def jump_target(text: str | None, by_num: dict) -> tuple | None:
     """Cible d'un saut rapide de lecture (barre en haut de l'onglet « Lire »).
 
-    Accepte une référence ``sourate:verset`` (ou « sourate verset », blancs
-    tolérés) ou un simple numéro de sourate. ``by_num`` : ``{n°: {sura…,
-    verses_count}}``.
+    Accepte une référence ``sourate:verset`` — séparateurs `:`, `.`, `/`,
+    espace (blancs tolérés) — ou un simple numéro de sourate. ``by_num`` :
+    ``{n°: {sura…, verses_count}}``.
 
     Renvoie ``("verse", sura, aya)``, ``("sura", sura)`` ou ``None`` si
     l'entrée est vide / invalide / hors bornes du corpus.
