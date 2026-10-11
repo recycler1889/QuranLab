@@ -353,7 +353,10 @@ has a **Listen** button (Arabic speech synthesis `ar-SA` via the browser API,
 `ui.tts_arabic`).
 
 1. **Alphabet** — the 28 letters, isolated / initial / medial / final forms and
-   the rule of the six non-connecting letters.
+   the rule of the six non-connecting letters; a **Shuffle the letters** toggle
+   reorders the cards randomly (the order is kept in the session state, so it
+   is stable while listening to the TTS), with a one-click return to the
+   **traditional order**.
 2. **Vowels** — short (*ḥarakāt*) and long (*moudoud*), with a drill (pick the
    transcription).
 3. **Signs** — soukoun, chaddah, tanwīn, illustrated by example words.

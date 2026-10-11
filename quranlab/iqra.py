@@ -23,6 +23,8 @@ Le sens des mots de lecture est fourni dans les deux langues de l'interface
 d'interface.
 """
 
+import random
+
 # ---------------------------------------------------------------- Alphabet -
 # (lettre, nom, nom arabe, transcription, quatre formes). Deux conventions :
 #   - le ``name`` latin est identique en français et en anglais ; ``ar_name``
@@ -131,6 +133,21 @@ MARKS = [
         ],
     },
 ]
+
+# ------------------------------------------------------------------ Mélange --
+def shuffled_order(n: int, rng: random.Random | None = None) -> list:
+    """Permutation aléatoire de ``range(n)`` (indices pour un affichage mélangé).
+
+    Renvoie une liste de ``n`` indices couvrant exactement ``0..n-1``, dans un
+    ordre tiré aléatoirement (dès que ``n > 1``). Un générateur ``rng`` peut être
+    fourni pour un tirage reproductible (tests). L'appelant conserve le résultat
+    dans l'état de session pour que l'ordre reste **stable** entre deux
+    ré-exécutions (interaction audio, bascule de forme…).
+    """
+    idx = list(range(n))
+    (rng or random).shuffle(idx)
+    return idx
+
 
 # ----------------------------------------------------------------- Syllabes --
 def consonants(exclude_alif: bool = True) -> list:

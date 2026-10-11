@@ -1,10 +1,14 @@
 """Onglet « Apprendre » · parcours de lecture de l'arabe (méthode Iqraʾ).
 
-Affiche le module pédagogique de ``iqra.py`` en six étapes navigables
-(Alphabet → Voyelles → Signes → Lecture → Vocabulaire → Nombres) puis, en
-toute fin de parcours de lecture, une passerelle vers le Coran : des sourates
+Affiche le module pédagogique de ``iqra.py`` en sept étapes navigables
+(Alphabet → Voyelles → Signes → Lecture → Vocabulaire → Nombres → 99 Noms) puis,
+en toute fin de parcours de lecture, une passerelle vers le Coran : des sourates
 courtes rendues en Uthmani avec récitation audio et transcription phonétique
 via ``ui.render_verse``.
+
+L'étape Alphabet propose un mode **mélangé** (bouton bascule) pour réviser les
+lettres dans un ordre aléatoire — conservé dans l'état de session pour rester
+stable entre les ré-exécutions — et un bouton de retour à l'ordre traditionnel.
 
 Synthèse vocale : un bouton « Écouter » (``ui.tts_arabic``) accompagne chaque
 lettre, voyelle, signe, mot-exemple, terme de vocabulaire et nombre — la
@@ -85,12 +89,46 @@ def _letter_card(letter: dict, c: dict) -> str:
     ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
 
 
+def _reset_alpha_shuffle() -> None:
+    """Revient à l'ordre traditionnel (callback : exécuté avant le rerun)."""
+    st.session_state["iqra_alpha_shuffle"] = False
+    st.session_state.pop("iqra_alpha_order", None)
+
+
+def _alphabet_order(n: int) -> list:
+    """Ordre d'affichage de l'alphabet : traditionnel ou mélangé (persistant).
+
+    En mode mélangé, l'ordre tiré est **conservé dans l'état de session** afin
+    de rester stable entre les ré-exécutions (écoute TTS, changement de forme) ;
+    il n'est régénéré que s'il est absent ou invalide.
+    """
+    if not st.session_state.get("iqra_alpha_shuffle"):
+        st.session_state.pop("iqra_alpha_order", None)
+        return list(range(n))
+    order = st.session_state.get("iqra_alpha_order")
+    if not order or len(order) != n or sorted(order) != list(range(n)):
+        order = iqra.shuffled_order(n)
+        st.session_state["iqra_alpha_order"] = order
+    return order
+
+
 def _step_alphabet():
     st.subheader(t("iqra.s1_title"))
     st.caption(t("iqra.s1_desc"))
     st.caption(t("iqra.s1_legend"))
+
+    n = len(iqra.ALPHABET)
+    _c1, _c2 = st.columns([3, 1])
+    with _c1:
+        shuffled = st.toggle(t("iqra.s1_shuffle"), key="iqra_alpha_shuffle")
+    with _c2:
+        st.button(t("iqra.s1_reset"), key="iqra_alpha_reset",
+                  on_click=_reset_alpha_shuffle, disabled=not shuffled)
+    order = _alphabet_order(n)
+
     c = _css()
-    for i, letter in enumerate(iqra.ALPHABET):
+    for i, idx in enumerate(order):
+        letter = iqra.ALPHABET[idx]
         if i % 4 == 0:
             cols = st.columns(4)
         with cols[i % 4]:

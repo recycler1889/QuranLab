@@ -545,6 +545,8 @@ _FR = {
         "Ces six lettres ne se rattachent jamais à la suivante : leur forme "
         "initiale égale leur forme isolée."
     ),
+    "iqra.s1_shuffle": "Mélanger les lettres",
+    "iqra.s1_reset": "Ordre traditionnel",
     "iqra.s2_title": "Voyelles — courtes (harakāt) et longues (moudoud)",
     "iqra.s2_desc": (
         "Une voyelle courte sonorise la consonne qui la porte ; une voyelle "
@@ -1116,6 +1118,8 @@ _EN = {
         "These six letters never bind to the next one: their initial form "
         "equals their isolated form."
     ),
+    "iqra.s1_shuffle": "Shuffle the letters",
+    "iqra.s1_reset": "Traditional order",
     "iqra.s2_title": "Vowels — short (harakāt) and long (moudoud)",
     "iqra.s2_desc": (
         "A short vowel voices the consonant that carries it; a long vowel "

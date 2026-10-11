@@ -362,7 +362,10 @@ Chaque élément porte un bouton **Écouter** (synthèse vocale arabe `ar-SA` vi
 l'API du navigateur, `ui.tts_arabic`).
 
 1. **Alphabet** — les 28 lettres, formes isolée / initiale / médiale / finale et
-   règle des six lettres non connectantes.
+   règle des six lettres non connectantes ; un bouton bascule **Mélanger les
+   lettres** réordonne les cartes aléatoirement (l'ordre est conservé dans
+   l'état de session, donc stable pendant l'écoute TTS), avec retour à
+   l'**ordre traditionnel** en un clic.
 2. **Voyelles** — courtes (*ḥarakāt*) et longues (*moudoud*), avec un
    entraînement (choix de la transcription).
 3. **Signes** — soukoun, chaddah, tanwīn, illustrés par des mots-exemples.

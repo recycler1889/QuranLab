@@ -1,5 +1,6 @@
 """Tests du parcours de lecture de l'arabe (module iqra, pur)."""
 
+import random
 import unittest
 
 from quranlab import iqra
@@ -179,6 +180,27 @@ class TestNumbers(unittest.TestCase):
         seen = [x["n"] for x in iqra.NUM_UNITS + iqra.NUM_TENS
                 + iqra.NUM_HUNDREDS]
         self.assertEqual(len(seen), len(set(seen)))
+
+
+class TestShuffledOrder(unittest.TestCase):
+    def test_permutation_complete(self):
+        order = iqra.shuffled_order(28)
+        self.assertEqual(len(order), 28)
+        self.assertEqual(sorted(order), list(range(28)))
+
+    def test_reproductible_avec_rng(self):
+        self.assertEqual(iqra.shuffled_order(28, random.Random(0)),
+                         iqra.shuffled_order(28, random.Random(0)))
+
+    def test_tailles_limites(self):
+        self.assertEqual(iqra.shuffled_order(0), [])
+        self.assertEqual(iqra.shuffled_order(1), [0])
+
+    def test_melange_modifie_au_moins_un_tirage(self):
+        identity = list(range(28))
+        self.assertTrue(
+            any(iqra.shuffled_order(28) != identity for _ in range(5))
+        )
 
 
 if __name__ == "__main__":
