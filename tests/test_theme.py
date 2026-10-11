@@ -42,6 +42,32 @@ class TestThemeSvg(unittest.TestCase):
         self.assertIn("@media (max-width: 420px)", css)
         self.assertIn("stMainBlockContainer", css)
 
+    def test_css_exposes_gold_accent(self):
+        for name in theme.ORDER:
+            css = theme.css(name)
+            self.assertIn("--ql-gold", css)
+            self.assertIn(theme.PALETTES[name]["gold"], css)
+
+    def test_css_defines_verse_anchors(self):
+        css = theme.css("Clair")
+        for part in (".ql-verse-anchor", ".ql-verse-ref", ".ql-ref-num",
+                     ".ql-verse-ar", ".ql-target"):
+            self.assertIn(part, css)
+
+    def test_dark_accent_is_muted_forest_green(self):
+        # Le vert du thème sombre doit rester mat/désaturé (pas de vert vif).
+        accent = theme.PALETTES["Sombre"]["accent"].lstrip("#")
+        r, g, b = (int(accent[i:i + 2], 16) for i in (0, 2, 4))
+        self.assertGreater(g, r)          # dominante verte
+        self.assertLess(g - b, 120)       # pas saturé à l'extrême
+        self.assertLess(g, 170)           # sombre, non éblouissant
+
+    def test_light_bg_is_not_pure_white(self):
+        bg = theme.PALETTES["Clair"]["bg"].lstrip("#")
+        self.assertNotEqual(bg.lower(), "ffffff")
+        r, g, b = (int(bg[i:i + 2], 16) for i in (0, 2, 4))
+        self.assertLess(max(r, g, b), 250)  # ivoire, jamais blanc pur
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -221,17 +221,16 @@ with tab_read:
         for s in _surahs
     }
 
-    # --- Barre de recherche / saut rapide (haut de page) ------------------
-    # Accepte « sourate:verset » (séparateurs : : . / espace) ou un simple
-    # numéro de sourate. Positionne directement le sélecteur et le curseur de
-    # plage ci-dessous via l'état de session, posé AVANT la création des
-    # widgets : effet instantané, sans rerun ni conflit de valeur. La dernière
-    # saisie appliquée est mémorisée pour ne pas re-déclencher le saut à chaque
-    # run.
+    # --- Barre de recherche rapide de verset (haut de page) ----------------
+    # Analogue à la barre de l'onglet Recherche : accepte une référence
+    # « sourate:verset » (séparateurs : : . / espace) ou un simple numéro de
+    # sourate. La lecture étant **continue** (sourate entière ci-dessous), une
+    # référence fait **défiler** jusqu'au verset ciblé et le **met en évidence**.
     _jump = st.text_input(
         t("app.read_jump"),
         key="read_jump",
         placeholder=t("app.read_jump_ph"),
+        label_visibility="collapsed",
     )
     _jump_s = (_jump or "").strip()
     _jtarget = search.jump_target(_jump_s, _by_num)
@@ -241,14 +240,22 @@ with tab_read:
         if _jtarget[0] == "verse":
             _, _js, _ja = _jtarget
             st.session_state["read_sura"] = _js
-            st.session_state[f"read_range_{_js}"] = (_ja, _ja)
-            st.success(t("app.read_jump_verse", ref=f"{_js}:{_ja}", n=_js))
+            st.session_state["read_target"] = (_js, _ja)
+            st.session_state["read_scroll"] = f"ql-v-{_js}-{_ja}"
+            st.session_state["read_jump_msg"] = t(
+                "app.read_jump_verse", ref=f"{_js}:{_ja}", n=_js
+            )
         else:
             _, _js = _jtarget
-            _jlast = _by_num[_js]["verses_count"]
             st.session_state["read_sura"] = _js
-            st.session_state[f"read_range_{_js}"] = (1, min(_jlast, 20))
-            st.success(t("app.read_jump_sura", n=_js, a=1, b=min(_jlast, 20)))
+            st.session_state["read_target"] = None
+            st.session_state["read_scroll"] = f"ql-sura-{_js}"
+            st.session_state["read_jump_msg"] = t(
+                "app.read_jump_sura_all",
+                n=_js,
+                name=_by_num[_js]["name_translit"],
+                count=_by_num[_js]["verses_count"],
+            )
         st.session_state["read_jump_applied"] = _jump_s
 
     _sura = st.selectbox(
@@ -258,16 +265,14 @@ with tab_read:
         key="read_sura",
     )
     _last = _by_num[_sura]["verses_count"]
-    # Etat d'abord (pattern « session-state-first ») : le saut rapide écrit
-    # read_range_<_sura> AVANT la création du curseur ; sans valeur explicite,
-    # Streamlit reprend l'état de session sans conflit ni fuite visuelle.
-    _range_key = f"read_range_{_sura}"
-    if _range_key not in st.session_state:
-        st.session_state[_range_key] = (1, min(_last, 20))
-    _lo, _hi = st.slider(t("app.read_range"), 1, _last, key=_range_key)
-    st.caption(t("app.read_showing", a=_lo, b=_hi, n=_last))
 
-    _verses = read_verses_cached(con, _sura, _lo, _hi)
+    _jump_msg = st.session_state.pop("read_jump_msg", None)
+    if _jump_msg:
+        st.success(_jump_msg)
+
+    # Lecture continue : l'**intégralité** de la sourate, sans limite de plage.
+    _verses = read_verses_cached(con, _sura, 1, _last)
+    st.caption(t("app.read_showing_all", n=_last))
 
     _force_media = st.checkbox(
         t("app.read_media"),
@@ -280,16 +285,27 @@ with tab_read:
     st.caption(t("app.read_continuous_help"))
     ui.continuous_player(_verses)
 
-    _per_media = (_hi - _lo + 1) <= 50 or _force_media
+    _target = st.session_state.get("read_target")
+    _per_media = _last <= 50 or _force_media
     _clickable = bool(st.session_state.get("learn_clickable")) and getattr(
         config, "LEARN_ENABLED", False
     )
+    # Ancre de tête (cible du saut « sourate »).
+    st.markdown(f"<div id='ql-sura-{_sura}' class='ql-verse-anchor'></div>",
+                unsafe_allow_html=True)
     for _v in _verses:
+        _is_target = bool(_target) and _target == (_v["sura"], _v["aya"])
         render_verse(
             _v["sura"], _v["aya"], _v["text_uthmani"], _v["translations"],
             bookmark=True, media=_per_media,
             interactive=_clickable, con=con,
+            anchor=f"ql-v-{_v['sura']}-{_v['aya']}" if _is_target else None,
+            target=_is_target,
         )
+    # Défilement vers la cible, une seule fois, juste après le saut.
+    _scroll = st.session_state.pop("read_scroll", None)
+    if _scroll:
+        ui.scroll_to(_scroll)
 
 
 # --------------------------------------------------- Rendu partagé : racine

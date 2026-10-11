@@ -36,8 +36,8 @@ APP_DESC = (
     "de l'arabe (méthode Iqraʾ) et 99 Noms d'Allah."
 )
 
-BASE_ACCENT = "#0B6E4F"
-BASE_BG = "#F7F5F0"
+BASE_ACCENT = "#0C5C46"
+BASE_BG = "#F2F1E8"
 
 # Taille (px) — nom de fichier, motif, fond plein, transparence.
 ICON_SPECS = (

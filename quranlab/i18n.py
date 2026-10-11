@@ -377,6 +377,7 @@ _FR = {
     "app.read_next": "Suivants",
     "app.read_all": "Toute la sourate",
     "app.read_showing": "Versets {a} à {b} sur {n}.",
+    "app.read_showing_all": "Versets 1 à {n} — sourate entière.",
     "app.read_jump": "Aller à une sourate ou un verset",
     "app.read_jump_ph": "ex. 2:255 · 2.255 · 2/255 · 2 255 (ou n° : 2)",
     "app.read_jump_bad": (
@@ -385,6 +386,7 @@ _FR = {
     ),
     "app.read_jump_verse": "Verset {ref} affiché (sourate {n}).",
     "app.read_jump_sura": "Sourate {n} — affichage des versets {a} à {b}.",
+    "app.read_jump_sura_all": "Sourate {n} · {name} — {count} versets affichés.",
     "app.read_continuous": "Lecture continue de la sourate",
     "app.read_continuous_help": "Enchaîne la récitation verset par verset.",
     "app.read_media": "Lecteurs audio par verset",
@@ -952,6 +954,7 @@ _EN = {
     "app.read_next": "Next",
     "app.read_all": "Whole surah",
     "app.read_showing": "Verses {a} to {b} of {n}.",
+    "app.read_showing_all": "Verses 1 to {n} — whole surah.",
     "app.read_jump": "Jump to a surah or verse",
     "app.read_jump_ph": "e.g. 2:255 · 2.255 · 2/255 · 2 255 (or #: 2)",
     "app.read_jump_bad": (
@@ -960,6 +963,7 @@ _EN = {
     ),
     "app.read_jump_verse": "Verse {ref} displayed (surah {n}).",
     "app.read_jump_sura": "Surah {n} — showing verses {a} to {b}.",
+    "app.read_jump_sura_all": "Surah {n} · {name} — {count} verses shown.",
     "app.read_continuous": "Continuous recitation of the surah",
     "app.read_continuous_help": "Plays the recitation verse by verse.",
     "app.read_media": "Per-verse audio players",

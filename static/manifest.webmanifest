@@ -8,8 +8,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#F7F5F0",
-  "theme_color": "#0B6E4F",
+  "background_color": "#F2F1E8",
+  "theme_color": "#0C5C46",
   "categories": [
     "education",
     "books",

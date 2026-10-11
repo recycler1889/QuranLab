@@ -941,6 +941,28 @@ def parse_ref(text: str) -> tuple[int, int] | None:
     return search.parse_ref(text)
 
 
+def scroll_to(anchor: str) -> None:
+    """Défile la page jusqu'à l'élément d'identifiant ``anchor``.
+
+    Le script s'exécute dans l'iframe de composant (même origine) et agit sur
+    le document parent. Échec silencieux si l'élément ou l'accès parent sont
+    indisponibles : l'ancre reste un simple repère inoffensif.
+    """
+    if not anchor:
+        return
+    target = json.dumps(anchor)
+    script = (
+        "<script>(function(){try{var d=window.parent.document;"
+        "function go(){var el=d.getElementById(" + target + ");"
+        "if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}"
+        "setTimeout(go,180);}catch(e){}})();</script>"
+    )
+    try:
+        st.iframe(script, height=0, width=0)
+    except Exception:
+        pass
+
+
 def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
     """Petit bouton d'ajout / retrait d'un verset aux favoris.
 
@@ -982,6 +1004,8 @@ def render_verse(
     media: bool = True,
     interactive: bool = False,
     con=None,
+    anchor: str | None = None,
+    target: bool = False,
 ) -> None:
     """Affiche un verset : référence (avec nom de sourate), texte arabe uthmani
     puis, systématiquement, les traductions empilées.
@@ -999,6 +1023,12 @@ def render_verse(
     ``interactive=True`` (avec ``con`` fourni) rend chaque mot du verset
     **cliquable** : un clic ouvre la fiche du mot (racine, fréquence, glose)
     via le paramètre d'URL ``appw``.
+
+    ``anchor`` pose un identifiant DOM (``<div id=…>``) sur la référence du
+    verset, cible d'un défilement (``ui.scroll_to``) ; ``target=True`` met le
+    verset en évidence (encadré doré) — utilisé par le saut rapide de l'onglet
+    « Lire » pour montrer directement le verset demandé dans la sourate
+    affichée en continu.
     """
     names = surah_names()
     ref = f"{sura}:{aya}"
@@ -1006,7 +1036,16 @@ def render_verse(
     show_audio = bool(audio) and st.session_state.get("show_quran_audio", True)
     show_tts = st.session_state.get("show_tts", True)
     trans = translations_for_lang(translations)
-    st.markdown(f"**{label or (f'{ref} — {name}' if name else ref)}**")
+    ref_text = label or (f"{ref} — {name}" if name else ref)
+    if anchor:
+        st.markdown(
+            f"<div id='{anchor}' class='ql-verse-anchor'></div>"
+            f"<div class='ql-verse-ref'><span class='ql-ref-num'>"
+            f"{html.escape(ref_text)}</span></div>",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(f"**{ref_text}**")
 
     tokens = []
     if interactive and con is not None:
@@ -1020,9 +1059,10 @@ def render_verse(
         )
     else:
         body = html.escape(text_uthmani)
+    body_class = "ql-verse-ar ql-target" if target else "ql-verse-ar"
     st.markdown(
-        f"<div dir='rtl' lang='ar' style='font-size:{font_size};"
-        f"line-height:2.2;margin:.2rem 0 .5rem 0'>{body}</div>",
+        f"<div class='{body_class}' dir='rtl' lang='ar' "
+        f"style='font-size:{font_size}'>{body}</div>",
         unsafe_allow_html=True,
     )
     if media and (show_audio or (show_tts and trans)):
