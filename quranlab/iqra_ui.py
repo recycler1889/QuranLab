@@ -23,12 +23,12 @@ import html
 
 import streamlit as st
 
-from . import cache, config, i18n, iqra, search, ui, vocab
+from . import asma, cache, config, i18n, iqra, search, ui, vocab
 
 t = i18n.t
 
 STEP_LABELS = ("iqra.step1", "iqra.step2", "iqra.step3", "iqra.step4",
-               "iqra.step5", "iqra.step6")
+               "iqra.step5", "iqra.step6", "iqra.step7")
 
 
 def _css() -> dict:
@@ -386,6 +386,62 @@ def _step_numbers():
 
 
 # --------------------------------------------------------------------------
+# Étape 7 — les 99 Noms d'Allah (cartes étymologiques + écoute par Nom)
+# --------------------------------------------------------------------------
+def _asma_card(name: dict, c: dict) -> str:
+    """Carte d'un Nom : calligraphie, translittération, traduction directe,
+    racine et définition lexicographique ; repère graphique à teinte douce."""
+    hue = name["hue"]
+    badge_bg = f"hsla({hue},60%,50%,.16)"
+    badge_br = f"hsla({hue},60%,45%,.55)"
+    return (
+        "<div style='border:1px solid {border};border-radius:14px;"
+        "padding:.6rem .55rem;background:{bg2};color:{fg};height:100%'>"
+        "<div style='display:flex;align-items:center;"
+        "justify-content:space-between'>"
+        f"<span style='font-size:.72rem;color:{c['fg2']}'>{name['n']} / "
+        f"{asma.count()}</span>"
+        "<span style='display:inline-flex;align-items:center;"
+        "justify-content:center;width:1.9rem;height:1.9rem;"
+        f"border-radius:50%;background:{badge_bg};border:1px solid {badge_br};"
+        f"font-size:1rem'>{name['icon']}</span></div>"
+        f"<div dir='rtl' lang='ar' style='text-align:center;font-size:1.7rem;"
+        f"color:{c['accent']};margin:.25rem 0 .1rem'>"
+        f"{html.escape(name['ar'])}</div>"
+        f"<div style='text-align:center;font-size:.86rem'>"
+        f"{html.escape(name['tr'])}</div>"
+        f"<div style='text-align:center;font-weight:600;font-size:.92rem;"
+        f"margin:.15rem 0'>{html.escape(asma.translation(name, _lang()))}</div>"
+        f"<div style='text-align:center;font-size:.74rem;color:{c['fg2']}'>"
+        f"{html.escape(t('iqra.asma_root'))} : "
+        f"<span dir='rtl' lang='ar'>{html.escape(name['root_ar'])}</span> · "
+        f"{html.escape(name['root_tr'])}</div>"
+        f"<div style='font-size:.78rem;color:{c['fg']};margin-top:.35rem;"
+        f"border-top:1px solid {c['border']};padding-top:.35rem'>"
+        f"{html.escape(asma.etymology(name, _lang()))}</div>"
+        "</div>"
+    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+
+
+def _step_asma():
+    st.subheader(t("iqra.asma_title"))
+    st.caption(t("iqra.asma_desc"))
+    st.caption(t("iqra.asma_legend"))
+    q = st.text_input(t("iqra.asma_search"), key="iqra_asma_q")
+    names = asma.search(q or "", _lang())
+    if not names:
+        st.caption(t("iqra.asma_none"))
+        return
+    c = _css()
+    for i in range(0, len(names), 3):
+        cols = st.columns(3)
+        for col, name in zip(cols, names[i:i + 3]):
+            with col:
+                st.markdown(_asma_card(name, c), unsafe_allow_html=True)
+                _listen(name["ar"])
+
+
+# --------------------------------------------------------------------------
 # Rendu complet
 # --------------------------------------------------------------------------
 def render_tab(con) -> None:
@@ -412,5 +468,7 @@ def render_tab(con) -> None:
         _step_reading(con=con)
     elif step == 4:
         _step_vocab(con)
-    else:
+    elif step == 5:
         _step_numbers()
+    else:
+        _step_asma()

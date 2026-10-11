@@ -149,6 +149,68 @@ _CONTENT = {
                     "Choisissez le critère « Racine » ou « Terme arabe ».",
                 ],
             },
+            {
+                "key": "Référence",
+                "label": "Recherche par référence",
+                "desc": (
+                    "Dans la barre de recherche universelle, saisissez "
+                    "directement une **référence de verset** : `2:255`, "
+                    "`2.255`, `2/255` ou `2 255` ouvrent le verset (sourate 2, "
+                    "verset 255). Les séparateurs `:`, `.`, `/` et l'espace "
+                    "sont équivalents."
+                ),
+                "tips": [
+                    "Formats acceptés : `36:1`, `36.1`, `36/1`, `36 1`.",
+                    "La référence ouvre le verset dans l'onglet Lire, au bon "
+                    "endroit.",
+                ],
+            },
+            {
+                "key": "Favoris",
+                "label": "Favoris",
+                "desc": (
+                    "L'onglet **Favoris** rassemble tous les versets mis de "
+                    "côté : gestion **centralisée** (consultation, "
+                    "suppression, export) et bouton de favori sous chaque "
+                    "verset pour ajouter ou retirer d'un clic."
+                ),
+                "tips": [
+                    "Le bouton sous un verset l'ajoute aux favoris.",
+                    "Les favoris restent locaux à votre installation.",
+                ],
+            },
+            {
+                "key": "Apprendre l'arabe",
+                "label": "Apprendre l'arabe (Iqra)",
+                "desc": (
+                    "Parcours progressif de l'onglet **Apprendre** : "
+                    "**alphabet** (28 lettres et formes), **voyelles** et "
+                    "**signes**, **lecture**, **vocabulaire essentiel** (les "
+                    "500 mots les plus fréquents du Coran), **nombres** (de 1 "
+                    "à 1000) et les **99 Noms d'Allah**. Chaque élément porte "
+                    "un bouton **Écouter** (synthèse vocale arabe)."
+                ),
+                "tips": [
+                    "Sept étapes navigables dans le parcours Iqra.",
+                    "La synthèse vocale arabe suit la voix du navigateur.",
+                ],
+            },
+            {
+                "key": "99 Noms",
+                "label": "Les 99 Noms d'Allah",
+                "desc": (
+                    "Dernière étape du parcours Iqra : les **99 Noms** (Asmāʾ "
+                    "Allāh al-Ḥusnā) en cartes — calligraphie arabe, "
+                    "translittération, traduction directe, **racine** et "
+                    "**sens lexicographique** de cette racine (étymologie, "
+                    "sans exégèse), avec écoute de la prononciation et filtre."
+                ),
+                "tips": [
+                    "Filtrez par arabe, translittération, sens ou racine.",
+                    "Un clic sur « Écouter » donne la prononciation arabe du "
+                    "Nom.",
+                ],
+            },
         ],
         "GUIDE_TITLE": "Guide de démarrage — rôle de chaque onglet",
         "WELCOME_TITLE": "Bienvenue dans QuranLab",
@@ -282,6 +344,67 @@ _CONTENT = {
                 "tips": [
                     "Ranking is by number of shared roots and overlap ratio.",
                     "Choose the criterion “Root” or “Arabic term”.",
+                ],
+            },
+            {
+                "key": "Reference",
+                "label": "Reference search",
+                "desc": (
+                    "In the universal search bar, type a **verse reference** "
+                    "directly: `2:255`, `2.255`, `2/255` or `2 255` open the "
+                    "verse (surah 2, verse 255). The separators `:`, `.`, `/` "
+                    "and space are equivalent."
+                ),
+                "tips": [
+                    "Accepted formats: `36:1`, `36.1`, `36/1`, `36 1`.",
+                    "The reference opens the verse in the Read tab, at the "
+                    "right place.",
+                ],
+            },
+            {
+                "key": "Bookmarks",
+                "label": "Bookmarks",
+                "desc": (
+                    "The **Bookmarks** tab gathers every saved verse: "
+                    "**centralised** management (browse, remove, export) plus "
+                    "a bookmark button under each verse to add or remove in "
+                    "one click."
+                ),
+                "tips": [
+                    "The button under a verse adds it to bookmarks.",
+                    "Bookmarks stay local to your installation.",
+                ],
+            },
+            {
+                "key": "Learn Arabic",
+                "label": "Learn Arabic (Iqra)",
+                "desc": (
+                    "A progressive course in the **Learn** tab: **alphabet** "
+                    "(28 letters and forms), **vowels** and **signs**, "
+                    "**reading**, **essential vocabulary** (the 500 most "
+                    "frequent words of the Qur'an), **numbers** (1 to 1000) "
+                    "and the **99 Names of Allah**. Every item has a "
+                    "**Listen** button (Arabic speech synthesis)."
+                ),
+                "tips": [
+                    "Seven navigable steps in the Iqra course.",
+                    "Arabic speech synthesis follows the browser voice.",
+                ],
+            },
+            {
+                "key": "99 Names",
+                "label": "The 99 Names of Allah",
+                "desc": (
+                    "Final step of the Iqra course: the **99 Names** (Asmāʾ "
+                    "Allāh al-Ḥusnā) as cards — Arabic calligraphy, "
+                    "transliteration, direct translation, **root** and the "
+                    "**lexicographic meaning** of that root (etymology, no "
+                    "exegesis), with pronunciation playback and a filter."
+                ),
+                "tips": [
+                    "Filter by Arabic, transliteration, meaning or root.",
+                    "One click on “Listen” gives the Arabic pronunciation of "
+                    "the Name.",
                 ],
             },
         ],

@@ -611,6 +611,21 @@ _FR = {
         "La centaine se construit sur مِائَة ; 200 fait exception avec la "
         "forme duelle مِائَتَان. « 1000 » se dit أَلْف."
     ),
+    "iqra.step7": "7 · Les 99 Noms",
+    "iqra.asma_title": "Les 99 Noms d'Allah — Asmāʾ Allāh al-Ḥusnā",
+    "iqra.asma_desc": (
+        "Pour chaque Nom : la calligraphie arabe, la translittération, la "
+        "traduction directe, la racine et le sens lexicographique de cette "
+        "racine (étymologie), sans exégèse. Un bouton « Écouter » donne la "
+        "prononciation."
+    ),
+    "iqra.asma_search": "Filtrer les noms (arabe, translittération, sens, racine…)",
+    "iqra.asma_root": "Racine",
+    "iqra.asma_legend": (
+        "Chaque carte porte un repère graphique et une teinte ; cliquez "
+        "« Écouter » pour la prononciation arabe."
+    ),
+    "iqra.asma_none": "Aucun nom ne correspond au filtre.",
     "iqra.listen": "Écouter",
     "iqra.listen_ar": "Écouter la prononciation arabe",
 }
@@ -1166,6 +1181,21 @@ _EN = {
         "The hundred is built on مِائَة; 200 is the exception with the dual "
         "form مِائَتَان. '1000' is أَلْف."
     ),
+    "iqra.step7": "7 · The 99 Names",
+    "iqra.asma_title": "The 99 Names of Allah — Asmāʾ Allāh al-Ḥusnā",
+    "iqra.asma_desc": (
+        "For each Name: the Arabic calligraphy, the transliteration, the "
+        "direct translation, the root, and the lexicographic meaning of that "
+        "root (etymology), with no exegesis. A 'Listen' button gives the "
+        "pronunciation."
+    ),
+    "iqra.asma_search": "Filter names (Arabic, transliteration, meaning, root…)",
+    "iqra.asma_root": "Root",
+    "iqra.asma_legend": (
+        "Each card carries a graphic marker and a tint; click 'Listen' for "
+        "the Arabic pronunciation."
+    ),
+    "iqra.asma_none": "No name matches the filter.",
     "iqra.listen": "Listen",
     "iqra.listen_ar": "Listen to Arabic pronunciation",
 }
