@@ -172,9 +172,9 @@ def new_queue(con, count: int | None = None) -> list:
     """Cartes neuves à introduire (racines fréquentes pas encore vues).
 
     ``con`` : connexion SQLite (pour le classement par fréquence). Import
-    paresseux de ``vocab`` pour éviter toute dépendance circulaire.
+    paresseux de ``cache`` pour éviter toute dépendance circulaire.
     """
-    from . import vocab  # import local : évite un cycle d'imports
+    from . import cache  # import local : évite un cycle d'imports
 
     settings = get_settings()
     n = settings["daily_new"] if count is None else count
@@ -182,7 +182,7 @@ def new_queue(con, count: int | None = None) -> list:
         return []
     cards = load()["cards"]
     out = []
-    for root in vocab.frequent_roots(con, top_n=config.LEARN_TOP_ROOTS):
+    for root in cache.frequent_roots_cached(con, config.LEARN_TOP_ROOTS):
         if _ckey("root", root["root_bw"]) in cards:
             continue
         out.append({
@@ -239,9 +239,9 @@ def stats(con=None, now=None) -> dict:
     }
 
     if con is not None:
-        from . import vocab  # import local
+        from . import cache  # import local
 
-        top = vocab.frequent_roots(con, top_n=config.LEARN_TOP_ROOTS)
+        top = cache.frequent_roots_cached(con, config.LEARN_TOP_ROOTS)
         total = len(top)
         ids = {r["root_bw"] for r in top}
         m = sum(1 for c in mastered if c.get("id") in ids)

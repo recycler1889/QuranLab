@@ -525,63 +525,50 @@ _FR = {
     "learn.no_vocab": "Lexique indisponible.",
     "iqra.title": "Lire l'arabe — méthode Iqraʾ",
     "iqra.caption": (
-        "Parcours en 4 étapes : alphabet, voyelles, signes, puis lecture "
-        "progressive du Coran en polices Uthmani."
+        "Un parcours guidé : alphabet, voyelles, signes, lecture progressive, "
+        "vocabulaire essentiel du Coran et nombres arabes."
     ),
     "iqra.choose_step": "Étape du parcours",
     "iqra.step1": "1 · Alphabet",
     "iqra.step2": "2 · Voyelles",
     "iqra.step3": "3 · Signes",
     "iqra.step4": "4 · Lecture",
-    "iqra.s1_intro": (
-        "Les 28 lettres de l'alphabet ont jusqu'à quatre formes selon leur "
-        "place dans le mot. Les six lettres « non connectives » n'en ont que "
-        "deux : elles ne s'attachent jamais à la suivante."
+    "iqra.step5": "5 · Vocabulaire",
+    "iqra.step6": "6 · Nombres",
+    "iqra.s1_title": "Alphabet arabe — les 28 lettres",
+    "iqra.s1_desc": (
+        "Chaque lettre a une forme isolée (seule) et des formes liées qui "
+        "dépendent de sa place dans le mot. Le bouton « Écouter » lit son nom."
     ),
-    "iqra.s1_col_letter": "Lettre",
-    "iqra.s1_col_name": "Nom",
-    "iqra.s1_col_iso": "Isolée",
-    "iqra.s1_col_init": "Initiale",
-    "iqra.s1_col_medi": "Médiale",
-    "iqra.s1_col_fin": "Finale",
-    "iqra.s1_col_tr": "Prononciation",
-    "iqra.s1_note_connect": (
-        "La forme « initiale » se lie à la lettre suivante, la « médiale » aux "
-        "deux côtés, la « finale » seulement à la précédente."
-    ),
+    "iqra.s1_legend": "Formes dans un mot : isolée · initiale · médiale · finale",
     "iqra.s1_note_nonconnect": (
         "Ces six lettres ne se rattachent jamais à la suivante : leur forme "
         "initiale égale leur forme isolée."
     ),
-    "iqra.s2_intro": (
-        "Une voyelle courte (haraka) sonorise la consonne : fatha (a), kasra "
-        "(i), dhamma (u). Une voyelle longue (madd) double le temps de la "
-        "syllabe."
+    "iqra.s2_title": "Voyelles — courtes (harakāt) et longues (moudoud)",
+    "iqra.s2_desc": (
+        "Une voyelle courte sonorise la consonne qui la porte ; une voyelle "
+        "longue allonge la syllabe. Écoutez chaque combinaison, puis "
+        "entraînez-vous."
     ),
     "iqra.s2_table_short": "Voyelles courtes — harakāt",
     "iqra.s2_table_long": "Voyelles longues — moudoud",
-    "iqra.s2_col_form": "Avec ب",
-    "iqra.s2_col_name": "Nom",
-    "iqra.s2_col_sound": "Son",
-    "iqra.s2_col_combo": "Construction",
     "iqra.s2_exercise": "Entraînement : lisez la syllabe, puis vérifiez.",
     "iqra.s2_drill_hint": "Quelle transcription pour cette syllabe ?",
     "iqra.s2_check": "Vérifier",
     "iqra.s2_correct": "Correct !",
     "iqra.s2_wrong": "Non — c'était « {tr} ».",
     "iqra.s2_next": "Syllabe suivante",
-    "iqra.s3_intro": (
-        "Trois signes affinent la lecture : soukoun (aucune voyelle), chaddah "
-        "(consonne doublée), tanwin (n final). Lisez les exemples à voix haute."
+    "iqra.s3_title": "Signes de lecture — soukoun, chaddah, tanwin",
+    "iqra.s3_desc": (
+        "Ces signes affinent la prononciation : aucune voyelle, consonne "
+        "doublée, n final. Écoutez chaque mot-exemple, puis lisez à voix haute."
     ),
     "iqra.s3_role": "Rôle",
-    "iqra.s3_mot": "Mot",
-    "iqra.s3_tr": "Prononciation",
-    "iqra.s3_mean": "Sens",
-    "iqra.s4_intro": (
-        "Assemblez les briques lues : des mots simples aux expressions, puis "
-        "lisez de courtes sourates. La transcription phonétique vous guide, "
-        "la récitation vous corrige."
+    "iqra.s4_title": "Lecture progressive — mots puis sourates",
+    "iqra.s4_desc": (
+        "Assemblez ce que vous savez : mots simples, expressions consacrées, "
+        "puis de courtes sourates avec transcription phonétique et récitation."
     ),
     "iqra.s4_practice": "Passerelle vers le Coran — lisez ces sourates courtes",
     "iqra.s4_practice_hint": (
@@ -591,6 +578,41 @@ _FR = {
     ),
     "iqra.s4_surah_fmt": "Sourate {n} — {name}",
     "iqra.s4_no_con": "Connexion aux données indisponible : passerelle Coran masquée.",
+    "iqra.vocab_title": "Vocabulaire essentiel du Coran",
+    "iqra.vocab_desc": (
+        "Les racines les plus fréquentes du texte coranique : chaque carte "
+        "montre le mot le plus représentatif, sa prononciation, son sens et "
+        "une référence. « Écouter » lit le mot."
+    ),
+    "iqra.vocab_cov": (
+        "Les {n} racines les plus fréquentes couvrent {pct} % des {total} "
+        "mots racinisés du Coran."
+    ),
+    "iqra.vocab_search": "Filtrer les mots (arabe, prononciation, sens…)",
+    "iqra.vocab_limit": "Nombre de cartes affichées",
+    "iqra.vocab_root": "racine",
+    "iqra.vocab_meta": "{occ} fois · {verses} versets · {ref}",
+    "iqra.vocab_none": "Aucun mot ne correspond au filtre.",
+    "iqra.vocab_no_con": "Connexion aux données indisponible : vocabulaire masqué.",
+    "iqra.num_title": "Les nombres en arabe — de 1 à 1000",
+    "iqra.num_desc": (
+        "Chaque nombre associe son chiffre arabo-indien (٠١٢٣٤٥٦٧٨٩), son "
+        "écriture en toutes lettres et sa prononciation : écoutez-la d'un "
+        "clic sur « Écouter »."
+    ),
+    "iqra.num_units_title": "De 1 à 10",
+    "iqra.num_tens_title": "Les dizaines — de 20 à 90",
+    "iqra.num_tens_hint": (
+        "Pour composer un nombre, unité puis dizaine reliées par « و » : "
+        "« 21 » se dit « واحد وعشرون » (un et vingt)."
+    ),
+    "iqra.num_hundreds_title": "Les centaines — jusqu'à 1000",
+    "iqra.num_hundreds_hint": (
+        "La centaine se construit sur مِائَة ; 200 fait exception avec la "
+        "forme duelle مِائَتَان. « 1000 » se dit أَلْف."
+    ),
+    "iqra.listen": "Écouter",
+    "iqra.listen_ar": "Écouter la prononciation arabe",
 }
 
 _EN = {
@@ -1058,62 +1080,50 @@ _EN = {
     "learn.no_vocab": "Lexicon unavailable.",
     "iqra.title": "Read Arabic — Iqraʾ method",
     "iqra.caption": (
-        "A 4-step path: alphabet, vowels, signs, then progressive Qur'an "
-        "reading in Uthmani fonts."
+        "A guided path: alphabet, vowels, signs, progressive reading, "
+        "essential Qur'an vocabulary and Arabic numbers."
     ),
     "iqra.choose_step": "Course step",
     "iqra.step1": "1 · Alphabet",
     "iqra.step2": "2 · Vowels",
     "iqra.step3": "3 · Signs",
     "iqra.step4": "4 · Reading",
-    "iqra.s1_intro": (
-        "The 28 letters of the alphabet have up to four forms depending on "
-        "their position in the word. The six 'non-connective' letters have "
-        "only two: they never bind to the following letter."
+    "iqra.step5": "5 · Vocabulary",
+    "iqra.step6": "6 · Numbers",
+    "iqra.s1_title": "Arabic alphabet — the 28 letters",
+    "iqra.s1_desc": (
+        "Each letter has an isolated form (alone) and linked forms that "
+        "depend on its position in the word. The 'Listen' button reads its "
+        "name."
     ),
-    "iqra.s1_col_letter": "Letter",
-    "iqra.s1_col_name": "Name",
-    "iqra.s1_col_iso": "Isolated",
-    "iqra.s1_col_init": "Initial",
-    "iqra.s1_col_medi": "Medial",
-    "iqra.s1_col_fin": "Final",
-    "iqra.s1_col_tr": "Sound",
-    "iqra.s1_note_connect": (
-        "An 'initial' form binds to the following letter, a 'medial' form to "
-        "both sides, a 'final' form only to the previous one."
-    ),
+    "iqra.s1_legend": "Forms in a word: isolated · initial · medial · final",
     "iqra.s1_note_nonconnect": (
         "These six letters never bind to the next one: their initial form "
         "equals their isolated form."
     ),
-    "iqra.s2_intro": (
-        "A short vowel (haraka) voices the consonant: fatha (a), kasra (i), "
-        "dhamma (u). A long vowel (madd) doubles the length of the syllable."
+    "iqra.s2_title": "Vowels — short (harakāt) and long (moudoud)",
+    "iqra.s2_desc": (
+        "A short vowel voices the consonant that carries it; a long vowel "
+        "stretches the syllable. Listen to each combination, then practice."
     ),
     "iqra.s2_table_short": "Short vowels — harakāt",
     "iqra.s2_table_long": "Long vowels — moudoud",
-    "iqra.s2_col_form": "With ب",
-    "iqra.s2_col_name": "Name",
-    "iqra.s2_col_sound": "Sound",
-    "iqra.s2_col_combo": "Building",
     "iqra.s2_exercise": "Practice: read the syllable, then check.",
     "iqra.s2_drill_hint": "Which transliteration for this syllable?",
     "iqra.s2_check": "Check",
     "iqra.s2_correct": "Correct!",
     "iqra.s2_wrong": "No — it was “{tr}”.",
     "iqra.s2_next": "Next syllable",
-    "iqra.s3_intro": (
-        "Three signs refine your reading: sukun (no vowel), shadda (doubled "
-        "consonant), tanwin (final n). Read the examples aloud."
+    "iqra.s3_title": "Reading signs — sukun, shadda, tanwin",
+    "iqra.s3_desc": (
+        "These signs refine your pronunciation: no vowel, doubled consonant, "
+        "final n. Listen to each example word, then read aloud."
     ),
     "iqra.s3_role": "Role",
-    "iqra.s3_mot": "Word",
-    "iqra.s3_tr": "Sound",
-    "iqra.s3_mean": "Meaning",
-    "iqra.s4_intro": (
-        "Assemble the bricks you have read: from simple words to set phrases, "
-        "then read short surahs. The phonetic transliteration guides you, the "
-        "recitation corrects you."
+    "iqra.s4_title": "Progressive reading — words then surahs",
+    "iqra.s4_desc": (
+        "Assemble what you know: simple words, set phrases, then short surahs "
+        "with phonetic transliteration and recitation."
     ),
     "iqra.s4_practice": "Bridge to the Qur'an — read these short surahs",
     "iqra.s4_practice_hint": (
@@ -1123,6 +1133,41 @@ _EN = {
     ),
     "iqra.s4_surah_fmt": "Surah {n} — {name}",
     "iqra.s4_no_con": "Data connection unavailable: Qur'an bridge hidden.",
+    "iqra.vocab_title": "Essential Qur'an vocabulary",
+    "iqra.vocab_desc": (
+        "The most frequent roots of the Qur'anic text: each card shows the "
+        "most representative word, its pronunciation, its meaning and a "
+        "reference. 'Listen' reads the word."
+    ),
+    "iqra.vocab_cov": (
+        "The {n} most frequent roots cover {pct} % of the {total} rooted "
+        "words of the Qur'an."
+    ),
+    "iqra.vocab_search": "Filter words (Arabic, pronunciation, meaning…)",
+    "iqra.vocab_limit": "Number of cards shown",
+    "iqra.vocab_root": "root",
+    "iqra.vocab_meta": "{occ} times · {verses} verses · {ref}",
+    "iqra.vocab_none": "No word matches the filter.",
+    "iqra.vocab_no_con": "Data connection unavailable: vocabulary hidden.",
+    "iqra.num_title": "Arabic numbers — from 1 to 1000",
+    "iqra.num_desc": (
+        "Each number pairs its Arabic-Indic digit (٠١٢٣٤٥٦٧٨٩), its spelling "
+        "in full letters and its pronunciation: listen with a click on "
+        "'Listen'."
+    ),
+    "iqra.num_units_title": "From 1 to 10",
+    "iqra.num_tens_title": "The tens — from 20 to 90",
+    "iqra.num_tens_hint": (
+        "To compose a number, unit then ten joined by 'و': '21' is said "
+        "'واحد وعشرون' (one and twenty)."
+    ),
+    "iqra.num_hundreds_title": "The hundreds — up to 1000",
+    "iqra.num_hundreds_hint": (
+        "The hundred is built on مِائَة; 200 is the exception with the dual "
+        "form مِائَتَان. '1000' is أَلْف."
+    ),
+    "iqra.listen": "Listen",
+    "iqra.listen_ar": "Listen to Arabic pronunciation",
 }
 
 # --- API ------------------------------------------------------------------

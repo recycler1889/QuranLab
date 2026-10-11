@@ -229,3 +229,80 @@ def sample_verses(con: sqlite3.Connection, root_bw: str, limit: int = 1) -> list
         (root_bw, int(limit)),
     ).fetchall()
     return [{"sura": r["sura"], "aya": r["aya"]} for r in rows]
+
+
+# --- Vocabulaire essentiel (parcours Iqra) --------------------------------
+def corpus_token_count(con: sqlite3.Connection) -> int:
+    """Nombre total de mots « racinisés » du corpus (= dénominateur de
+    la couverture de fréquence)."""
+    return con.execute(
+        "SELECT COUNT(*) FROM words "
+        "WHERE root_buckwalter IS NOT NULL AND root_buckwalter <> ''"
+    ).fetchone()[0]
+
+
+def frequent_words(con: sqlite3.Connection, top_n: int = 500,
+                   lang: str = "fr") -> list:
+    """Racines les plus fréquentes, avec leur mot le plus représentatif.
+
+    Chaque entrée contient, outre le rang et la racine (arabe + Buckwalter) :
+
+    - ``ar`` / ``tr`` : la **forme la plus fréquente** du corpus pour cette
+      racine, avec sa translittération (colonne ``words.transliteration``) ;
+    - ``occ`` / ``verses`` : occurrences totales et versets distincts ;
+    - ``ref`` : première occurrence (``sura:aya``) du corpus ;
+    - ``gloss`` : glose localisée (par ``lang``) ;
+    - ``coverage_pct`` : part cumulée du texte couverte jusqu'à ce rang.
+
+    Deux requêtes seulement (regroupement par racine puis par forme) :
+    pas de sous-requête corrélée.
+    """
+    total = corpus_token_count(con)
+    rows = con.execute(
+        """
+        SELECT root_buckwalter AS bw, root_arabic AS ar, COUNT(*) AS occ,
+               COUNT(DISTINCT sura || ':' || aya) AS verses,
+               MIN(sura * 1000 + aya) AS first_key
+        FROM words
+        WHERE root_buckwalter IS NOT NULL AND root_buckwalter <> ''
+        GROUP BY root_buckwalter
+        ORDER BY occ DESC, root_buckwalter ASC
+        LIMIT ?
+        """,
+        (int(top_n),),
+    ).fetchall()
+
+    # Forme (arabe + translittération) la plus fréquente de chaque racine :
+    # le tri par compte décroissant donne la première occurrence par racine.
+    best: dict = {}
+    for r in con.execute(
+        """
+        SELECT root_buckwalter AS bw, form_arabic AS form,
+               MAX(transliteration) AS tr
+        FROM words
+        WHERE root_buckwalter IS NOT NULL AND root_buckwalter <> ''
+          AND form_arabic <> '' AND transliteration <> ''
+        GROUP BY root_buckwalter, form_arabic
+        ORDER BY COUNT(*) DESC
+        """
+    ).fetchall():
+        best.setdefault(r["bw"], (r["form"], r["tr"]))
+
+    out = []
+    cumulative = 0
+    for rank, r in enumerate(rows, start=1):
+        cumulative += r["occ"]
+        form, tr = best.get(r["bw"], ("", ""))
+        out.append({
+            "rank": rank,
+            "root_bw": r["bw"],
+            "root_ar": r["ar"],
+            "ar": form,
+            "tr": tr,
+            "occ": r["occ"],
+            "verses": r["verses"],
+            "ref": "%d:%d" % (r["first_key"] // 1000, r["first_key"] % 1000),
+            "gloss": root_gloss(r["bw"], lang),
+            "coverage_pct": round(cumulative / total * 100, 1) if total else 0.0,
+        })
+    return out

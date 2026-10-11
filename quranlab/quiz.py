@@ -15,7 +15,7 @@ from __future__ import annotations
 import random
 import sqlite3
 
-from . import config, srs, vocab
+from . import cache, config, srs, vocab
 
 
 def build_choices(correct: str, distractors, n: int = 4,
@@ -71,8 +71,8 @@ def context_question(con: sqlite3.Connection, card: dict, lang: str = "fr",
     if not answer:
         return None
     distractors = [
-        r["gloss"] for r in vocab.frequent_roots(
-            con, top_n=config.LEARN_TOP_ROOTS, lang=lang)
+        r["gloss"] for r in cache.frequent_roots_cached(
+            con, config.LEARN_TOP_ROOTS, lang=lang)
         if r["root_bw"] != root_bw and r.get("gloss")
     ]
     options = build_choices(answer, distractors, config.LEARN_QUIZ_CHOICES, rng)
@@ -94,8 +94,8 @@ def root_question(con: sqlite3.Connection, lang: str = "fr",
     """Question de reconnaissance de racine à partir d'une forme du corpus."""
     rng = rng or random
     lemmas = [
-        lemma for lemma in vocab.frequent_lemmas(
-            con, top_n=config.LEARN_TOP_ROOTS)
+        lemma for lemma in cache.frequent_lemmas_cached(
+            con, config.LEARN_TOP_ROOTS)
         if lemma.get("root_bw") and lemma.get("root_ar")
     ]
     if not lemmas:
@@ -110,8 +110,8 @@ def root_question(con: sqlite3.Connection, lang: str = "fr",
         return None
     answer = lemma["root_ar"]
     distractors = [
-        r["root_ar"] for r in vocab.frequent_roots(
-            con, top_n=config.LEARN_TOP_ROOTS)
+        r["root_ar"] for r in cache.frequent_roots_cached(
+            con, config.LEARN_TOP_ROOTS)
         if r["root_bw"] != lemma["root_bw"] and r.get("root_ar")
     ]
     options = build_choices(answer, distractors, config.LEARN_QUIZ_CHOICES, rng)

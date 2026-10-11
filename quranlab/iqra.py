@@ -3,11 +3,14 @@
 Données pédagogiques statiques, volontairement indépendantes de Streamlit
 (pour être testables à l'unité) :
 
-- ``ALPHABET`` : les 28 lettres, avec leur nom, leur transcription et leurs
-  quatre formes positionnelles (isolée, initiale, médiale, finale) ;
+- ``ALPHABET`` : les 28 lettres, avec leur nom, leur nom arabe (pour la
+  synthèse vocale), leur transcription et leurs quatre formes
+  positionnelles (isolée, initiale, médiale, finale) ;
 - ``SHORT_VOWELS`` / ``LONG_VOWELS`` : voyelles courtes (harakāt) et longues
   (moudoud), présentées sur la consonne ``ب`` ;
 - ``MARKS`` : soukoun, chaddah, tanwin, avec des mots-exemples voyellés ;
+- ``NUM_UNITS`` / ``NUM_TENS`` / ``NUM_HUNDREDS`` : les nombres arabes de 1 à
+  1000 (chiffre arabo-indien, mot voyellé, transcription) ;
 - ``syllable_items()`` / ``syllables_grid()`` : grilles consonne × voyelle ;
 - ``READING_TIERS`` : des listes de mots progressifs (du mot simple aux
   expressions consacrées), chacune accompagnée de sa transcription et de sa
@@ -21,39 +24,40 @@ d'interface.
 """
 
 # ---------------------------------------------------------------- Alphabet -
-# (lettre, nom, transcription, quatre formes). Deux conventions :
-#   - le ``name`` latin est identique en français et en anglais ;
+# (lettre, nom, nom arabe, transcription, quatre formes). Deux conventions :
+#   - le ``name`` latin est identique en français et en anglais ; ``ar_name``
+#     est le nom de la lettre en écriture arabe (lu par la synthèse vocale) ;
 #   - les lettres « non connectives » (ا د ذ ر ز و) ne joignent jamais la
 #     lettre suivante : leur forme initiale égale leur forme isolée.
 ALPHABET = [
-    {"ar": "ا", "name": "alif",    "tr": "ā / ʾ", "forms": ("ا", "ا", "ـا", "ـا")},
-    {"ar": "ب", "name": "bāʾ",     "tr": "b",     "forms": ("ب", "بـ", "ـبـ", "ـب")},
-    {"ar": "ت", "name": "tāʾ",     "tr": "t",     "forms": ("ت", "تـ", "ـتـ", "ـت")},
-    {"ar": "ث", "name": "thāʾ",    "tr": "th",    "forms": ("ث", "ثـ", "ـثـ", "ـث")},
-    {"ar": "ج", "name": "jīm",     "tr": "j",     "forms": ("ج", "جـ", "ـجـ", "ـج")},
-    {"ar": "ح", "name": "ḥāʾ",     "tr": "ḥ",     "forms": ("ح", "حـ", "ـحـ", "ـح")},
-    {"ar": "خ", "name": "khāʾ",    "tr": "kh",    "forms": ("خ", "خـ", "ـخـ", "ـخ")},
-    {"ar": "د", "name": "dāl",     "tr": "d",     "forms": ("د", "د", "ـد", "ـد")},
-    {"ar": "ذ", "name": "dhāl",    "tr": "dh",    "forms": ("ذ", "ذ", "ـذ", "ـذ")},
-    {"ar": "ر", "name": "rāʾ",     "tr": "r",     "forms": ("ر", "ر", "ـر", "ـر")},
-    {"ar": "ز", "name": "zay",     "tr": "z",     "forms": ("ز", "ز", "ـز", "ـز")},
-    {"ar": "س", "name": "sīn",     "tr": "s",     "forms": ("س", "سـ", "ـسـ", "ـس")},
-    {"ar": "ش", "name": "shīn",    "tr": "sh",    "forms": ("ش", "شـ", "ـشـ", "ـش")},
-    {"ar": "ص", "name": "ṣād",     "tr": "ṣ",     "forms": ("ص", "صـ", "ـصـ", "ـص")},
-    {"ar": "ض", "name": "ḍād",     "tr": "ḍ",     "forms": ("ض", "ضـ", "ـضـ", "ـض")},
-    {"ar": "ط", "name": "ṭāʾ",     "tr": "ṭ",     "forms": ("ط", "طـ", "ـطـ", "ـط")},
-    {"ar": "ظ", "name": "ẓāʾ",     "tr": "ẓ",     "forms": ("ظ", "ظـ", "ـظـ", "ـظ")},
-    {"ar": "ع", "name": "ʿayn",    "tr": "ʿ",     "forms": ("ع", "عـ", "ـعـ", "ـع")},
-    {"ar": "غ", "name": "ghayn",   "tr": "gh",    "forms": ("غ", "غـ", "ـغـ", "ـغ")},
-    {"ar": "ف", "name": "fāʾ",     "tr": "f",     "forms": ("ف", "فـ", "ـفـ", "ـف")},
-    {"ar": "ق", "name": "qāf",     "tr": "q",     "forms": ("ق", "قـ", "ـقـ", "ـق")},
-    {"ar": "ك", "name": "kāf",     "tr": "k",     "forms": ("ك", "كـ", "ـكـ", "ـك")},
-    {"ar": "ل", "name": "lām",     "tr": "l",     "forms": ("ل", "لـ", "ـلـ", "ـل")},
-    {"ar": "م", "name": "mīm",     "tr": "m",     "forms": ("م", "مـ", "ـمـ", "ـم")},
-    {"ar": "ن", "name": "nūn",     "tr": "n",     "forms": ("ن", "نـ", "ـنـ", "ـن")},
-    {"ar": "ه", "name": "hāʾ",     "tr": "h",     "forms": ("ه", "هـ", "ـهـ", "ـه")},
-    {"ar": "و", "name": "wāw",     "tr": "w",     "forms": ("و", "و", "ـو", "ـو")},
-    {"ar": "ي", "name": "yāʾ",     "tr": "y",     "forms": ("ي", "يـ", "ـيـ", "ـي")},
+    {"ar": "ا", "name": "alif",    "ar_name": "أَلِف",   "tr": "ā / ʾ",    "forms": ("ا", "ا", "ـا", "ـا")},
+    {"ar": "ب", "name": "bāʾ",     "ar_name": "بَاء",    "tr": "b",        "forms": ("ب", "بـ", "ـبـ", "ـب")},
+    {"ar": "ت", "name": "tāʾ",     "ar_name": "تَاء",    "tr": "t",        "forms": ("ت", "تـ", "ـتـ", "ـت")},
+    {"ar": "ث", "name": "thāʾ",    "ar_name": "ثَاء",    "tr": "th",       "forms": ("ث", "ثـ", "ـثـ", "ـث")},
+    {"ar": "ج", "name": "jīm",     "ar_name": "جِيم",    "tr": "j",        "forms": ("ج", "جـ", "ـجـ", "ـج")},
+    {"ar": "ح", "name": "ḥāʾ",     "ar_name": "حَاء",    "tr": "ḥ",        "forms": ("ح", "حـ", "ـحـ", "ـح")},
+    {"ar": "خ", "name": "khāʾ",    "ar_name": "خَاء",    "tr": "kh",       "forms": ("خ", "خـ", "ـخـ", "ـخ")},
+    {"ar": "د", "name": "dāl",     "ar_name": "دَال",    "tr": "d",        "forms": ("د", "د", "ـد", "ـد")},
+    {"ar": "ذ", "name": "dhāl",    "ar_name": "ذَال",    "tr": "dh",       "forms": ("ذ", "ذ", "ـذ", "ـذ")},
+    {"ar": "ر", "name": "rāʾ",     "ar_name": "رَاء",    "tr": "r",        "forms": ("ر", "ر", "ـر", "ـر")},
+    {"ar": "ز", "name": "zay",     "ar_name": "زَاي",    "tr": "z",        "forms": ("ز", "ز", "ـز", "ـز")},
+    {"ar": "س", "name": "sīn",     "ar_name": "سِين",    "tr": "s",        "forms": ("س", "سـ", "ـسـ", "ـس")},
+    {"ar": "ش", "name": "shīn",    "ar_name": "شِين",    "tr": "sh",       "forms": ("ش", "شـ", "ـشـ", "ـش")},
+    {"ar": "ص", "name": "ṣād",     "ar_name": "صَاد",    "tr": "ṣ",        "forms": ("ص", "صـ", "ـصـ", "ـص")},
+    {"ar": "ض", "name": "ḍād",     "ar_name": "ضَاد",    "tr": "ḍ",        "forms": ("ض", "ضـ", "ـضـ", "ـض")},
+    {"ar": "ط", "name": "ṭāʾ",     "ar_name": "طَاء",    "tr": "ṭ",        "forms": ("ط", "طـ", "ـطـ", "ـط")},
+    {"ar": "ظ", "name": "ẓāʾ",     "ar_name": "ظَاء",    "tr": "ẓ",        "forms": ("ظ", "ظـ", "ـظـ", "ـظ")},
+    {"ar": "ع", "name": "ʿayn",    "ar_name": "عَيْن",   "tr": "ʿ",        "forms": ("ع", "عـ", "ـعـ", "ـع")},
+    {"ar": "غ", "name": "ghayn",   "ar_name": "غَيْن",   "tr": "gh",       "forms": ("غ", "غـ", "ـغـ", "ـغ")},
+    {"ar": "ف", "name": "fāʾ",     "ar_name": "فَاء",    "tr": "f",        "forms": ("ف", "فـ", "ـفـ", "ـف")},
+    {"ar": "ق", "name": "qāf",     "ar_name": "قَاف",    "tr": "q",        "forms": ("ق", "قـ", "ـقـ", "ـق")},
+    {"ar": "ك", "name": "kāf",     "ar_name": "كَاف",    "tr": "k",        "forms": ("ك", "كـ", "ـكـ", "ـك")},
+    {"ar": "ل", "name": "lām",     "ar_name": "لَام",    "tr": "l",        "forms": ("ل", "لـ", "ـلـ", "ـل")},
+    {"ar": "م", "name": "mīm",     "ar_name": "مِيم",    "tr": "m",        "forms": ("م", "مـ", "ـمـ", "ـم")},
+    {"ar": "ن", "name": "nūn",     "ar_name": "نُون",    "tr": "n",        "forms": ("ن", "نـ", "ـنـ", "ـن")},
+    {"ar": "ه", "name": "hāʾ",     "ar_name": "هَاء",    "tr": "h",        "forms": ("ه", "هـ", "ـهـ", "ـه")},
+    {"ar": "و", "name": "wāw",     "ar_name": "وَاو",    "tr": "w",        "forms": ("و", "و", "ـو", "ـو")},
+    {"ar": "ي", "name": "yāʾ",     "ar_name": "يَاء",    "tr": "y",        "forms": ("ي", "يـ", "ـيـ", "ـي")},
 ]
 
 # Lettres qui ne s'attachent jamais à la suivante (forme initiale == isolée).
@@ -247,6 +251,56 @@ READING_TIERS = [
             {"ar": "لَا إِلَٰهَ إِلَّا اللَّهُ", "tr": "lā ilāha illā llāh", "fr": "nulle divinité sinon Dieu", "en": "no god but God"},
         ],
     },
+]
+
+# --------------------------------------------------------------- Nombres ----
+# Chiffres arabo-indiens (levantins) pour convertir l'écriture d'un nombre.
+ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩"
+
+
+def arabic_digits(n: int) -> str:
+    """Convertit un entier en chiffres arabo-indiens (``21`` -> ``٢١``)."""
+    return "".join(ARABIC_DIGITS[int(ch)] for ch in str(int(n)))
+
+
+# De 1 à 10 : chiffre, mot voyellé (forme de comptage) et transcription.
+NUM_UNITS = [
+    {"n": 1,  "ar": "وَاحِد",    "tr": "wāḥid"},
+    {"n": 2,  "ar": "اِثْنَانِ", "tr": "ithnāni"},
+    {"n": 3,  "ar": "ثَلَاثَة",  "tr": "thalātha"},
+    {"n": 4,  "ar": "أَرْبَعَة", "tr": "arbaʿa"},
+    {"n": 5,  "ar": "خَمْسَة",   "tr": "khamsa"},
+    {"n": 6,  "ar": "سِتَّة",    "tr": "sitta"},
+    {"n": 7,  "ar": "سَبْعَة",   "tr": "sabʿa"},
+    {"n": 8,  "ar": "ثَمَانِيَة", "tr": "thamāniya"},
+    {"n": 9,  "ar": "تِسْعَة",   "tr": "tisʿa"},
+    {"n": 10, "ar": "عَشَرَة",   "tr": "ʿashara"},
+]
+
+# Les dizaines : 20, 30, …, 90 (le 10 est déjà compté dans NUM_UNITS).
+NUM_TENS = [
+    {"n": 20, "ar": "عِشْرُون",   "tr": "ʿishrūn"},
+    {"n": 30, "ar": "ثَلَاثُون",  "tr": "thalāthūn"},
+    {"n": 40, "ar": "أَرْبَعُون", "tr": "arbaʿūn"},
+    {"n": 50, "ar": "خَمْسُون",   "tr": "khamsūn"},
+    {"n": 60, "ar": "سِتُّون",    "tr": "sittūn"},
+    {"n": 70, "ar": "سَبْعُون",   "tr": "sabʿūn"},
+    {"n": 80, "ar": "ثَمَانُون",  "tr": "thamānūn"},
+    {"n": 90, "ar": "تِسْعُون",   "tr": "tisʿūn"},
+]
+
+# Les centaines : 100, 200, …, 1000 (200 est la forme duelle de مائة).
+NUM_HUNDREDS = [
+    {"n": 100,  "ar": "مِائَة",       "tr": "miʾa"},
+    {"n": 200,  "ar": "مِائَتَان",    "tr": "miʾatān"},
+    {"n": 300,  "ar": "ثَلَاثُمِائَة", "tr": "thalāthu miʾa"},
+    {"n": 400,  "ar": "أَرْبَعُمِائَة", "tr": "arbaʿu miʾa"},
+    {"n": 500,  "ar": "خَمْسُمِائَة", "tr": "khamsu miʾa"},
+    {"n": 600,  "ar": "سِتُّمِائَة",  "tr": "sittu miʾa"},
+    {"n": 700,  "ar": "سَبْعُمِائَة", "tr": "sabʿu miʾa"},
+    {"n": 800,  "ar": "ثَمَانِي مِائَة", "tr": "thamāni miʾa"},
+    {"n": 900,  "ar": "تِسْعُمِائَة", "tr": "tisʿu miʾa"},
+    {"n": 1000, "ar": "أَلْف",        "tr": "alf"},
 ]
 
 # Sourates courtes à lire en fin de parcours : verset -> transcription.

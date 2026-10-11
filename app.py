@@ -8,7 +8,7 @@ import sqlite3
 
 import streamlit as st
 
-from quranlab import bookmarks, config, db, i18n, iqra_ui, learn_ui, onboarding, search, ui
+from quranlab import bookmarks, cache, config, db, i18n, iqra_ui, learn_ui, onboarding, search, ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -202,7 +202,7 @@ with tab_read:
     st.subheader(t("app.read_title"))
     st.caption(t("app.read_caption"))
 
-    _surahs = search.surah_list(con)
+    _surahs = cache.surah_list_cached(con)
     _by_num = {s["number"]: s for s in _surahs}
     _labels = {
         s["number"]: t(

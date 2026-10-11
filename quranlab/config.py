@@ -61,7 +61,7 @@ TRANSLATIONS = [
 ]
 
 # Locale BCP-47 par langue, utilisée par la synthèse vocale du navigateur.
-TTS_LOCALES = {"fr": "fr-FR", "en": "en-US"}
+TTS_LOCALES = {"fr": "fr-FR", "en": "en-US", "ar": "ar-SA"}
 
 
 def tts_locale(language: str) -> str:
@@ -244,6 +244,9 @@ LEARNING_PATH = DATA_DIR / "learning.json"
 
 # Taille du lexique fréquent servant de référence au taux de maîtrise (%).
 LEARN_TOP_ROOTS = 300
+
+# Nombre de racines du « Vocabulaire essentiel » du parcours Iqra (top du corpus).
+IQRA_VOCAB_TOP = 500
 
 # Une carte est considérée « maîtrisée » après ce nombre de révisions réussies
 # en état « review » (échéance espacée).

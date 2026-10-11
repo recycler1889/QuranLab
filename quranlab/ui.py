@@ -220,10 +220,11 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
 #     Les voix « Natural / Neural / Online » (Microsoft Edge, gratuites et très
 #     naturelles) sont classées en tête, puis Google (Chrome), puis les voix
 #     locales du système.
-_LG_MATCH = {"fr": "fr", "en": "en"}
+_LG_MATCH = {"fr": "fr", "en": "en", "ar": "ar"}
 _LG_SUBS = {
     "fr": ("fran", "french", "français", "francais"),
     "en": ("english", "eng"),
+    "ar": ("arab", "arabic", "arabe", "arabique"),
 }
 _LG_PREFS = {
     "fr": [
@@ -237,6 +238,10 @@ _LG_PREFS = {
         "natural", "neural", "online", "google us", "google uk",
         "microsoft aria", "microsoft jenny", "microsoft guy",
         "samantha", "zira", "david", "mark", "google", "microsoft",
+    ],
+    "ar": [
+        "arabic", "arab", "arabe", "arabique", "natural", "neural",
+        "online", "google", "microsoft",
     ],
 }
 
@@ -414,37 +419,28 @@ def _piper_player(text: str, language: str, key: str) -> None:
         st.audio(data, format="audio/wav")
 
 
-def tts(text: str, language: str = "fr") -> None:
-    """Bouton de synthèse vocale d'un texte.
+def _tts_browser_button(text: str, language: str, allow_external: bool = True,
+                        title_key: str = "ui.tts_title",
+                        label_key: str = "ui.play") -> None:
+    """Bouton de synthèse vocale « voix du navigateur » (Web Speech API).
 
-    Deux fonctionnements, selon la configuration :
-
-    * **Voix du navigateur** (défaut) : Web Speech API — voix « Natural » de
-      Microsoft Edge, voix Google de Chrome ou voix système. Un moteur de choix
-      privilégie les voix françaises neuronales/en ligne et évite l'épellation
-      lettre à lettre.
-    * **Fournisseur externe** (si ``config.TTS_HTTP_URL`` est renseigné) : le
-      texte est lu depuis le flux audio du service configuré (aucune voix
-      locale requise).
-
-    Les libellés suivent la langue d'**interface** active ; la langue lue suit
-    ``language``. Composant autonome (bascule lire/arrêter).
+    Fabrique un iframe autonome (non sandboxé : la Web Speech API s'y active) ;
+    le sélecteur de voix est paramétré par langue, la préférence mémorisée par
+    le navigateur (localStorage). Un fournisseur HTTP externe
+    (``config.TTS_HTTP_URL``) prend le relais si ``allow_external``.
     """
-    if _tts_engine(language) == "piper":
-        _piper_player(text, language, key=f"tts_{language}")
-        return
     pal = _palette()
     locale = config.tts_locale(language)
     rate = float(st.session_state.get("tts_rate", 1.0))
     pitch = float(st.session_state.get("tts_pitch", 1.0))
     # json.dumps → littéral JS sûr ; « < » échappé pour ne pas clore </script>.
     payload = json.dumps(text or "", ensure_ascii=False).replace("<", "\\u003c")
-    play = json.dumps(t("ui.play"), ensure_ascii=False)
+    play = json.dumps(t(label_key), ensure_ascii=False)
     stop = json.dumps(t("ui.stop"), ensure_ascii=False)
     unavail = json.dumps(t("ui.tts_unavail"), ensure_ascii=False)
-    title = html.escape(t("ui.tts_title", locale=locale))
+    title = html.escape(t(title_key, locale=locale))
 
-    external = _tts_external_url(text or "", locale)
+    external = _tts_external_url(text or "", locale) if allow_external else ""
     if external:
         button_js = f"""
         var au=document.getElementById('ext');var PLAY='\\u25B6 ' + {play};
@@ -482,7 +478,7 @@ def tts(text: str, language: str = "fr") -> None:
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
     </style></head><body>
       <button id="b" title="{title}">
-        &#9654; {t("ui.play")}</button>
+        &#9654; {t(label_key)}</button>
       {audio_tag}
       <script>
         var RATE={rate!r};var PITCH={pitch!r};
@@ -495,6 +491,42 @@ def tts(text: str, language: str = "fr") -> None:
       </script>
     </body></html>"""
     st.iframe(comp, height=30)
+
+
+def tts(text: str, language: str = "fr") -> None:
+    """Bouton de synthèse vocale d'un texte.
+
+    Deux fonctionnements, selon la configuration :
+
+    * **Voix du navigateur** (défaut) : Web Speech API — voix « Natural » de
+      Microsoft Edge, voix Google de Chrome ou voix système. Un moteur de choix
+      privilégie les voix françaises neuronales/en ligne et évite l'épellation
+      lettre à lettre.
+    * **Fournisseur externe** (si ``config.TTS_HTTP_URL`` est renseigné) : le
+      texte est lu depuis le flux audio du service configuré (aucune voix
+      locale requise).
+
+    Les libellés suivent la langue d'**interface** active ; la langue lue suit
+    ``language``. Composant autonome (bascule lire/arrêter).
+
+    Pour l'**arabe**, utiliser :func:`tts_arabic` : aucune voix Piper, la
+    locution est toujours confiée à la Web Speech API du navigateur.
+    """
+    if language != "ar" and _tts_engine(language) == "piper":
+        _piper_player(text, language, key=f"tts_{language}")
+        return
+    _tts_browser_button(text, language)
+
+
+def tts_arabic(text: str) -> None:
+    """Prononciation arabe d'un texte (Web Speech API, jamais Piper).
+
+    La locale ``ar-SA`` et les préférences de voix arabes (``_LG_SUBS``/
+    ``_LG_PREFS``) sont utilisées ; l'iframe étant autonome, la fonction est
+    répétable sans collision d'identifiant.
+    """
+    _tts_browser_button(text, "ar", allow_external=False,
+                        title_key="iqra.listen_ar", label_key="iqra.listen")
 
 
 def verse_media(

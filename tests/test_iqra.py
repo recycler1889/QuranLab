@@ -13,6 +13,11 @@ class TestAlphabet(unittest.TestCase):
             self.assertTrue(letter["name"])
             self.assertTrue(letter["tr"])
             self.assertEqual(len(letter["forms"]), 4)
+            self.assertTrue(letter["ar_name"])
+            self.assertTrue(
+                any("\u0620" <= ch <= "\u064a" for ch in letter["ar_name"]),
+                f"{letter['ar']}: ar_name non arabe",
+            )
 
     def test_lettres_connectives_ont_4_formes_distinctes(self):
         for letter in iqra.ALPHABET:
@@ -136,6 +141,44 @@ class TestPracticeSurahs(unittest.TestCase):
         total = sum(len(translit) for _, translit in iqra.PRACTICE_SURAHS)
         # 4 + 5 + 6 + 7 = 22 versets transcrits.
         self.assertEqual(total, 22)
+
+
+class TestNumbers(unittest.TestCase):
+    def _has_arabic(self, s: str) -> bool:
+        return any(
+            "\u0620" <= ch <= "\u064a"
+            or ch in "\u064b\u064c\u064d\u064e\u064f\u0650\u0651\u0652"
+            for ch in s
+        )
+
+    def test_unites_1_a_10(self):
+        self.assertEqual([u["n"] for u in iqra.NUM_UNITS],
+                         list(range(1, 11)))
+        for u in iqra.NUM_UNITS:
+            self.assertTrue(u["ar"])
+            self.assertTrue(u["tr"])
+            self.assertTrue(self._has_arabic(u["ar"]))
+
+    def test_dizaines_et_centaines(self):
+        self.assertEqual([t["n"] for t in iqra.NUM_TENS],
+                         list(range(20, 100, 10)))
+        self.assertEqual([h["n"] for h in iqra.NUM_HUNDREDS],
+                         [*range(100, 1000, 100), 1000])
+        for item in iqra.NUM_TENS + iqra.NUM_HUNDREDS:
+            self.assertTrue(self._has_arabic(item["ar"]))
+            self.assertTrue(item["tr"])
+
+    def test_arabic_digits_conversion(self):
+        self.assertEqual(iqra.arabic_digits(0), "٠")
+        self.assertEqual(iqra.arabic_digits(1), "١")
+        self.assertEqual(iqra.arabic_digits(21), "٢١")
+        self.assertEqual(iqra.arabic_digits(1000), "١٠٠٠")
+        self.assertEqual(len(iqra.arabic_digits(999)), 3)
+
+    def test_valeurs_uniques(self):
+        seen = [x["n"] for x in iqra.NUM_UNITS + iqra.NUM_TENS
+                + iqra.NUM_HUNDREDS]
+        self.assertEqual(len(seen), len(set(seen)))
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ import random
 
 import streamlit as st
 
-from . import config, i18n, learning, quiz, search, srs, ui, vocab
+from . import cache, config, i18n, learning, quiz, search, srs, ui, vocab
 
 t = i18n.t
 
@@ -160,8 +160,8 @@ def _pick_card(con) -> dict | None:
     due = learning.due_cards(limit=1)
     if due:
         return due[0]
-    roots = vocab.frequent_roots(con, top_n=config.LEARN_TOP_ROOTS,
-                                 lang=i18n.lang())
+    roots = cache.frequent_roots_cached(con, config.LEARN_TOP_ROOTS,
+                                        lang=i18n.lang())
     if not roots:
         return None
     r = random.choice(roots)
@@ -340,8 +340,8 @@ def _ask(con, q: dict, state_key: str) -> None:
             card = {"kind": "root", "id": "", "ar": q["root_ar"],
                     "label": q["answer"]}
             # On retrouve la racine Buckwalter via la glose (best effort).
-            for r in vocab.frequent_roots(con, top_n=config.LEARN_TOP_ROOTS,
-                                          lang=i18n.lang()):
+            for r in cache.frequent_roots_cached(
+                    con, config.LEARN_TOP_ROOTS, lang=i18n.lang()):
                 if r.get("gloss") == q["answer"]:
                     card["id"] = r["root_bw"]
                     break
