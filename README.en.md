@@ -28,16 +28,29 @@ quran-lab/
 │  ├─ download.py             # source download
 │  ├─ build.py                # schema + SQLite build
 │  ├─ db.py                   # SQLite connection
-│  ├─ search.py               # engine: text, roots, verses, themes
+│  ├─ search.py               # engine: text, roots, verses, themes, reference
 │  ├─ ui.py                   # shared views: verses, tables, universal search
+│  ├─ theme.py                # Light / Medium / Dark palettes
+│  ├─ i18n.py                 # FR/EN translations (key parity)
+│  ├─ cache.py                # st.cache_data wrappers (roots, words, surahs)
+│  ├─ onboarding.py           # getting-started guide (sidebar modal)
+│  ├─ bookmarks.py            # bookmarks (data/bookmarks.json)
+│  ├─ learn_ui.py             # "Learn" tab (SRS dashboard)
+│  ├─ learning.py             # card & goal persistence
+│  ├─ srs.py                  # spaced repetition (simplified SM-2)
+│  ├─ quiz.py                 # context / root-recognition quiz
+│  ├─ vocab.py                # word card (form, root, gloss, frequency)
+│  ├─ iqra.py                 # reading-course data (letters, vowels, signs, numbers)
+│  ├─ iqra_ui.py              # "Read the Quran Iqra" tab (7 steps)
+│  ├─ asma.py                 # 99 Names of Allah (etymological data + filter)
+│  ├─ tts.py                  # text-to-speech (Piper + browser fallback)
 │  ├─ themes.json             # thematic maps (salat, wudu', ...)
 │  ├─ lexicon_fr.json         # FR lexicon → roots (bridge, 86 entries)
+│  ├─ controversies.json      # misconceptions / controversies (12 topics)
 │  ├─ cli.py                  # command-line interface
 │  └─ __main__.py
-└─ tests/
-   ├─ test_buckwalter.py       # Buckwalter ↔ Arabic conversions, normalization
-   ├─ test_theme.py            # SVG generators / stylesheet
-   └─ test_search_helpers.py   # pure search helpers (no database)
+└─ tests/                     # 16 unittest files: buckwalter, search, i18n,
+                              # theme, TTS, iqra, asma, onboarding, SRS, bookmarks…
 ```
 
 ## 2. Getting started
@@ -191,12 +204,13 @@ target roots is counted only once. The verses are then displayed with context
 (root selector + display limit, or a textual list for Arabic), with a collapsible
 fallback listing the French occurrences in the translations.
 
-The bar also accepts a **direct verse reference**: type `2:255` or `2 255`
-(colon or space) to immediately display the matching verse — Arabic text,
-phonetic transliteration and the translations of the active language — without
-going through the textual search (`search.parse_ref()`, regex
-`^\s*\d{1,3}\s*[: ]\s*\d{1,3}\s*$`). Any input that is not a valid reference
-(out of bounds, missing verse… or plain text) falls back to the classic search.
+The bar also accepts a **direct verse reference**: `2:255`, `2.255`, `2/255`
+or `2 255` — the separators **colon, dot, slash and space** are equivalent —
+immediately display the matching verse (Arabic text, phonetic transliteration
+and the translations of the active language) without going through the textual
+search (`search.parse_ref()`, regex `^\s*(\d{1,3})\s*[:./\s]\s*(\d{1,3})\s*$`).
+Any input that is not a valid reference (out of bounds, missing verse… or plain
+text) falls back to the classic search.
 
 The view components (`html_table`, `render_verse`, `render_verses`,
 `render_root_results`, `universal_search`, `verse_picker`) are **shared in
@@ -315,4 +329,64 @@ ignored, like bookmarks).
 - **Configurable daily goals** (new words, reviews) and reminders.
 
 Can be disabled via `config.LEARN_ENABLED = False`.
+
+## 14. Bookmarks (the *Bookmarks* tab)
+
+Every saved verse is **centralised** in the *Bookmarks* tab
+(`quranlab/bookmarks.py`, local storage `data/bookmarks.json`, git ignored):
+
+- **Add / remove in one click**: under each displayed verse, the *bookmark*
+  button toggles membership (`bookmarks.toggle()`).
+- **Add by reference**: type a reference directly — same tolerant separators as
+  the search (`2:255`, `2.255`, `2/255`, `2 255`).
+- **Annotations**: each bookmark can carry a personal **note**.
+- **Export**: the list (references, uthmani text and translations of the active
+  language) downloads as a text file; a **reset** button clears everything.
+
+No data leaves the machine: each deployment keeps its own bookmarks.
+
+## 15. Reading Arabic — the Iqraʾ method (the *Read the Quran Iqra* tab)
+
+A guided course in **7 navigable steps** (radio) to learn to read Qur'anic Arabic
+(`quranlab/iqra.py` for the data, `quranlab/iqra_ui.py` for the view). Every item
+has a **Listen** button (Arabic speech synthesis `ar-SA` via the browser API,
+`ui.tts_arabic`).
+
+1. **Alphabet** — the 28 letters, isolated / initial / medial / final forms and
+   the rule of the six non-connecting letters.
+2. **Vowels** — short (*ḥarakāt*) and long (*moudoud*), with a drill (pick the
+   transcription).
+3. **Signs** — soukoun, chaddah, tanwīn, illustrated by example words.
+4. **Reading** — words, set expressions then short surahs, with phonetic
+   transcription and audio recitation.
+5. **Essential vocabulary** — the `config.IQRA_VOCAB_TOP` (500) most frequent
+   roots, as cards (representative word, pronunciation, meaning, reference),
+   with a full-text filter and a display limit.
+6. **Numbers** — from 1 to 1000: Arabic-Indic digit, spelling in words and
+   pronunciation (units, tens, hundreds).
+7. **The 99 Names of Allah** — see below.
+
+### 15.1 The 99 Names of Allah (`quranlab/asma.py`)
+
+The 99 Names (*Asmāʾ Allāh al-Ḥusnā*) are presented as **cards**, in a
+**strictly etymological / lexicographic** approach (no exegesis):
+
+- Arabic calligraphy (RTL), **transliteration** and **direct translation**;
+- **root** and the **lexicographic meaning** of that root;
+- a graphic marker and a tint derived from the rank; a full-text **filter**
+  (Arabic, transliteration, French, English and root — internal spaces of roots
+  ignored, e.g. `رحم` finds `ر ح م`);
+- a **Listen** button per Name (Arabic pronunciation).
+
+Data exposed through `asma.NAMES` and the helpers `asma.count()`,
+`asma.translation()`, `asma.etymology()` and `asma.search()`.
+
+## 16. Getting-started guide (sidebar modal)
+
+`quranlab/onboarding.py` provides a bilingual **getting-started guide**, opened by
+a **sidebar button** — it **never opens automatically** (state `ql_guide_open`,
+closed by default on a fresh session). The guide describes the role of each tab,
+the multi-separator **reference search**, **bookmarks**, the **Iqra** course
+(alphabet → 99 Names) and the **99 Names**, then offers course suggestions
+(`SUGGESTIONS`).
 

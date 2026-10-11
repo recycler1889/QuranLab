@@ -28,16 +28,29 @@ quran-lab/
 │  ├─ download.py             # téléchargement des sources
 │  ├─ build.py                # schéma + construction de la base SQLite
 │  ├─ db.py                   # connexion SQLite
-│  ├─ search.py               # moteur : texte, racines, versets, thèmes
+│  ├─ search.py               # moteur : texte, racines, versets, thèmes, référence
 │  ├─ ui.py                   # vues partagées : versets, tableaux, recherche universelle
+│  ├─ theme.py                # palettes Clair / Intermédiaire / Sombre
+│  ├─ i18n.py                 # traductions FR/EN (parité des clés)
+│  ├─ cache.py                # wrappers st.cache_data (racines, mots, sourates)
+│  ├─ onboarding.py           # guide de démarrage (modale latérale)
+│  ├─ bookmarks.py            # favoris (data/bookmarks.json)
+│  ├─ learn_ui.py             # onglet « Apprendre » (tableau de bord SRS)
+│  ├─ learning.py             # persistance des cartes et objectifs
+│  ├─ srs.py                  # répétition espacée (SM-2 simplifié)
+│  ├─ quiz.py                 # quiz de contexte / reconnaissance de racine
+│  ├─ vocab.py                # fiche mot (forme, racine, glose, fréquence)
+│  ├─ iqra.py                 # données du parcours de lecture (lettres, voyelles, signes, nombres)
+│  ├─ iqra_ui.py              # onglet « Lire le Coran Iqra » (7 étapes)
+│  ├─ asma.py                 # 99 Noms d'Allah (données étymologiques + filtre)
+│  ├─ tts.py                  # synthèse vocale (Piper + repli navigateur)
 │  ├─ themes.json             # cartographies thématiques (salât, wudû', ...)
 │  ├─ lexicon_fr.json         # lexique FR → racines (passerelle, 86 entrées)
+│  ├─ controversies.json      # idées reçues / controverses (12 sujets)
 │  ├─ cli.py                  # interface ligne de commande
 │  └─ __main__.py
-└─ tests/
-   ├─ test_buckwalter.py       # conversions Buckwalter ↔ arabe, normalisation
-   ├─ test_theme.py            # générateurs SVG / feuille de style
-   └─ test_search_helpers.py   # aides de recherche pures (sans base)
+└─ tests/                     # 16 fichiers unittest : buckwalter, search, i18n,
+                              # thème, TTS, iqra, asma, onboarding, SRS, favoris…
 ```
 
 ## 2. Démarrage
@@ -196,11 +209,12 @@ affichés contextualisés (sélecteur de racine + limite d'affichage, ou liste
 textuelle pour l'arabe), avec un repli dépliable reprenant les occurrences
 françaises dans les traductions.
 
-La barre accepte aussi une **référence directe de verset** : tapez `2:255` ou
-`2 255` (deux-points ou espace) pour afficher immédiatement le verset
-correspondant — texte arabe, translittération phonétique et traductions de la
-langue active — sans passer par la recherche textuelle (`search.parse_ref()`,
-regex `^\s*\d{1,3}\s*[: ]\s*\d{1,3}\s*$`). Une saisie qui n'est pas une
+La barre accepte aussi une **référence directe de verset** : `2:255`, `2.255`,
+`2/255` ou `2 255` — les séparateurs **deux-points, point, barre oblique et
+espace** sont équivalents — affichent immédiatement le verset correspondant
+(texte arabe, translittération phonétique et traductions de la langue active)
+sans passer par la recherche textuelle (`search.parse_ref()`, regex
+`^\s*(\d{1,3})\s*[:./\s]\s*(\d{1,3})\s*$`). Une saisie qui n'est pas une
 référence valide (hors bornes, verset inexistant… ou simple texte) retombe
 automatiquement sur la recherche classique.
 
@@ -324,4 +338,64 @@ sans dépendance externe. La progression est stockée localement dans
 - **Objectifs quotidiens paramétrables** (nouveaux mots, révisions) et rappels.
 
 Désactivable via `config.LEARN_ENABLED = False`.
+
+## 14. Favoris (onglet *Favoris*)
+
+Tous les versets mis de côté sont **centralisés** dans l'onglet *Favoris*
+(`quranlab/bookmarks.py`, stockage local `data/bookmarks.json`, ignoré par git) :
+
+- **Ajout / retrait d'un clic** : sous chaque verset affiché, le bouton *favori*
+  bascule l'appartenance à la liste (`bookmarks.toggle()`).
+- **Ajout par référence** : saisie directe d'une référence — mêmes séparateurs
+  tolérants que la recherche (`2:255`, `2.255`, `2/255`, `2 255`).
+- **Annotations** : chaque favori peut recevoir une **note** personnelle.
+- **Export** : la liste (références, texte uthmani et traductions de la langue
+  active) se télécharge en un fichier texte ; bouton de **réinitialisation**.
+
+Aucune donnée ne quitte la machine : chaque déploiement garde ses propres favoris.
+
+## 15. Lire l'arabe — méthode Iqraʾ (onglet *Lire le Coran Iqra*)
+
+Parcours guidé en **7 étapes** navigables (radio) pour apprendre à lire l'arabe du
+Coran (`quranlab/iqra.py` pour les données, `quranlab/iqra_ui.py` pour la vue).
+Chaque élément porte un bouton **Écouter** (synthèse vocale arabe `ar-SA` via
+l'API du navigateur, `ui.tts_arabic`).
+
+1. **Alphabet** — les 28 lettres, formes isolée / initiale / médiale / finale et
+   règle des six lettres non connectantes.
+2. **Voyelles** — courtes (*ḥarakāt*) et longues (*moudoud*), avec un
+   entraînement (choix de la transcription).
+3. **Signes** — soukoun, chaddah, tanwīn, illustrés par des mots-exemples.
+4. **Lecture** — mots, expressions consacrées puis courtes sourates, avec
+   transcription phonétique et récitation audio.
+5. **Vocabulaire essentiel** — les `config.IQRA_VOCAB_TOP` (500) racines les plus
+   fréquentes, en cartes (mot représentatif, prononciation, sens, référence),
+   filtre plein texte et limite d'affichage.
+6. **Nombres** — de 1 à 1000 : chiffre arabo-indien, écriture en toutes lettres
+   et prononciation (unités, dizaines, centaines).
+7. **Les 99 Noms d'Allah** — voir ci-dessous.
+
+### 15.1 Les 99 Noms d'Allah (`quranlab/asma.py`)
+
+Les 99 Noms (*Asmāʾ Allāh al-Ḥusnā*) sont présentés en **cartes**, dans une
+approche **strictement étymologique / lexicographique** (sans exégèse) :
+
+- calligraphie arabe (RTL), **translittération** et **traduction directe** ;
+- **racine** et **sens lexicographique** de cette racine ;
+- repère graphique et teinte dérivés du rang ; **filtre** plein texte (arabe,
+  translittération, français, anglais et racine — espaces internes des racines
+  ignorés, ex. `رحم` retrouve `ر ح م`) ;
+- bouton **Écouter** par Nom (prononciation arabe).
+
+Données exposées par `asma.NAMES` et les helpers `asma.count()`,
+`asma.translation()`, `asma.etymology()` et `asma.search()`.
+
+## 16. Guide de démarrage (modale latérale)
+
+`quranlab/onboarding.py` fournit un **guide de démarrage** bilingue, ouvert par un
+**bouton de la barre latérale** — il ne s'ouvre **jamais automatiquement** (état
+`ql_guide_open`, fermé par défaut sur une session neuve). Le guide décrit le rôle
+de chaque onglet, la **recherche par référence** multi-séparateurs, les
+**favoris**, le parcours **Iqra** (alphabet → 99 Noms) et les **99 Noms**, puis
+propose des suggestions de parcours (`SUGGESTIONS`).
 
