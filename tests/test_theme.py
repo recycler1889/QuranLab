@@ -27,6 +27,21 @@ class TestThemeSvg(unittest.TestCase):
     def test_css_falls_back_to_default(self):
         self.assertEqual(theme.css("Inconnu"), theme.css(theme.DEFAULT))
 
+    def test_css_defines_shared_card_component(self):
+        css = theme.css("Clair")
+        self.assertIn(".ql-card", css)
+        self.assertIn(".ql-card:hover", css)
+        self.assertIn("box-shadow", css)
+        for part in (".ql-ar", ".ql-name", ".ql-tr", ".ql-gloss", ".ql-meta",
+                     ".ql-forms", ".ql-badge", ".ql-sep"):
+            self.assertIn(part, css)
+
+    def test_css_has_responsive_rules(self):
+        css = theme.css("Sombre")
+        self.assertIn("@media (max-width: 780px)", css)
+        self.assertIn("@media (max-width: 420px)", css)
+        self.assertIn("stMainBlockContainer", css)
+
 
 if __name__ == "__main__":
     unittest.main()

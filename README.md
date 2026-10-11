@@ -43,14 +43,18 @@ quran-lab/
 │  ├─ iqra.py                 # données du parcours de lecture (lettres, voyelles, signes, nombres)
 │  ├─ iqra_ui.py              # onglet « Lire le Coran Iqra » (7 étapes)
 │  ├─ asma.py                 # 99 Noms d'Allah (données étymologiques + filtre)
+│  ├─ pwa.py                  # application installable (manifeste, icônes, métadonnées)
 │  ├─ tts.py                  # synthèse vocale (Piper + repli navigateur)
 │  ├─ themes.json             # cartographies thématiques (salât, wudû', ...)
 │  ├─ lexicon_fr.json         # lexique FR → racines (passerelle, 86 entrées)
 │  ├─ controversies.json      # idées reçues / controverses (12 sujets)
 │  ├─ cli.py                  # interface ligne de commande
 │  └─ __main__.py
-└─ tests/                     # 16 fichiers unittest : buckwalter, search, i18n,
-                              # thème, TTS, iqra, asma, onboarding, SRS, favoris…
+├─ static/                    # ressources servies (manifeste PWA + icônes PNG)
+│  ├─ manifest.webmanifest
+│  └─ icons/                  # 192 / 512 / maskable / apple-touch-icon
+└─ tests/                     # 18 fichiers unittest : buckwalter, search, i18n,
+                              # thème, TTS, iqra, asma, onboarding, SRS, favoris, PWA…
 ```
 
 ## 2. Démarrage
@@ -401,4 +405,26 @@ Données exposées par `asma.NAMES` et les helpers `asma.count()`,
 de chaque onglet, la **recherche par référence** multi-séparateurs, les
 **favoris**, le parcours **Iqra** (alphabet → 99 Noms) et les **99 Noms**, puis
 propose des suggestions de parcours (`SUGGESTIONS`).
+
+## 17. Application installable (PWA) et confort mobile
+
+QuranLab est une **application web installable** : sur mobile ou bureau, le
+navigateur propose « Installer » / « Ajouter à l'écran d'accueil » et l'app
+s'ouvre alors **en plein écran**, sans barre d'adresse.
+
+- `quranlab/pwa.py` génère, si absents, le **manifeste** et les **icônes PNG**
+  (192, 512, variante *maskable* et `apple-touch-icon`), puis injecte dans
+  l'en-tête du document le lien `<link rel="manifest">`, la couleur `theme-color`
+  (assortie au thème courant) et les métadonnées `apple-mobile-web-app-*`.
+- Les fichiers sont servis par Streamlit depuis le dossier `static/`, ce qui
+  suppose `server.enableStaticServing = true` (déjà posé dans
+  `.streamlit/config.toml`) ; ils sont exposés sous `/app/static/…`.
+- Les icônes sont **versionnées** dans le dépôt ; Pillow n'est requis que pour
+  les régénérer (`python -m quranlab.pwa`).
+
+Le **design** a été homogénéisé : un gabarit CSS unique `.ql-card` (bordures
+douces, ombre portée discrète, espacements généreux, hiérarchie typographique)
+habille toutes les cartes pédagogiques du parcours Iqra, et des
+*media queries* (`max-width: 780px` / `420px`) adaptent bandeau, cartes, onglets
+et zones tactiles aux petits écrans.
 

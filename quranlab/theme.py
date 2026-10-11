@@ -438,5 +438,123 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     color: var(--ql-fg) !important;
 }}
 [data-testid="stDialog"] hr {{ border-color: var(--ql-border) !important; }}
+
+/* --- Cartes pédagogiques (parcours Iqra) : base unique et homogène --------
+   Un seul gabarit `.ql-card` habille alphabet, voyelles, signes, mots,
+   vocabulaire, nombres et 99 Noms : bordures douces, ombre portée discrète,
+   espacements généreux et hiérarchie typographique claire. Couleurs issues
+   des variables --ql-*, donc contraste garanti sur les trois thèmes. */
+.ql-card {{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .32rem;
+    height: 100%;
+    padding: .95rem .8rem;
+    border: 1px solid var(--ql-border);
+    border-radius: 16px;
+    background: var(--ql-bg2);
+    color: var(--ql-fg);
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05),
+                0 10px 24px -18px rgba(0, 0, 0, .5);
+    transition: transform .15s ease, box-shadow .15s ease,
+                border-color .15s ease;
+}}
+.ql-card:hover {{
+    transform: translateY(-2px);
+    border-color: var(--ql-accent);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .08),
+                0 16px 32px -18px rgba(0, 0, 0, .55);
+}}
+.ql-card .ql-ar,
+.ql-ar {{ font-family: var(--ql-font-ar); color: var(--ql-accent); }}
+.ql-card .ql-ar {{
+    font-size: 1.9rem;
+    line-height: 1.5;
+    text-align: center;
+}}
+.ql-ar-num {{ font-size: 1.75rem; }}
+.ql-ar-xl {{ font-size: 2.1rem; }}
+.ql-card .ql-name {{
+    font-weight: 600;
+    font-size: .95rem;
+    letter-spacing: .01em;
+}}
+.ql-card .ql-tr {{ color: var(--ql-fg2); font-size: .8rem; }}
+.ql-card .ql-gloss {{
+    color: var(--ql-fg);
+    font-size: .86rem;
+    min-height: 1.1rem;
+}}
+.ql-card .ql-meta {{ color: var(--ql-fg2); font-size: .72rem; }}
+.ql-card .ql-head {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .4rem;
+    font-size: .72rem;
+    color: var(--ql-fg2);
+}}
+.ql-card .ql-sep {{
+    margin-top: auto;
+    padding-top: .4rem;
+    border-top: 1px solid var(--ql-border);
+    font-size: .78rem;
+    color: var(--ql-fg);
+    text-align: left;
+}}
+.ql-card .ql-badge {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    font-size: 1rem;
+    flex: none;
+}}
+.ql-accent {{ color: var(--ql-accent) !important; }}
+/* En-tête de signe (soukoun / chaddah / tanwin) : carte alignée à gauche */
+.ql-card.ql-mark {{ text-align: left; gap: .2rem; }}
+.ql-card.ql-mark .ql-head {{ font-size: .82rem; }}
+.ql-forms {{ display: flex; gap: 3px; margin-top: .4rem; }}
+.ql-forms span {{
+    flex: 1;
+    padding: .14rem 0;
+    border-radius: 7px;
+    background: var(--ql-bg);
+    color: var(--ql-fg);
+    font-size: 1.05rem;
+}}
+
+/* --- Confort mobile : l'app installée (PWA) reste lisible et tactile ---- */
+@media (max-width: 780px) {{
+    [data-testid="stMainBlockContainer"], .block-container {{
+        padding-left: .9rem !important;
+        padding-right: .9rem !important;
+    }}
+    .ql-banner {{ padding: 1.15rem 1rem 1rem 1rem; border-radius: 14px; }}
+    .ql-banner .ql-title {{ font-size: 1.55rem; letter-spacing: .08em; }}
+    .ql-banner .ql-ar {{ font-size: 1rem; }}
+    .ql-card {{ padding: .8rem .55rem; border-radius: 14px; gap: .26rem; }}
+    .ql-card .ql-ar {{ font-size: 1.75rem; }}
+    .ql-card .ql-ar.ql-ar-xl {{ font-size: 1.85rem; }}
+    .ql-card .ql-ar.ql-ar-num {{ font-size: 1.6rem; }}
+    .stApp h2 {{ font-size: 1.35rem; }}
+    .stButton > button {{ min-height: 2.75rem; }}
+    .stTabs [data-baseweb="tab"] {{
+        padding-left: .5rem;
+        padding-right: .5rem;
+        font-size: .9rem;
+    }}
+    /* 16 px minimum : évite le zoom automatique des champs sur iOS */
+    input, textarea, select {{ font-size: 16px !important; }}
+}}
+@media (max-width: 420px) {{
+    .ql-card {{ padding: .7rem .45rem; gap: .22rem; }}
+    .ql-card .ql-gloss {{ font-size: .82rem; }}
+    .ql-card .ql-ar {{ font-size: 1.6rem; }}
+}}
 </style>
 """

@@ -72,21 +72,16 @@ def _listen(text: str) -> None:
 def _letter_card(letter: dict, c: dict) -> str:
     """Carte d'une lettre : forme isolée, nom, transcription, quatre formes."""
     tiles = "".join(
-        f"<span dir='rtl' lang='ar' style='flex:1;padding:.12rem 0;"
-        f"font-size:1.05rem;border-radius:6px;background:{c['bg2']};"
-        f"color:{c['fg']}'>{form}</span>"
-        for form in letter["forms"]
+        f"<span dir='rtl' lang='ar'>{form}</span>" for form in letter["forms"]
     )
     return (
-        "<div style='border:1px solid {border};border-radius:12px;"
-        "padding:.5rem .4rem;background:{bg2};color:{fg};text-align:center'>"
-        f"<div dir='rtl' lang='ar' style='font-size:2rem;"
-        f"color:{c['accent']}'>{letter['ar']}</div>"
-        f"<div style='font-weight:600;font-size:.9rem'>{html.escape(letter['name'])}</div>"
-        f"<div style='color:{c['fg2']};font-size:.78rem'>{html.escape(letter['tr'])}</div>"
-        "<div style='display:flex;gap:3px;margin-top:.35rem'>" + tiles + "</div>"
+        "<div class='ql-card'>"
+        f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(letter['ar'])}</div>"
+        f"<div class='ql-name'>{html.escape(letter['name'])}</div>"
+        f"<div class='ql-tr'>{html.escape(letter['tr'])}</div>"
+        f"<div class='ql-forms'>{tiles}</div>"
         "</div>"
-    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+    )
 
 
 def _reset_alpha_shuffle() -> None:
@@ -145,20 +140,15 @@ def _step_alphabet():
 def _vowel_card(v: dict, c: dict) -> str:
     """Carte d'une voyelle : combinaison arabe, nom, construction, son."""
     combo = html.escape(v.get("combo", ""))
-    combo_html = (
-        f"<div style='color:{c['fg2']};font-size:.78rem'>{combo}</div>"
-        if combo else ""
-    )
+    combo_html = f"<div class='ql-tr'>{combo}</div>" if combo else ""
     return (
-        "<div style='border:1px solid {border};border-radius:12px;"
-        "padding:.55rem .3rem;background:{bg2};color:{fg};text-align:center'>"
-        f"<div dir='rtl' lang='ar' style='font-size:2rem;"
-        f"color:{c['accent']}'>{html.escape(v['ar'])}</div>"
-        f"<div style='font-weight:600;font-size:.95rem'>{html.escape(v['name'])}</div>"
+        "<div class='ql-card'>"
+        f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(v['ar'])}</div>"
+        f"<div class='ql-name'>{html.escape(v['name'])}</div>"
         + combo_html
-        + f"<div style='color:{c['fg']};font-size:.85rem'>{html.escape(v['tr'])}</div>"
+        + f"<div class='ql-gloss'>{html.escape(v['tr'])}</div>"
         + "</div>"
-    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+    )
 
 
 def _drill():
@@ -221,34 +211,30 @@ def _step_vowels():
 def _mark_header(mark: dict, c: dict) -> str:
     """En-tête d'un signe : nom, glyphe du signe et rôle."""
     return (
-        "<div style='border:1px solid {border};border-left:3px solid {accent};"
-        "border-radius:12px;background:{bg2};padding:.6rem 1rem;margin:.4rem 0;"
-        "color:{fg}'>"
-        f"<b style='color:{c['accent']}'>{html.escape(mark['name'])}</b>"
-        f" <span dir='rtl' lang='ar' style='font-size:1.2rem'>"
-        f"{html.escape(mark['sign'])}</span>"
-        f"<span style='color:{c['fg2']}'>{html.escape(t('iqra.s3_role'))} : "
+        "<div class='ql-card ql-mark'>"
+        "<div class='ql-head'>"
+        f"<span><b class='ql-accent'>{html.escape(mark['name'])}</b> "
+        f"<span dir='rtl' lang='ar' style='font-size:1.2rem'>"
+        f"{html.escape(mark['sign'])}</span></span>"
+        f"<span class='ql-tr'>{html.escape(t('iqra.s3_role'))} : "
         f"{html.escape(mark['tr'])}</span>"
-        "</div>"
-    ).format(**{k: c[k] for k in ("border", "accent", "bg2", "fg")})
+        "</div></div>"
+    )
 
 
 def _word_card(w: dict, c: dict) -> str:
     """Carte d'un mot d'exercice (arabe, transcription, sens, référence)."""
     ref_html = (
-        f"<div style='text-align:center;color:{c['fg2']};font-size:.8rem'>"
-        f"· {html.escape(w.get('ref', ''))}</div>"
+        f"<div class='ql-meta'>· {html.escape(w.get('ref', ''))}</div>"
         if w.get("ref")
         else ""
     )
     return (
         "".join([
-            f"<div style='border:1px solid {c['border']};border-radius:12px;"
-            f"padding:.6rem;background:{c['bg2']};color:{c['fg']}'>",
-            _ar_div(w["ar"], "1.9rem", c, margin=".1rem 0"),
-            f"<div style='text-align:center'>{html.escape(w['tr'])}</div>",
-            f"<div style='text-align:center;color:{c['fg2']};font-size:.86rem'>"
-            f"{html.escape(_mean(w))}</div>",
+            "<div class='ql-card'>",
+            f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(w['ar'])}</div>",
+            f"<div class='ql-tr'>{html.escape(w['tr'])}</div>",
+            f"<div class='ql-gloss'>{html.escape(_mean(w))}</div>",
             ref_html,
             "</div>",
         ])
@@ -329,22 +315,18 @@ def _vocab_card(w: dict, c: dict) -> str:
     meta = html.escape(t("iqra.vocab_meta", occ=w["occ"], verses=w["verses"],
                          ref=w.get("ref", "")))
     return (
-        "<div style='border:1px solid {border};border-radius:12px;"
-        "padding:.55rem .4rem;background:{bg2};color:{fg}'>"
-        f"<div style='display:flex;justify-content:space-between;"
-        f"align-items:center'>"
-        f"<span style='color:{c['fg2']};font-size:.72rem'>{w['rank']} · "
-        f"{html.escape(t('iqra.vocab_root'))}</span>"
-        f"<span dir='rtl' lang='ar' style='color:{c['accent']};font-size:.95rem'>{root}</span></div>"
-        f"<div dir='rtl' lang='ar' style='text-align:center;font-size:1.5rem;"
-        f"color:{c['accent']};margin:.2rem 0'>{html.escape(w['ar'])}</div>"
-        f"<div style='text-align:center;font-size:.82rem'>{html.escape(w['tr'])}</div>"
-        f"<div style='text-align:center;color:{c['fg']};font-size:.85rem;"
-        f"min-height:1.1rem'>{gloss}</div>"
-        f"<div style='text-align:center;color:{c['fg2']};font-size:.72rem;"
-        f"margin-top:.15rem'>{meta}</div>"
+        "<div class='ql-card'>"
+        "<div class='ql-head'>"
+        f"<span>{w['rank']} · {html.escape(t('iqra.vocab_root'))}</span>"
+        f"<span class='ql-accent' dir='rtl' lang='ar' "
+        f"style='font-size:.95rem'>{root}</span></div>"
+        f"<div class='ql-ar' dir='rtl' lang='ar' style='font-size:1.5rem;"
+        f"margin:.2rem 0'>{html.escape(w['ar'])}</div>"
+        f"<div class='ql-tr'>{html.escape(w['tr'])}</div>"
+        f"<div class='ql-gloss'>{gloss}</div>"
+        f"<div class='ql-meta' style='margin-top:.15rem'>{meta}</div>"
         "</div>"
-    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+    )
 
 
 def _step_vocab(con):
@@ -387,16 +369,13 @@ def _num_card(item: dict, c: dict) -> str:
     """Carte d'un nombre : chiffre arabo-indien, mot voyellé, transcription."""
     digit = iqra.arabic_digits(item["n"])
     return (
-        "<div style='border:1px solid {border};border-radius:12px;"
-        "padding:.5rem .3rem;background:{bg2};color:{fg};text-align:center'>"
-        f"<div dir='rtl' lang='ar' style='font-size:1.75rem;"
-        f"color:{c['accent']}'>{digit}</div>"
-        f"<div dir='rtl' lang='ar' style='font-size:1rem;"
-        f"color:{c['fg']}'>{html.escape(item['ar'])}</div>"
-        f"<div style='color:{c['fg2']};font-size:.78rem'>"
-        f"{html.escape(item['tr'])}</div>"
+        "<div class='ql-card'>"
+        f"<div class='ql-ar ql-ar-num' dir='rtl' lang='ar'>{digit}</div>"
+        f"<div dir='rtl' lang='ar' style='font-size:1rem'>"
+        f"{html.escape(item['ar'])}</div>"
+        f"<div class='ql-tr'>{html.escape(item['tr'])}</div>"
         "</div>"
-    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+    )
 
 
 def _num_grid(items: list, per_row: int, c: dict) -> None:
@@ -433,32 +412,24 @@ def _asma_card(name: dict, c: dict) -> str:
     badge_bg = f"hsla({hue},60%,50%,.16)"
     badge_br = f"hsla({hue},60%,45%,.55)"
     return (
-        "<div style='border:1px solid {border};border-radius:14px;"
-        "padding:.6rem .55rem;background:{bg2};color:{fg};height:100%'>"
-        "<div style='display:flex;align-items:center;"
-        "justify-content:space-between'>"
-        f"<span style='font-size:.72rem;color:{c['fg2']}'>{name['n']} / "
-        f"{asma.count()}</span>"
-        "<span style='display:inline-flex;align-items:center;"
-        "justify-content:center;width:1.9rem;height:1.9rem;"
-        f"border-radius:50%;background:{badge_bg};border:1px solid {badge_br};"
-        f"font-size:1rem'>{name['icon']}</span></div>"
-        f"<div dir='rtl' lang='ar' style='text-align:center;font-size:1.7rem;"
-        f"color:{c['accent']};margin:.25rem 0 .1rem'>"
-        f"{html.escape(name['ar'])}</div>"
-        f"<div style='text-align:center;font-size:.86rem'>"
+        "<div class='ql-card'>"
+        "<div class='ql-head'>"
+        f"<span>{name['n']} / {asma.count()}</span>"
+        "<span class='ql-badge' "
+        f"style='background:{badge_bg};border:1px solid {badge_br}'>"
+        f"{name['icon']}</span></div>"
+        f"<div class='ql-ar ql-ar-xl' dir='rtl' lang='ar' "
+        f"style='margin:.25rem 0 .1rem'>{html.escape(name['ar'])}</div>"
+        f"<div class='ql-tr' style='font-size:.86rem'>"
         f"{html.escape(name['tr'])}</div>"
-        f"<div style='text-align:center;font-weight:600;font-size:.92rem;"
-        f"margin:.15rem 0'>{html.escape(asma.translation(name, _lang()))}</div>"
-        f"<div style='text-align:center;font-size:.74rem;color:{c['fg2']}'>"
-        f"{html.escape(t('iqra.asma_root'))} : "
+        f"<div class='ql-name' style='font-size:.92rem;margin:.15rem 0'>"
+        f"{html.escape(asma.translation(name, _lang()))}</div>"
+        f"<div class='ql-meta'>{html.escape(t('iqra.asma_root'))} : "
         f"<span dir='rtl' lang='ar'>{html.escape(name['root_ar'])}</span> · "
         f"{html.escape(name['root_tr'])}</div>"
-        f"<div style='font-size:.78rem;color:{c['fg']};margin-top:.35rem;"
-        f"border-top:1px solid {c['border']};padding-top:.35rem'>"
-        f"{html.escape(asma.etymology(name, _lang()))}</div>"
+        f"<div class='ql-sep'>{html.escape(asma.etymology(name, _lang()))}</div>"
         "</div>"
-    ).format(**{k: c[k] for k in ("border", "bg2", "fg")})
+    )
 
 
 def _step_asma():

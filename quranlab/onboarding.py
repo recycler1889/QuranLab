@@ -193,6 +193,9 @@ _CONTENT = {
                 "tips": [
                     "Sept étapes navigables dans le parcours Iqra.",
                     "La synthèse vocale arabe suit la voix du navigateur.",
+                    "À l'étape alphabet, un mode **mélangé** réaffiche les "
+                    "lettres dans un ordre aléatoire (révision) ; un bouton "
+                    "revient à l'ordre traditionnel.",
                 ],
             },
             {
@@ -389,6 +392,9 @@ _CONTENT = {
                 "tips": [
                     "Seven navigable steps in the Iqra course.",
                     "Arabic speech synthesis follows the browser voice.",
+                    "In the alphabet step, a **shuffled** mode redisplays the "
+                    "letters in random order (revision); a button restores the "
+                    "traditional order.",
                 ],
             },
             {

@@ -8,7 +8,7 @@ import sqlite3
 
 import streamlit as st
 
-from quranlab import bookmarks, cache, config, db, i18n, iqra_ui, learn_ui, onboarding, search, ui
+from quranlab import bookmarks, cache, config, db, i18n, iqra_ui, learn_ui, onboarding, pwa, search, ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -19,7 +19,11 @@ render_root_results = ui.render_root_results
 t = i18n.t
 lang = i18n.lang
 
-st.set_page_config(page_title=t("app.title"), layout="wide")
+# Application installable (PWA) : génère manifeste + icônes si absents.
+pwa.ensure_assets()
+
+st.set_page_config(page_title=t("app.title"), page_icon=pwa.page_icon_path(),
+                   layout="wide")
 
 # Réinitialise les compteurs d'occurrence des clés de widgets (unicité par run).
 ui.begin_run()
@@ -88,6 +92,9 @@ with st.sidebar:
     ui.donation_section()
 
 st.markdown(theme_mod.css(theme_name), unsafe_allow_html=True)
+
+# Métadonnées PWA (manifeste, theme-color assorti au thème, icône iOS).
+pwa.inject(theme_mod.PALETTES[theme_name]["accent"])
 
 ui.page_header("quranlab", t("app.subtitle"))
 

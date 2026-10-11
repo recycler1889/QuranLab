@@ -1,0 +1,38 @@
+{
+  "name": "QuranLab — Étude du Coran",
+  "short_name": "QuranLab",
+  "description": "Étude du Coran : lecture, racines, concordance, parcours d'apprentissage de l'arabe (méthode Iqraʾ) et 99 Noms d'Allah.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F5F0",
+  "theme_color": "#0B6E4F",
+  "categories": [
+    "education",
+    "books",
+    "reference"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

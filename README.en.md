@@ -43,14 +43,18 @@ quran-lab/
 │  ├─ iqra.py                 # reading-course data (letters, vowels, signs, numbers)
 │  ├─ iqra_ui.py              # "Read the Quran Iqra" tab (7 steps)
 │  ├─ asma.py                 # 99 Names of Allah (etymological data + filter)
+│  ├─ pwa.py                  # installable app (manifest, icons, metadata)
 │  ├─ tts.py                  # text-to-speech (Piper + browser fallback)
 │  ├─ themes.json             # thematic maps (salat, wudu', ...)
 │  ├─ lexicon_fr.json         # FR lexicon → roots (bridge, 86 entries)
 │  ├─ controversies.json      # misconceptions / controversies (12 topics)
 │  ├─ cli.py                  # command-line interface
 │  └─ __main__.py
-└─ tests/                     # 16 unittest files: buckwalter, search, i18n,
-                              # theme, TTS, iqra, asma, onboarding, SRS, bookmarks…
+├─ static/                    # served assets (PWA manifest + PNG icons)
+│  ├─ manifest.webmanifest
+│  └─ icons/                  # 192 / 512 / maskable / apple-touch-icon
+└─ tests/                     # 18 unittest files: buckwalter, search, i18n,
+                              # theme, TTS, iqra, asma, onboarding, SRS, bookmarks, PWA…
 ```
 
 ## 2. Getting started
@@ -392,4 +396,26 @@ closed by default on a fresh session). The guide describes the role of each tab,
 the multi-separator **reference search**, **bookmarks**, the **Iqra** course
 (alphabet → 99 Names) and the **99 Names**, then offers course suggestions
 (`SUGGESTIONS`).
+
+## 17. Installable app (PWA) and mobile comfort
+
+QuranLab is an **installable web app**: on mobile or desktop the browser offers
+"Install" / "Add to Home screen", and the app then opens **full screen**, with
+no address bar.
+
+- `quranlab/pwa.py` generates, if missing, the **manifest** and the **PNG icons**
+  (192, 512, a *maskable* variant and `apple-touch-icon`), then injects into the
+  document head the `<link rel="manifest">`, the `theme-color` (matching the
+  current theme) and the `apple-mobile-web-app-*` metadata.
+- The files are served by Streamlit from the `static/` folder, which requires
+  `server.enableStaticServing = true` (already set in `.streamlit/config.toml`);
+  they are exposed under `/app/static/…`.
+- The icons are **committed** to the repo; Pillow is only needed to regenerate
+  them (`python -m quranlab.pwa`).
+
+The **design** has been unified: a single `.ql-card` CSS template (soft borders,
+subtle drop shadow, generous spacing, clear typographic hierarchy) dresses every
+pedagogical card of the Iqra course, and *media queries*
+(`max-width: 780px` / `420px`) adapt the banner, cards, tabs and touch targets to
+small screens.
 

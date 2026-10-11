@@ -17,3 +17,7 @@ pandas>=2.0
 # échoue, l'app se rabat sur les voix du navigateur (Web Speech API).
 piper-tts>=1.2
 
+# Génération à la volée des icônes PWA (manifeste installable). Les icônes
+# sont versionnées dans le dépôt ; Pillow n'est requis que pour les (re)créer.
+Pillow>=9
+
