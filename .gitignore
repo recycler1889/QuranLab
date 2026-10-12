@@ -15,10 +15,11 @@ ENV/
 # --- Données générées (reconstruites automatiquement au 1er lancement) ----
 # Sources brutes téléchargées (~13 Mo) : régénérables via `python -m quranlab init`
 data/raw/
-# Base SQLite (~29 Mo) : construite automatiquement par l'app si absente.
-# Pour un démarrage instantané en ligne, commentez la ligne ci-dessous et
-# versionnez data/quran.db (Streamlit Cloud le clonera tel quel).
-data/quran.db
+# Base SQLite PRÉCONSTRUITE (~34 Mo) : versionnée pour un démarrage INSTANTANÉ
+# sur Streamlit Cloud (sinon l'app la télécharge et la construit au premier
+# lancement, d'où une longue attente « qui charge en vain »). Pour ne pas la
+# versionner, décommentez la ligne ci-dessous.
+# data/quran.db
 # Favoris (versets mis de côté), propres à chaque instance.
 data/bookmarks.json
 # Progression d'apprentissage (cartes SRS, objectifs), propre à chaque instance.

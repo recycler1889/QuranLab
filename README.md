@@ -298,8 +298,12 @@ construit la base automatiquement** (≈30 s, une seule fois par conteneur, mis 
 cache par `@st.cache_resource`). Les chemins sont strictement relatifs
 (`config.py` se base sur `__file__`), donc rien de spécifique à Windows.
 
-> Pour un démarrage instantané, on peut versionner la base : commenter la ligne
-> `data/quran.db` dans `.gitignore`, puis committer `data/quran.db` (~29 Mo).
+> **Base préconstruite versionnée.** `data/quran.db` (~34 Mo) est
+> volontairement **committée** : Streamlit Cloud la clone telle quelle et
+> démarre instantanément. Sans elle, l'app la téléchargerait et la
+> construirait au premier lancement (longue attente qui semble « charger en
+> vain »). Pour ne plus la versionner, décommentez `data/quran.db` dans
+> `.gitignore`.
 
 Fichiers utiles au déploiement : `requirements.txt` (streamlit + pandas),
 `.streamlit/config.toml` (thème), `.gitignore`.
