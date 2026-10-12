@@ -54,6 +54,22 @@ class TestBookmarks(unittest.TestCase):
         bookmarks.clear()
         self.assertEqual(bookmarks.count(), 0)
 
+    def test_load_renvoie_une_copie(self):
+        bookmarks.add(1, 1)
+        data = bookmarks.load()
+        data["9:9"] = {"sura": 9, "aya": 9, "note": "", "added": ""}
+        self.assertFalse(bookmarks.contains(9, 9))
+
+    def test_cache_invalide_sur_modification_externe(self):
+        import json
+        bookmarks.add(1, 1)
+        self.assertTrue(bookmarks.contains(1, 1))
+        path = bookmarks._path()
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw["2:2"] = {"sura": 2, "aya": 2, "note": "", "added": ""}
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        self.assertTrue(bookmarks.contains(2, 2))
+
 
 if __name__ == "__main__":
     unittest.main()

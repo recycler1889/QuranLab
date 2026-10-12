@@ -697,9 +697,10 @@ def theme(con: sqlite3.Connection, name: str, limit: int = 500,
 # Idées reçues et controverses (analyse strictement textuelle)
 # --------------------------------------------------------------------------
 def load_controversies() -> dict:
-    """Charge controversies.json (clé `_meta` incluse)."""
-    path = Path(__file__).resolve().parent / "controversies.json"
-    return json.loads(path.read_text(encoding="utf-8"))
+    """Charge controversies.json (clé `_meta` incluse), mise en cache mtime."""
+    return _load_json_cached(
+        _CONTROVERSIES_PATH, "_CONTROV_CACHE", "_CONTROV_MTIME"
+    )
 
 
 def _controversies_only() -> dict:
@@ -1029,7 +1030,8 @@ def concordance(
             "verses": verses,
         }
     if term:
-        rows = search_arabic(con, term, limit=limit)
+        summary = arabic_occurrence_summary(con, term, limit=limit)
+        rows = summary["rows"]
         refs = list(dict.fromkeys((r["sura"], r["aya"]) for r in rows))
         bundle = verses_bundle(con, refs)
         verses = [
@@ -1046,8 +1048,8 @@ def concordance(
             "kind": "terme",
             "label": term,
             "detail": "",
-            "occurrences": len(refs),
-            "verses_count": len(refs),
+            "occurrences": summary["occurrences"],
+            "verses_count": summary["verses"],
             "verses": verses,
         }
     return {"found": False}

@@ -17,7 +17,7 @@ from urllib.parse import quote
 
 import streamlit as st
 
-from . import bookmarks, config, db, i18n, search
+from . import bookmarks, cache, config, db, i18n, search
 from . import theme as theme_mod
 from . import tts as tts_mod
 from .buckwalter import is_arabic
@@ -1182,7 +1182,7 @@ def render_root_results(con, res, limit_note: str | None = None) -> None:
         if "context" in o:
             refs += [(c["sura"], c["aya"])
                      for c in o["context"]["before"] + o["context"]["after"]]
-    bundle = search.verses_bundle(con, refs)
+    bundle = cache.verses_bundle_cached(con, tuple(refs))
 
     by_verse: dict = {}
     for o in res["occurrences"]:
@@ -1235,9 +1235,9 @@ def render_root_results(con, res, limit_note: str | None = None) -> None:
 # --------------------------------------------------------------------------
 def _summary_french(con, q: str) -> dict:
     """Mot français : passerelle vers racines + occurrences dans les traductions."""
-    props = search.french_bridge(con, q)["proposals"]
+    props = cache.french_bridge_cached(con, q)["proposals"]
     stats = search.roots_union_stats(con, [p["root_bw"] for p in props])
-    fr_rows = search.search_french(con, q)
+    fr_rows = cache.search_french_cached(con, q)
     return {
         "kind": "bridge",
         "props": props,
@@ -1318,8 +1318,8 @@ def _render_rows(con, rows) -> None:
     """Affiche des versets (lignes brutes) avec leurs traductions."""
     if not rows:
         return
-    refs = [(r["sura"], r["aya"]) for r in rows]
-    bundle = search.verses_bundle(con, refs)
+    refs = tuple((r["sura"], r["aya"]) for r in rows)
+    bundle = cache.verses_bundle_cached(con, refs)
     for r in rows:
         data = bundle.get((r["sura"], r["aya"]), {})
         render_verse(
@@ -1391,7 +1391,7 @@ def universal_search(
         return
 
     with st.spinner(t("ui.spinner")):
-        summary = occurrence_summary(con, q)
+        summary = cache.occurrence_summary_cached(con, q)
 
     has_hits = summary and (
         summary["props"] or summary["ar_rows"] or summary["fr_rows"]
@@ -1472,7 +1472,9 @@ def universal_search(
             10, 500, default_limit,
             key=f"uni_limit_{section_key}",
         )
-        res = search.search_root(con, summary["props"][pick]["root_bw"], limit=limit)
+        res = cache.search_root_cached(
+            con, summary["props"][pick]["root_bw"], limit=limit
+        )
         note = None
         if res.get("found") and res["count"] >= limit:
             note = t("ui.limit_props", n=res["count"], limit=limit)

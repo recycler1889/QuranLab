@@ -18,15 +18,19 @@ Format ::
 from __future__ import annotations
 
 import json
+import logging
 import threading
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from . import config, srs
 
+logger = logging.getLogger(__name__)
+
 _LEARNING_PATH = getattr(config, "LEARNING_PATH", config.DATA_DIR / "learning.json")
 _LOCK = threading.Lock()
 _VERSION = 1
+_MAX_DAILY = 400  # ~13 mois de journal ; borne la croissance du fichier
 
 
 def _path() -> Path:
@@ -51,7 +55,7 @@ def _empty() -> dict:
 
 
 def load() -> dict:
-    """Charge le store (structure normalisée, jamais None)."""
+    """Charge le store (structure normalisée et typée, jamais None)."""
     path = _path()
     if not path.exists():
         return _empty()
@@ -62,23 +66,47 @@ def load() -> dict:
     if not isinstance(data, dict):
         return _empty()
     data.setdefault("version", _VERSION)
-    data.setdefault("cards", {})
-    data.setdefault("daily", {})
+    cards = data.get("cards")
+    data["cards"] = (
+        {k: v for k, v in cards.items() if isinstance(v, dict)}
+        if isinstance(cards, dict) else {}
+    )
+    daily = data.get("daily")
+    data["daily"] = (
+        {k: v for k, v in daily.items() if isinstance(v, dict)}
+        if isinstance(daily, dict) else {}
+    )
     settings = _default_settings()
-    settings.update(data.get("settings") or {})
+    raw_settings = data.get("settings")
+    if isinstance(raw_settings, dict):
+        settings.update(raw_settings)
     data["settings"] = settings
     return data
 
 
+def _prune_daily(data: dict) -> dict:
+    """Ne conserve que les ``_MAX_DAILY`` journées les plus récentes."""
+    daily = data.get("daily")
+    if isinstance(daily, dict) and len(daily) > _MAX_DAILY:
+        for key in sorted(daily)[:-_MAX_DAILY]:
+            daily.pop(key, None)
+    return data
+
+
 def _save(data: dict) -> None:
+    data = _prune_daily(data)
     path = _path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True),
-        encoding="utf-8",
-    )
-    tmp.replace(path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        tmp.replace(path)
+    except OSError as exc:  # disque plein / lecture seule : ne pas planter l'app
+        logger.warning("Écriture de la progression impossible (%s) : %s",
+                       path, exc)
 
 
 # --- Objectifs ------------------------------------------------------------

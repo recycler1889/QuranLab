@@ -55,6 +55,29 @@ class TestLearningStore(unittest.TestCase):
         learning.record_review("root", "ktb", srs.GRADE_GOOD, now=self.now)
         self.assertEqual(learning.stats(now=self.now)["streak"], 1)
 
+    def test_load_tolere_types_invalides(self):
+        learning._path().write_text(
+            '{"cards": [], "daily": 3, "settings": "x"}', encoding="utf-8"
+        )
+        data = learning.load()
+        self.assertEqual(data["cards"], {})
+        self.assertEqual(data["daily"], {})
+        self.assertIn("daily_new", data["settings"])
+
+    def test_save_borne_le_journal(self):
+        from datetime import date, timedelta
+        base = date(2026, 1, 1)
+        with learning._LOCK:
+            data = learning._empty()
+            for i in range(learning._MAX_DAILY + 25):
+                day = (base + timedelta(days=i)).isoformat()
+                data["daily"][day] = {"reviews": 1, "new": 0, "correct": 0}
+            learning._save(data)
+        saved = learning.load()["daily"]
+        self.assertEqual(len(saved), learning._MAX_DAILY)
+        last = (base + timedelta(days=learning._MAX_DAILY + 24)).isoformat()
+        self.assertIn(last, saved)
+
 
 if __name__ == "__main__":
     unittest.main()

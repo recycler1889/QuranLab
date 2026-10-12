@@ -132,7 +132,7 @@ if getattr(config, "LEARN_ENABLED", False):
 # --------------------------------------------------------------------------
 # Compteurs mis en cache (sidebar + onglets)
 # --------------------------------------------------------------------------
-@st.cache_resource(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def corpus_stats() -> dict:
     """Chiffres du corpus : sourates, versets, mots, racines, traductions."""
     c = get_con()
@@ -324,7 +324,7 @@ with tab_root:
     root_in = col1.text_input(t("app.root_label"), key="root_in")
     ctx = col2.number_input(t("app.root_ctx"), 0, 10, 1, key="root_ctx")
     if root_in:
-        res = search.search_root(con, root_in, with_context=int(ctx))
+        res = cache.search_root_cached(con, root_in, with_context=int(ctx))
         render_root_results(con, res)
 
 # ---------------------------------------------------------------- Recherche
@@ -346,7 +346,7 @@ with tab_search:
     if q and lang_choice == "fr":
         # --- 1. Passerelle linguistique français -> arabe -----------------
         st.markdown(f"#### {t('app.bridge_heading')}")
-        props = search.french_bridge(con, q)["proposals"]
+        props = cache.french_bridge_cached(con, q)["proposals"]
         if not props:
             st.info(t("app.bridge_none"))
         else:
@@ -376,7 +376,7 @@ with tab_search:
                 t("app.bridge_limit"),
                 10, 500, 50, key="bridge_limit",
             )
-            res_root = search.search_root(
+            res_root = cache.search_root_cached(
                 con, props[pick]["root_bw"], limit=limit_root
             )
             note = None
@@ -387,12 +387,12 @@ with tab_search:
 
         # --- 2. Occurrences dans les traductions françaises ---------------
         st.markdown(f"#### {t('app.fr_occurrences')}")
-        rows = search.search_french(con, q)
+        rows = cache.search_french_cached(con, q)
         st.write(t("app.rows_verses", n=len(rows)))
         if len(rows) >= 100:
             st.caption(t("app.limit_100"))
-        bundle = search.verses_bundle(
-            con, [(r["sura"], r["aya"]) for r in rows]
+        bundle = cache.verses_bundle_cached(
+            con, tuple((r["sura"], r["aya"]) for r in rows)
         )
         for r in rows:
             data = bundle.get((r["sura"], r["aya"]), {})
@@ -409,13 +409,13 @@ with tab_search:
 
     elif q:
         # --- Recherche arabe (texte original) -----------------------------
-        rows = search.search_arabic(con, q)
+        rows = cache.search_arabic_cached(con, q)
         st.write(t("app.rows_verses", n=len(rows)))
         if len(rows) >= 100:
             st.caption(t("app.limit_100"))
 
-        bundle = search.verses_bundle(
-            con, [(r["sura"], r["aya"]) for r in rows]
+        bundle = cache.verses_bundle_cached(
+            con, tuple((r["sura"], r["aya"]) for r in rows)
         )
         for r in rows:
             data = bundle.get((r["sura"], r["aya"]), {})
@@ -686,7 +686,7 @@ with tab_theme:
         if key is None:
             st.info(t("app.theme_pick_wait"))
         else:
-            res = search.theme(con, key, lang=lang())
+            res = cache.theme_cached(con, key, lang=lang())
             st.markdown(f"### {res['label']}")
             st.markdown(res["description"])
             extra = ""
@@ -710,8 +710,8 @@ with tab_theme:
                 )
             )
 
-            bundle = search.verses_bundle(
-                con, [(v["sura"], v["aya"]) for v in res["verses"]]
+            bundle = cache.verses_bundle_cached(
+                con, tuple((v["sura"], v["aya"]) for v in res["verses"])
             )
             for v in res["verses"]:
                 data = bundle.get((v["sura"], v["aya"]), {})
@@ -761,7 +761,7 @@ with tab_controv:
     if key is None:
         st.info(t("app.controv_wait"))
     elif key:
-        res = search.controversy(con, key, lang=lang())
+        res = cache.controversy_cached(con, key, lang=lang())
         st.markdown(f"### {res['label']}")
         st.markdown(t("app.controv_question", q=res["question"]))
         st.markdown(t("app.controv_framing", f=res["framing"]))
@@ -912,13 +912,13 @@ with tab_concord:
                 t("app.root_input"), value="صبر",
                 key="conc_root",
             )
-            res = search.concordance(con, root=value) if value else {"found": False}
+            res = cache.concordance_cached(con, root=value) if value else {"found": False}
         else:
             value = st.text_input(
                 t("app.arabic_term"), value="الصبر",
                 key="conc_term",
             )
-            res = search.concordance(con, term=value) if value else {"found": False}
+            res = cache.concordance_cached(con, term=value) if value else {"found": False}
 
         if res.get("found"):
             st.markdown(

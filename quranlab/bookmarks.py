@@ -23,6 +23,11 @@ from . import config
 _BOOKMARKS_PATH = config.DATA_DIR / "bookmarks.json"
 _LOCK = threading.Lock()
 
+# Cache mémoire du fichier, invalidé si le fichier change sur le disque. Sans
+# cela, ``contains`` relirait le JSON une fois **par verset** affiché.
+_CACHE: dict | None = None
+_CACHE_MTIME: int | None = None
+
 
 def _path() -> Path:
     return _BOOKMARKS_PATH
@@ -32,19 +37,39 @@ def _key(sura: int, aya: int) -> str:
     return f"{int(sura)}:{int(aya)}"
 
 
-def load() -> dict:
-    """Charge tous les favoris : {« sura:aya »: {sura, aya, note, added}}."""
+def _load_cached() -> dict:
+    """Version interne : renvoie le dict **caché** (ne pas muter)."""
+    global _CACHE, _CACHE_MTIME
     path = _path()
     if not path.exists():
-        return {}
+        _CACHE, _CACHE_MTIME = {}, None
+        return _CACHE
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    return data if isinstance(data, dict) else {}
+        mtime = path.stat().st_mtime_ns
+    except OSError:
+        return _CACHE or {}
+    if _CACHE is None or _CACHE_MTIME != mtime:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return _CACHE or {}
+        _CACHE = data if isinstance(data, dict) else {}
+        _CACHE_MTIME = mtime
+    return _CACHE
+
+
+def load() -> dict:
+    """Charge tous les favoris : {« sura:aya »: {sura, aya, note, added}}.
+
+    Le fichier est mis en cache et l'invalidité suit son ``mtime`` : les
+    lectures répétées (une par verset affiché) ne relisent pas le disque. Une
+    copie est renvoyée pour que l'appelant ne mute pas l'état partagé.
+    """
+    return dict(_load_cached())
 
 
 def _save(data: dict) -> None:
+    global _CACHE, _CACHE_MTIME
     path = _path()
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".json.tmp")
@@ -53,18 +78,18 @@ def _save(data: dict) -> None:
         encoding="utf-8",
     )
     tmp.replace(path)
+    _CACHE, _CACHE_MTIME = None, None
 
 
 def all_entries() -> list:
     """Tous les favoris, triés par référence (sourate puis verset)."""
-    data = load()
-    entries = list(data.values())
+    entries = list(_load_cached().values())
     entries.sort(key=lambda e: (int(e.get("sura", 0)), int(e.get("aya", 0))))
     return entries
 
 
 def contains(sura: int, aya: int) -> bool:
-    return _key(sura, aya) in load()
+    return _key(sura, aya) in _load_cached()
 
 
 def add(sura: int, aya: int, note: str = "") -> None:
@@ -115,4 +140,4 @@ def clear() -> None:
 
 
 def count() -> int:
-    return len(load())
+    return len(_load_cached())
