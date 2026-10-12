@@ -1,4 +1,4 @@
-# quranlab
+# QuranLab
 
 **Local** tool for research and analysis that is **strictly intra-Quranic**.
 The starting point is always the **Arabic text** (root, morphology), with a

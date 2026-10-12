@@ -23,7 +23,7 @@ DEFAULT = "fr"
 # --------------------------------------------------------------------------
 _FR = {
     # --- Application / sidebar --------------------------------------------
-    "app.title": "quranlab — analyse intra-coranique",
+    "app.title": "QuranLab — analyse intra-coranique",
     "app.subtitle": (
         "Recherche et analyse strictement intra-coraniques — texte, structure, "
         "linguistique et racines. Sans tafsir, hadith ni interprétation "
@@ -635,7 +635,7 @@ _FR = {
 }
 
 _EN = {
-    "app.title": "quranlab — intra-Qur'anic analysis",
+    "app.title": "QuranLab — intra-Qur'anic analysis",
     "app.subtitle": (
         "Strictly intra-Qur'anic search and analysis — text, structure, "
         "linguistics and roots. Without tafsir, hadith or post-Qur'anic "

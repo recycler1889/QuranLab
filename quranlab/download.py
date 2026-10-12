@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import config
 
-_UA = "quranlab/0.1 (outil local de recherche intra-coranique)"
+_UA = "QuranLab/0.1 (outil local de recherche intra-coranique)"
 
 
 def _fetch(url: str) -> bytes:

@@ -1,4 +1,4 @@
-"""Interface en ligne de commande de quranlab."""
+"""Interface en ligne de commande de QuranLab."""
 
 import argparse
 import sys
@@ -266,7 +266,7 @@ def cmd_bridge(args) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="quranlab",
+        prog="QuranLab",
         description="Recherche et analyse intra-coranique (texte, racines, traductions).",
     )
     sub = p.add_subparsers(dest="command", required=True)

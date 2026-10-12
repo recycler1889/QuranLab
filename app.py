@@ -1,4 +1,4 @@
-"""Interface Streamlit locale pour quranlab.
+"""Interface Streamlit locale pour QuranLab.
 
 Lancement :
     streamlit run app.py
@@ -96,7 +96,7 @@ st.markdown(theme_mod.css(theme_name), unsafe_allow_html=True)
 # Métadonnées PWA (manifeste, theme-color assorti au thème, icône iOS).
 pwa.inject(theme_mod.PALETTES[theme_name]["accent"])
 
-ui.page_header("quranlab", t("app.subtitle"))
+ui.page_header("QuranLab", t("app.subtitle"))
 
 # Tutoriel de première visite (modale) + rappel accessible en permanence.
 onboarding.init()

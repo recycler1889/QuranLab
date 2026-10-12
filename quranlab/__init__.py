@@ -1,4 +1,4 @@
-"""quranlab — outil local de recherche et d'analyse intra-coranique.
+"""QuranLab — outil local de recherche et d'analyse intra-coranique.
 
 Approche strictement textuelle : le Coran est étudié par son texte, sa
 structure, sa linguistique et ses racines, sans recours aux tafsirs, aux
