@@ -23,6 +23,7 @@ _POS = "learn_pos_state"
 _REVEAL = "learn_reveal_state"
 _QC = "learn_quiz_context"
 _QR = "learn_quiz_root"
+_QN = "learn_quiz_nonce"
 _TOASTED = "learn_toasted"
 
 
@@ -198,7 +199,8 @@ def _review_session(con) -> None:
         if st.button(t("learn.start"), key=ui.unique_key("learn_start")):
             settings = learning.get_settings()
             queue = learning.due_cards(limit=int(settings["daily_review"]))
-            queue += learning.new_queue(con, int(settings["daily_new"]))
+            queue += learning.new_queue(con, int(settings["daily_new"]),
+                                        lang=i18n.lang())
             st.session_state[_Q] = queue
             st.session_state[_POS] = 0
             st.session_state[_REVEAL] = False
@@ -267,6 +269,7 @@ def _quiz_block(con) -> None:
             st.session_state[_QC] = (
                 quiz.context_question(con, card, i18n.lang()) if card else None
             )
+            _bump_nonce(_QC)
             st.rerun()
         else:
             return
@@ -305,6 +308,7 @@ def _quiz_root_block(con) -> None:
     if q is None:
         if st.button(t("learn.quiz_another"), key=ui.unique_key("quiz_r_new")):
             st.session_state[_QR] = quiz.root_question(con, i18n.lang())
+            _bump_nonce(_QR)
             st.rerun()
         else:
             return
@@ -324,32 +328,36 @@ def _quiz_root_block(con) -> None:
         _ask(con, q, _QR)
 
 
+def _bump_nonce(state_key: str) -> None:
+    """Incrémente le compteur de question d'un quiz (nouvelle clé de widget).
+
+    Changer la clé du ``radio`` à chaque nouvelle question évite que la
+    sélection précédente ne « colle » à la question suivante.
+    """
+    nonces = st.session_state.setdefault(_QN, {})
+    nonces[state_key] = int(nonces.get(state_key, 0)) + 1
+
+
 def _ask(con, q: dict, state_key: str) -> None:
     """Affiche les propositions d'un quiz, corrige et alimente le SRS."""
     labels = [opt["text"] for opt in q["options"]]
+    nonce = int(st.session_state.get(_QN, {}).get(state_key, 0))
+    radio_key = f"quiz_choice_{state_key}_{nonce}"
     choice = st.radio(t("learn.quiz_submit"), list(range(len(labels))),
-                      format_func=lambda i: labels[i],
-                      key=ui.unique_key(f"quiz_choice_{state_key}"))
-    if st.button(t("learn.quiz_submit"), key=ui.unique_key(f"quiz_submit_{state_key}")):
+                      format_func=lambda i: labels[i], key=radio_key)
+    if st.button(t("learn.quiz_submit"),
+                 key=f"quiz_submit_{state_key}_{nonce}"):
         correct = bool(q["options"][choice]["correct"])
         if correct:
             st.success(t("learn.quiz_correct"))
         else:
             st.error(t("learn.quiz_wrong", ans=q["answer"]))
-        if q.get("kind") == "context" and q.get("root_ar"):
-            card = {"kind": "root", "id": "", "ar": q["root_ar"],
-                    "label": q["answer"]}
-            # On retrouve la racine Buckwalter via la glose (best effort).
-            for r in cache.frequent_roots_cached(
-                    con, config.LEARN_TOP_ROOTS, lang=i18n.lang()):
-                if r.get("gloss") == q["answer"]:
-                    card["id"] = r["root_bw"]
-                    break
-            if card["id"]:
-                learning.record_review("root", card["id"],
-                                       quiz.grade(correct),
-                                       ar=card["ar"], label=card["label"])
+        root_bw = q.get("root_bw")
+        if root_bw:
+            learning.record_review("root", root_bw, quiz.grade(correct),
+                                   ar=q.get("root_ar", ""), label=q["answer"])
         st.session_state[state_key] = None
+        st.session_state.pop(radio_key, None)
 
 
 # --------------------------------------------------------------------------

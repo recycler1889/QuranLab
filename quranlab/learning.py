@@ -168,21 +168,24 @@ def due_cards(limit: int | None = None, now=None) -> list:
     return cards[:limit] if limit else cards
 
 
-def new_queue(con, count: int | None = None) -> list:
+def new_queue(con, count: int | None = None, lang: str | None = None) -> list:
     """Cartes neuves à introduire (racines fréquentes pas encore vues).
 
-    ``con`` : connexion SQLite (pour le classement par fréquence). Import
-    paresseux de ``cache`` pour éviter toute dépendance circulaire.
+    ``con`` : connexion SQLite (pour le classement par fréquence). ``lang``
+    localise la glose persistée comme libellé de carte (par défaut, la langue
+    d'interface active) — sans quoi les cartes seraient toujours en français.
+    Import paresseux de ``cache`` pour éviter toute dépendance circulaire.
     """
-    from . import cache  # import local : évite un cycle d'imports
+    from . import cache, i18n  # import local : évite un cycle d'imports
 
+    lg = lang or i18n.lang()
     settings = get_settings()
     n = settings["daily_new"] if count is None else count
     if n <= 0:
         return []
     cards = load()["cards"]
     out = []
-    for root in cache.frequent_roots_cached(con, config.LEARN_TOP_ROOTS):
+    for root in cache.frequent_roots_cached(con, config.LEARN_TOP_ROOTS, lang=lg):
         if _ckey("root", root["root_bw"]) in cards:
             continue
         out.append({

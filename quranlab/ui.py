@@ -65,7 +65,11 @@ def surah_names() -> dict:
     """{numéro: nom translittéré} — chargé une fois par processus."""
     global _NAMES
     if _NAMES is None:
-        _NAMES = db.surah_names(db.connect())
+        con = db.connect()
+        try:
+            _NAMES = db.surah_names(con)
+        finally:
+            con.close()
     return _NAMES
 
 
@@ -151,7 +155,10 @@ def _tint(hex_color: str, alpha: float) -> str:
         h = "".join(ch * 2 for ch in h)
     if len(h) != 6:
         return hex_color
-    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    try:
+        r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return hex_color
     return f"rgba({r},{g},{b},{alpha})"
 
 
@@ -1245,24 +1252,24 @@ def _summary_arabic(con, q: str) -> dict:
     """Mot arabe : racine exacte si possible, sinon occurrences textuelles."""
     resolved = search.resolve_root(con, q)
     if resolved is not None:
-        st = search.root_stats(con, resolved["root_buckwalter"])
-        if st:
+        rs = search.root_stats(con, resolved["root_buckwalter"])
+        if rs:
             return {
                 "kind": "root",
                 "props": [
                     {
                         "fr": q,
-                        "root_bw": st["root_bw"],
-                        "root_ar": st["root_ar"],
-                        "occurrences": st["occurrences"],
-                        "verses": st["verses"],
+                        "root_bw": rs["root_bw"],
+                        "root_ar": rs["root_ar"],
+                        "occurrences": rs["occurrences"],
+                        "verses": rs["verses"],
                         "source": "racine (saisie directe)",
                     }
                 ],
                 "ar_rows": [],
                 "fr_rows": [],
-                "occurrences": st["occurrences"],
-                "verses": st["verses"],
+                "occurrences": rs["occurrences"],
+                "verses": rs["verses"],
             }
     ar = search.arabic_occurrence_summary(con, q)
     return {

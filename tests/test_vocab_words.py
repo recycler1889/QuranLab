@@ -41,6 +41,9 @@ class TestFrequentWords(unittest.TestCase):
     def setUp(self):
         self.con = _make_db()
 
+    def tearDown(self):
+        self.con.close()
+
     def test_corpus_token_count(self):
         self.assertEqual(vocab.corpus_token_count(self.con), 5)
 

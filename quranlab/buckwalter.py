@@ -147,6 +147,8 @@ def buckwalter_to_latin(text: str) -> str:
 
 def strip_diacritics(text: str) -> str:
     """Retire les marques combinantes (harakât, shadda...) et le tatweel."""
+    if not text:
+        return ""
     return "".join(
         ch for ch in text if unicodedata.category(ch) != "Mn" and ch != "\u0640"
     )
@@ -168,12 +170,36 @@ def normalize_arabic(text: str) -> str:
 
 
 def normalize_latin(text: str) -> str:
-    """Normalise une chaîne latine (français) : minuscules, sans accents."""
+    """Normalise une chaîne latine (français) : minuscules, sans accents.
+
+    Replie aussi les variantes typographiques sur leurs équivalents ASCII
+    (apostrophe courbe ``’`` -> ``'``, ligatures ``œ``/``æ`` -> ``oe``/``ae``)
+    afin qu'une même recherche donne le même résultat qu'on saisisse
+    « l'homme » ou « l’homme ».
+    """
+    if not text:
+        return ""
+    text = (
+        text.replace("\u2019", "'").replace("\u2018", "'")
+        .replace("\u0153", "oe").replace("\u0152", "oe")
+        .replace("\u00e6", "ae").replace("\u00c6", "ae")
+    )
     text = text.lower()
     decomposed = unicodedata.normalize("NFKD", text)
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
 def is_arabic(text: str) -> bool:
-    """Vrai si la chaîne contient au moins un caractère du bloc arabe."""
-    return any("\u0600" <= ch <= "\u06FF" for ch in text)
+    """Vrai si la chaîne contient au moins une *lettre* arabe.
+
+    On se restreint aux caractères de catégorie Unicode « Lettre » (``L*``) du
+    bloc arabe : les chiffres arabo-indiens (U+0660–0669), la ponctuation
+    (U+060C…) et les signes diacritiques (marques ``Mn``) sont ignorés, sinon
+    une saisie numérique serait routée à tort vers la recherche arabe.
+    """
+    if not text:
+        return False
+    for ch in text:
+        if "\u0600" <= ch <= "\u06FF" and unicodedata.category(ch).startswith("L"):
+            return True
+    return False

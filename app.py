@@ -150,7 +150,7 @@ def corpus_stats() -> dict:
 @st.cache_data(show_spinner="Comptage des occurrences des 164 thèmes…")
 def theme_counts_cached(fingerprint: int) -> dict:
     """{clé de thème: nb de versets} — recalculé seulement si themes.json change."""
-    return search.theme_counts(db.connect())
+    return search.theme_counts(get_con())
 
 
 @st.cache_data(show_spinner=False, hash_funcs={sqlite3.Connection: lambda c: id(c)})
@@ -233,6 +233,10 @@ with tab_read:
         label_visibility="collapsed",
     )
     _jump_s = (_jump or "").strip()
+    # Champ vidé : on oublie la dernière référence appliquée, sinon re-saisir
+    # la même valeur ne déclencherait aucun saut (comparaison identique).
+    if not _jump_s:
+        st.session_state.pop("read_jump_applied", None)
     _jtarget = search.jump_target(_jump_s, _by_num)
     if _jump_s and _jtarget is None:
         st.warning(t("app.read_jump_bad"))

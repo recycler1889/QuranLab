@@ -30,6 +30,24 @@ _CONTROVERSIES_EN_PATH = Path(__file__).resolve().parent / "controversies_en.jso
 # correspondre, sinon la recherche textuelle normale prend le relais.
 _REF_RE = re.compile(r"^\s*(\d{1,3})\s*[:./\s]\s*(\d{1,3})\s*$")
 
+# Échappement des métacaractères de ``LIKE`` : sans cela, une saisie comme « % »
+# ou « _ » se comporterait comme un joker et renverrait tout le corpus.
+_LIKE_ESCAPE = "\\"
+
+
+def _like_pattern(term: str) -> str:
+    """Motif ``LIKE`` encadré, métacaractères ``% _ \\`` neutralisés.
+
+    À utiliser avec ``LIKE ? ESCAPE '\\'`` pour que la saisie soit traitée
+    littéralement.
+    """
+    esc = (
+        term.replace(_LIKE_ESCAPE, _LIKE_ESCAPE * 2)
+        .replace("%", _LIKE_ESCAPE + "%")
+        .replace("_", _LIKE_ESCAPE + "_")
+    )
+    return f"%{esc}%"
+
 # Cache en mémoire du fichier de thèmes (invalidé si le fichier change).
 _THEMES_CACHE: dict | None = None
 _THEMES_MTIME: int | None = None
@@ -74,11 +92,11 @@ def search_arabic(con: sqlite3.Connection, query: str, limit: int = 100) -> list
         """
         SELECT sura, aya, text_uthmani, text_simple
         FROM verses
-        WHERE text_simple_norm LIKE ?
+        WHERE text_simple_norm LIKE ? ESCAPE '\\'
         ORDER BY sura, aya
         LIMIT ?
         """,
-        (f"%{q}%", limit),
+        (_like_pattern(q), limit),
     ).fetchall()
     return [dict(r) for r in rows]
 
@@ -100,8 +118,8 @@ def arabic_occurrence_summary(
         "COALESCE(SUM((LENGTH(text_simple_norm) "
         "  - LENGTH(REPLACE(text_simple_norm, ?, ''))) / LENGTH(?)), 0) "
         "  AS occurrences "
-        "FROM verses WHERE text_simple_norm LIKE ?",
-        (q, q, f"%{q}%"),
+        "FROM verses WHERE text_simple_norm LIKE ? ESCAPE '\\'",
+        (q, q, _like_pattern(q)),
     ).fetchone()
     return {
         "occurrences": int(row["occurrences"] or 0),
@@ -136,9 +154,9 @@ def search_french(
         FROM translation_verses tv
         JOIN translations t ON t.id = tv.translation_id
         JOIN verses v ON v.sura = tv.sura AND v.aya = tv.aya
-        WHERE tv.text_norm LIKE ?
+        WHERE tv.text_norm LIKE ? ESCAPE '\\'
     """
-    params: list = [f"%{q}%"]
+    params: list = [_like_pattern(q)]
     if translation_key:
         sql += " AND t.key = ?"
         params.append(translation_key)
@@ -169,9 +187,9 @@ def french_matches_rows(
         FROM translation_verses tv
         JOIN translations t ON t.id = tv.translation_id
         JOIN verses v ON v.sura = tv.sura AND v.aya = tv.aya
-        WHERE tv.text_norm LIKE ? AND ({where})
+        WHERE tv.text_norm LIKE ? ESCAPE '\\' AND ({where})
     """
-    params: list = [f"%{q}%"] + [x for ref in refs for x in ref]
+    params: list = [_like_pattern(q)] + [x for ref in refs for x in ref]
     if translation_key:
         sql += " AND t.key = ?"
         params.append(translation_key)
@@ -184,7 +202,9 @@ def french_matches_rows(
 # --------------------------------------------------------------------------
 def resolve_root(con: sqlite3.Connection, root_input: str):
     """Résout une racine saisie (arabe ou Buckwalter) vers sa forme canonique."""
-    root_input = root_input.strip()
+    root_input = (root_input or "").strip()
+    if not root_input:
+        return None
     row = None
     if is_arabic(root_input):
         row = con.execute(
@@ -585,7 +605,7 @@ def resolve_theme_key(name: str) -> tuple[str | None, list[str]]:
     Retourne ``(clé, [])`` si résolu, sinon ``(None, suggestions)``.
     """
     themes = _themes_only()
-    key = name.strip().lower()
+    key = (name or "").strip().lower()
     if key in themes:
         return key, []
     q_lat = normalize_latin(key)
@@ -617,7 +637,7 @@ def theme(con: sqlite3.Connection, name: str, limit: int = 500,
           lang: str = "fr") -> dict:
     """Regroupe toutes les occurrences textuelles d'un thème intra-coranique."""
     themes = _themes_only()
-    key = name.strip().lower()
+    key = (name or "").strip().lower()
     if key not in themes:
         key, suggestions = resolve_theme_key(name)
         if key is None:
@@ -730,7 +750,7 @@ def controversy(con: sqlite3.Connection, name: str, limit: int = 500,
     et retourne les versets clés avec leur texte et toutes leurs traductions.
     """
     items = _controversies_only()
-    key = name.strip().lower()
+    key = (name or "").strip().lower()
     if key not in items:
         return {"found": False, "name": name, "available": sorted(items)}
 

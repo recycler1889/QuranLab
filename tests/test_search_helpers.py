@@ -22,6 +22,19 @@ class TestThemeResolution(unittest.TestCase):
         self.assertIsNone(key)
         self.assertEqual(suggestions, [])
 
+    def test_none_is_ignored(self):
+        self.assertEqual(search.resolve_theme_key(None), (None, []))
+
+
+class TestLikeEscaping(unittest.TestCase):
+    def test_jokers_echappes(self):
+        self.assertEqual(search._like_pattern("100%"), "%100\\%%")
+        self.assertEqual(search._like_pattern("a_b"), "%a\\_b%")
+        self.assertEqual(search._like_pattern("a\\b"), "%a\\\\b%")
+
+    def test_terme_simple_inchange(self):
+        self.assertEqual(search._like_pattern("miséricorde"), "%miséricorde%")
+
 
 class TestFrenchHelpers(unittest.TestCase):
     def test_stem_plural(self):
