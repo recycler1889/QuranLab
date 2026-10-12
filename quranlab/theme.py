@@ -157,6 +157,9 @@ def css(name: str) -> str:
     glow = _rgba(p["gold"], 0.10)
     gold_soft = _rgba(p["gold"], 0.16)
     accent_soft = _rgba(p["accent"], 0.12)
+    sheen = _rgba(p["gold"], 0.20)
+    card_edge = _rgba(p["fg"], 0.06)
+    gold_glow = _rgba(p["gold"], 0.28)
     return f"""
 <style>
 :root, html, body, .stApp,
@@ -392,7 +395,9 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     overflow: hidden;
 }}
 .ql-banner::before {{
-    /* liseré supérieur : or, façon encadrement d'enluminure */
+    /* liseré supérieur : or, façon encadrement d'enluminure. Un éclat
+       traverse lentement le filet (dégradé défilant) pour animer l'en-tête
+       sans surcoût : seule la position du fond change. */
     content: "";
     position: absolute;
     left: 0; right: 0; top: 0;
@@ -400,7 +405,10 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     background: linear-gradient(
         90deg, transparent, var(--ql-gold), transparent
     );
+    background-size: 42% 100%;
+    background-repeat: no-repeat;
     opacity: .95;
+    animation: ql-sheen-line 7s ease-in-out infinite;
 }}
 .ql-banner::after {{
     /* filet inférieur discret, en écho au liseré supérieur */
@@ -497,14 +505,22 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     padding: 1.05rem .9rem .9rem .9rem;
     border: 1px solid var(--ql-border);
     border-radius: 16px;
-    background: var(--ql-bg2);
+    background:
+        linear-gradient(180deg, {card_edge}, transparent 38%),
+        var(--ql-bg2);
     color: var(--ql-fg);
     text-align: center;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .05),
-                0 12px 28px -20px rgba(0, 0, 0, .5);
-    transition: transform .16s ease, box-shadow .16s ease,
-                border-color .16s ease;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 1px 0 {card_edge} inset,
+                0 2px 4px -1px rgba(0, 0, 0, .06),
+                0 14px 30px -22px rgba(0, 0, 0, .55);
+    transition: transform .22s cubic-bezier(.2, .7, .3, 1),
+                box-shadow .22s ease, border-color .22s ease;
+    animation: ql-rise .34s cubic-bezier(.2, .7, .3, 1) both;
+    animation-delay: var(--ql-delay, 0ms);
+    will-change: transform;
 }}
 .ql-card::before {{
     /* filet doré en tête de carte, discret */
@@ -516,13 +532,64 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
         90deg, transparent, var(--ql-gold), transparent
     );
     opacity: .55;
+    transition: opacity .22s ease;
+}}
+.ql-card::after {{
+    /* éclat lumineux qui balaie la carte au survol */
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 55%;
+    background: linear-gradient(
+        100deg, transparent, {sheen}, transparent
+    );
+    transform: translateX(-160%) skewX(-16deg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
 }}
 .ql-card:hover {{
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.015);
     border-color: var(--ql-gold);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .08),
-                0 18px 36px -20px rgba(0, 0, 0, .55);
+    box-shadow: 0 1px 0 {card_edge} inset,
+                0 6px 14px -6px rgba(0, 0, 0, .22),
+                0 22px 40px -22px rgba(0, 0, 0, .5),
+                0 0 0 1px {gold_soft};
 }}
+.ql-card:hover::before {{ opacity: 1; }}
+.ql-card:hover::after {{ opacity: 1; animation: ql-sheen .85s ease; }}
+.ql-card:active {{
+    transform: translateY(-1px) scale(.995);
+    transition-duration: .08s;
+}}
+/* halo doré sur le glyphe arabe au survol : la carte « répond » au doigt */
+.ql-card:hover .ql-ar {{
+    transform: scale(1.06);
+    text-shadow: 0 2px 12px {gold_glow};
+}}
+.ql-card .ql-ar {{
+    transition: transform .22s cubic-bezier(.2, .7, .3, 1),
+                text-shadow .22s ease;
+}}
+/* petit fleuron d'angle (rosette géométrique, 100 % CSS) */
+.ql-card .ql-orn {{
+    position: absolute;
+    top: 9px; right: 9px;
+    width: 12px; height: 12px;
+    opacity: .35;
+    transition: opacity .22s ease, transform .4s ease;
+    pointer-events: none;
+    z-index: 2;
+}}
+.ql-card .ql-orn::before, .ql-card .ql-orn::after {{
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ql-gold);
+    border-radius: 2px;
+}}
+.ql-card .ql-orn::after {{ transform: rotate(45deg); }}
+.ql-card:hover .ql-orn {{ opacity: .9; transform: rotate(45deg); }}
 .ql-card .ql-ar,
 .ql-ar {{ font-family: var(--ql-font-ar); color: var(--ql-accent); }}
 .ql-card .ql-ar {{
@@ -669,6 +736,55 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     .ql-card {{ padding: .7rem .45rem; gap: .22rem; }}
     .ql-card .ql-gloss {{ font-size: .82rem; }}
     .ql-card .ql-ar {{ font-size: 1.6rem; }}
+}}
+
+/* --- Animations : entrée en cascade, éclats — transform/opacity seuls,
+   accélérés par le GPU, donc fluides même sur mobile/PWA ------------------- */
+@keyframes ql-rise {{
+    from {{ opacity: 0; transform: translateY(8px); }}
+    to   {{ opacity: 1; transform: none; }}
+}}
+@keyframes ql-sheen {{
+    from {{ transform: translateX(-160%) skewX(-16deg); }}
+    to   {{ transform: translateX(260%) skewX(-16deg); }}
+}}
+@keyframes ql-sheen-line {{
+    0%   {{ background-position: -60% 0; }}
+    55%  {{ background-position: 160% 0; }}
+    100% {{ background-position: 160% 0; }}
+}}
+@keyframes ql-pulse {{
+    0%   {{ box-shadow: 0 0 0 0 {gold_glow}; }}
+    70%  {{ box-shadow: 0 0 0 8px transparent; }}
+    100% {{ box-shadow: 0 0 0 0 transparent; }}
+}}
+
+/* Tactile : pas de survol persistant ; l'appui direct donne le retour visuel */
+@media (hover: none) {{
+    .ql-card:hover {{
+        transform: none;
+        border-color: var(--ql-border);
+        box-shadow: 0 1px 0 {card_edge} inset,
+                    0 2px 4px -1px rgba(0, 0, 0, .06),
+                    0 14px 30px -22px rgba(0, 0, 0, .55);
+    }}
+    .ql-card:hover .ql-orn {{ opacity: .35; transform: none; }}
+    .ql-card:active {{
+        transform: scale(.985);
+        border-color: var(--ql-gold);
+        box-shadow: 0 0 0 1px {gold_soft};
+    }}
+}}
+
+/* Respect des préférences d'accessibilité : on coupe le mouvement */
+@media (prefers-reduced-motion: reduce) {{
+    .ql-card, .ql-card::after, .ql-card .ql-ar, .ql-card .ql-orn,
+    .ql-banner::before {{
+        animation: none !important;
+        transition: none !important;
+    }}
+    .ql-card:hover {{ transform: none; }}
+    .ql-card:hover::after {{ display: none; }}
 }}
 </style>
 """

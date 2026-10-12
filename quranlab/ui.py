@@ -144,6 +144,17 @@ def _palette() -> dict:
     return theme_mod.PALETTES.get(name, theme_mod.PALETTES[theme_mod.DEFAULT])
 
 
+def _tint(hex_color: str, alpha: float) -> str:
+    """Couleur hexadécimale → ``rgba(...)`` (halos CSS des lecteurs audio)."""
+    h = (hex_color or "").lstrip("#")
+    if len(h) == 3:
+        h = "".join(ch * 2 for ch in h)
+    if len(h) != 6:
+        return hex_color
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def active_reciter() -> dict:
     """Récitateur sélectionné (repli sur le premier de config.RECITERS)."""
     reciters = [r for r in (getattr(config, "RECITERS", None) or [])
@@ -171,6 +182,7 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
     title = html.escape(f"{reciter['label']} · {sura}:{aya}")
     play = json.dumps(t("ui.listen"), ensure_ascii=False)
     pause = json.dumps(t("ui.pause"), ensure_ascii=False)
+    glow = _tint(pal["accent"], 0.38)
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;}}
@@ -178,30 +190,57 @@ def quran_audio(sura: int, aya: int, reciter: dict | None = None) -> None:
         font-family:system-ui,"Segoe UI",sans-serif;}}
       button{{cursor:pointer;border:1px solid {pal['border']};
         background:{pal['field']};color:{pal['fg']};border-radius:999px;
-        height:28px;padding:0 10px;font-size:12.5px;display:inline-flex;
-        align-items:center;gap:5px;transition:.15s;}}
+        height:28px;padding:0 11px;font-size:12.5px;display:inline-flex;
+        align-items:center;gap:7px;-webkit-tap-highlight-color:transparent;
+        transition:border-color .18s,color .18s,box-shadow .18s,transform .1s;}}
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
+      button:active{{transform:scale(.96);}}
+      #pp{{padding:0 12px 0 11px;}}
+      .eq{{display:inline-flex;align-items:flex-end;gap:2px;height:13px;}}
+      .eq i{{width:2.5px;height:100%;border-radius:1px;background:currentColor;
+        transform:scaleY(.32);transform-origin:bottom;
+        transition:transform .2s ease;}}
+      #pp.playing{{color:{pal['accent']};border-color:{pal['accent']};
+        animation:qpulse 1.5s ease-out infinite;}}
+      #pp.playing .eq i{{animation:qeq .85s ease-in-out infinite;}}
+      #pp.playing .eq i:nth-child(2){{animation-delay:.16s;}}
+      #pp.playing .eq i:nth-child(3){{animation-delay:.32s;}}
+      @keyframes qeq{{0%,100%{{transform:scaleY(.28);}}50%{{transform:scaleY(1);}}}}
+      @keyframes qpulse{{0%{{box-shadow:0 0 0 0 {glow};}}
+        70%{{box-shadow:0 0 0 8px transparent;}}
+        100%{{box-shadow:0 0 0 0 transparent;}}}}
+      @media (prefers-reduced-motion:reduce){{
+        #pp.playing{{animation:none;}}
+        #pp.playing .eq i{{animation:none;transform:scaleY(1);}}
+      }}
       .meta{{font-size:11px;color:{pal['fg2']};white-space:nowrap;
         overflow:hidden;text-overflow:ellipsis;max-width:170px;}}
     </style></head><body>
       <div class="bar">
-        <button id="pp" title="{html.escape(t('ui.listen_title'))}">&#9654; {t("ui.listen")}</button>
+        <button id="pp" title="{html.escape(t('ui.listen_title'))}">
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="lbl">{t("ui.listen")}</span></button>
         <button id="st" title="{html.escape(t('ui.stop_title'))}">&#9632;</button>
         <span class="meta">{title}</span>
         <audio id="au" preload="none" src="{url}"></audio>
       </div>
       <script>
-        var au=document.getElementById('au'),pp=document.getElementById('pp');
-        var PLAY='\u25B6 ' + {play}, PAUSE='\u275A\u275A ' + {pause};
+        var au=document.getElementById('au'),pp=document.getElementById('pp'),
+            lbl=pp.querySelector('.lbl');
+        var PLAY={play},PAUSE={pause};
+        function mark(on){{pp.classList.toggle('playing',on);}}
         pp.addEventListener('click',function(){{
-          if(au.paused){{au.play();pp.textContent=PAUSE;}}
-          else{{au.pause();pp.textContent=PLAY;}}
+          if(au.paused){{au.play();}}else{{au.pause();}}
         }});
-        document.getElementById('st').addEventListener('click',function(){{
-          au.pause();au.currentTime=0;pp.textContent=PLAY;
-        }});
+        au.addEventListener('play',function(){{
+          mark(true);lbl.textContent=PAUSE;}});
+        au.addEventListener('pause',function(){{
+          mark(false);lbl.textContent=PLAY;}});
         au.addEventListener('ended',function(){{
-          pp.textContent=PLAY;}});
+          mark(false);lbl.textContent=PLAY;au.currentTime=0;}});
+        document.getElementById('st').addEventListener('click',function(){{
+          au.pause();au.currentTime=0;mark(false);lbl.textContent=PLAY;
+        }});
       </script>
     </body></html>"""
     st.iframe(comp, height=36)
@@ -442,55 +481,80 @@ def _tts_browser_button(text: str, language: str, allow_external: bool = True,
 
     external = _tts_external_url(text or "", locale) if allow_external else ""
     if external:
-        button_js = f"""
-        var au=document.getElementById('ext');var PLAY='\\u25B6 ' + {play};
-        var STOP='\\u25A0 ' + {stop};
-        if(au){{
-          if(b.dataset.on==='1'){{au.pause();au.currentTime=0;
-            b.dataset.on='0';b.textContent=PLAY;return;}}
-          au.play();b.dataset.on='1';b.textContent=STOP;
-          au.onended=function(){{b.dataset.on='0';b.textContent=PLAY;}};
-        }} else {{ b.textContent={unavail}; }}
+        button_js = """
+        var au=document.getElementById('ext');
+        if(au){
+          if(b.dataset.on==='1'){au.pause();au.currentTime=0;
+            b.dataset.on='0';b.classList.remove('playing');
+            lbl.textContent=PLAY;return;}
+          au.play();b.dataset.on='1';b.classList.add('playing');
+          lbl.textContent=STOP;
+          au.onended=function(){b.dataset.on='0';
+            b.classList.remove('playing');lbl.textContent=PLAY;};
+        } else { lbl.textContent=UNAVAIL; }
         """
         audio_tag = f'<audio id="ext" preload="none" src="{html.escape(external)}"></audio>'
     else:
         button_js = f"""
-        if(!('speechSynthesis' in window)){{ b.textContent={unavail};return; }}
+        if(!('speechSynthesis' in window)){{ lbl.textContent=UNAVAIL;return; }}
         if(b.dataset.on==='1'){{
-          speechSynthesis.cancel();b.dataset.on='0';b.textContent=IDLE;return;}}
+          speechSynthesis.cancel();b.dataset.on='0';
+          b.classList.remove('playing');lbl.textContent=PLAY;return;}}
         var u=qlSpeak({payload},'',{locale!r},RATE,PITCH);
-        var done=function(){{b.dataset.on='0';b.textContent=IDLE;}};
+        var done=function(){{b.dataset.on='0';
+          b.classList.remove('playing');lbl.textContent=PLAY;}};
         u.onend=done;u.onerror=done;
-        b.dataset.on='1';b.textContent='\\u25A0 ' + {stop};
+        b.dataset.on='1';b.classList.add('playing');lbl.textContent=STOP;
         """
         audio_tag = ""
     voice_js = "" if external else _tts_voice_js(language)
-    idle_js = "" if external else f"var IDLE='\\u25B6 ' + {play};"
+    consts_js = f"var PLAY={play},STOP={stop},UNAVAIL={unavail};"
+    glow = _tint(pal["accent"], 0.38)
 
     comp = f"""
     <!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{{margin:0;padding:0;background:transparent;}}
       button{{cursor:pointer;border:1px solid {pal['border']};
         background:{pal['field']};color:{pal['fg2']};border-radius:999px;
-        height:26px;padding:0 10px;font-size:12px;display:inline-flex;
-        align-items:center;gap:5px;transition:.15s;
-        font-family:system-ui,"Segoe UI",sans-serif;}}
+        height:28px;padding:0 12px 0 11px;font-size:12.5px;display:inline-flex;
+        align-items:center;gap:8px;font-family:system-ui,"Segoe UI",sans-serif;
+        -webkit-tap-highlight-color:transparent;
+        transition:border-color .18s,color .18s,box-shadow .18s,transform .1s;}}
       button:hover{{border-color:{pal['accent']};color:{pal['accent']};}}
+      button:active{{transform:scale(.96);}}
+      .eq{{display:inline-flex;align-items:flex-end;gap:2px;height:13px;}}
+      .eq i{{width:2.5px;height:100%;border-radius:1px;background:currentColor;
+        transform:scaleY(.32);transform-origin:bottom;
+        transition:transform .2s ease;}}
+      button.playing{{color:{pal['accent']};border-color:{pal['accent']};
+        animation:qpulse 1.5s ease-out infinite;}}
+      button.playing .eq i{{animation:qeq .85s ease-in-out infinite;}}
+      button.playing .eq i:nth-child(2){{animation-delay:.16s;}}
+      button.playing .eq i:nth-child(3){{animation-delay:.32s;}}
+      @keyframes qeq{{0%,100%{{transform:scaleY(.28);}}50%{{transform:scaleY(1);}}}}
+      @keyframes qpulse{{0%{{box-shadow:0 0 0 0 {glow};}}
+        70%{{box-shadow:0 0 0 8px transparent;}}
+        100%{{box-shadow:0 0 0 0 transparent;}}}}
+      @media (prefers-reduced-motion:reduce){{
+        button.playing{{animation:none;}}
+        button.playing .eq i{{animation:none;transform:scaleY(1);}}
+      }}
     </style></head><body>
       <button id="b" title="{title}">
-        &#9654; {t(label_key)}</button>
+        <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="lbl">{t(label_key)}</span></button>
       {audio_tag}
       <script>
         var RATE={rate!r};var PITCH={pitch!r};
+        {consts_js}
         {voice_js}
-        var b=document.getElementById('b'),t={payload};
-        {idle_js}
+        var b=document.getElementById('b'),lbl=b.querySelector('.lbl');
         b.addEventListener('click',function(){{
           {button_js}
         }});
       </script>
     </body></html>"""
-    st.iframe(comp, height=30)
+    st.iframe(comp, height=32)
 
 
 def tts(text: str, language: str = "fr") -> None:

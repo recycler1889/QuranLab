@@ -69,13 +69,23 @@ def _listen(text: str) -> None:
 # --------------------------------------------------------------------------
 # Étape 1 — alphabet et formes positionnelles (cartes + écoute par lettre)
 # --------------------------------------------------------------------------
-def _letter_card(letter: dict, c: dict) -> str:
+def _delay(i: int) -> str:
+    """Décalage d'animation (ms) pour une entrée en cascade, plafonné.
+
+    Le plafond évite qu'une longue liste (99 Noms, 28 lettres) impose une
+    attente perceptible en fin de grille.
+    """
+    return f" style='--ql-delay:{min(i, 11) * 28}ms'"
+
+
+def _letter_card(letter: dict, c: dict, i: int = 0) -> str:
     """Carte d'une lettre : forme isolée, nom, transcription, quatre formes."""
     tiles = "".join(
         f"<span dir='rtl' lang='ar'>{form}</span>" for form in letter["forms"]
     )
     return (
-        "<div class='ql-card'>"
+        f"<div class='ql-card'{_delay(i)}>"
+        "<span class='ql-orn'></span>"
         f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(letter['ar'])}</div>"
         f"<div class='ql-name'>{html.escape(letter['name'])}</div>"
         f"<div class='ql-tr'>{html.escape(letter['tr'])}</div>"
@@ -127,7 +137,7 @@ def _step_alphabet():
         if i % 4 == 0:
             cols = st.columns(4)
         with cols[i % 4]:
-            st.markdown(_letter_card(letter, c), unsafe_allow_html=True)
+            st.markdown(_letter_card(letter, c, i), unsafe_allow_html=True)
             _listen(letter.get("ar_name") or letter["ar"])
     st.caption(t("iqra.s1_note_nonconnect"))
     st.markdown(_ar_div(" ".join(iqra.NON_CONNECTING), "2.1rem", c),
@@ -137,12 +147,13 @@ def _step_alphabet():
 # --------------------------------------------------------------------------
 # Étape 2 — voyelles courtes et longues (+ exercice d'entraînement)
 # --------------------------------------------------------------------------
-def _vowel_card(v: dict, c: dict) -> str:
+def _vowel_card(v: dict, c: dict, i: int = 0) -> str:
     """Carte d'une voyelle : combinaison arabe, nom, construction, son."""
     combo = html.escape(v.get("combo", ""))
     combo_html = f"<div class='ql-tr'>{combo}</div>" if combo else ""
     return (
-        "<div class='ql-card'>"
+        f"<div class='ql-card'{_delay(i)}>"
+        "<span class='ql-orn'></span>"
         f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(v['ar'])}</div>"
         f"<div class='ql-name'>{html.escape(v['name'])}</div>"
         + combo_html
@@ -190,15 +201,15 @@ def _step_vowels():
     c = _css()
     st.markdown(f"**{t('iqra.s2_table_short')}**")
     cols = st.columns(3)
-    for col, v in zip(cols, iqra.SHORT_VOWELS):
+    for i, (col, v) in enumerate(zip(cols, iqra.SHORT_VOWELS)):
         with col:
-            st.markdown(_vowel_card(v, c), unsafe_allow_html=True)
+            st.markdown(_vowel_card(v, c, i), unsafe_allow_html=True)
             _listen(v["ar"])
     st.markdown(f"**{t('iqra.s2_table_long')}**")
     cols = st.columns(3)
-    for col, v in zip(cols, iqra.LONG_VOWELS):
+    for i, (col, v) in enumerate(zip(cols, iqra.LONG_VOWELS)):
         with col:
-            st.markdown(_vowel_card(v, c), unsafe_allow_html=True)
+            st.markdown(_vowel_card(v, c, i), unsafe_allow_html=True)
             _listen(v["ar"])
     st.divider()
     st.markdown(f"**{t('iqra.s2_exercise')}**")
@@ -212,6 +223,7 @@ def _mark_header(mark: dict, c: dict) -> str:
     """En-tête d'un signe : nom, glyphe du signe et rôle."""
     return (
         "<div class='ql-card ql-mark'>"
+        "<span class='ql-orn'></span>"
         "<div class='ql-head'>"
         f"<span><b class='ql-accent'>{html.escape(mark['name'])}</b> "
         f"<span dir='rtl' lang='ar' style='font-size:1.2rem'>"
@@ -222,7 +234,7 @@ def _mark_header(mark: dict, c: dict) -> str:
     )
 
 
-def _word_card(w: dict, c: dict) -> str:
+def _word_card(w: dict, c: dict, i: int = 0) -> str:
     """Carte d'un mot d'exercice (arabe, transcription, sens, référence)."""
     ref_html = (
         f"<div class='ql-meta'>· {html.escape(w.get('ref', ''))}</div>"
@@ -231,7 +243,8 @@ def _word_card(w: dict, c: dict) -> str:
     )
     return (
         "".join([
-            "<div class='ql-card'>",
+            f"<div class='ql-card'{_delay(i)}>",
+            "<span class='ql-orn'></span>",
             f"<div class='ql-ar' dir='rtl' lang='ar'>{html.escape(w['ar'])}</div>",
             f"<div class='ql-tr'>{html.escape(w['tr'])}</div>",
             f"<div class='ql-gloss'>{html.escape(_mean(w))}</div>",
@@ -248,10 +261,10 @@ def _step_marks():
     for mark in iqra.MARKS:
         st.markdown(_mark_header(mark, c), unsafe_allow_html=True)
         cols = st.columns(len(mark["words"]))
-        for col, (ar, tr, fr, en) in zip(cols, mark["words"]):
+        for i, (col, (ar, tr, fr, en)) in enumerate(zip(cols, mark["words"])):
             with col:
                 st.markdown(
-                    _word_card({"ar": ar, "tr": tr, "fr": fr, "en": en}, c),
+                    _word_card({"ar": ar, "tr": tr, "fr": fr, "en": en}, c, i),
                     unsafe_allow_html=True,
                 )
                 _listen(ar)
@@ -272,9 +285,9 @@ def _step_reading(con):
         words = tier["words"]
         for start in range(0, len(words), 3):
             cols = st.columns(3)
-            for col, w in zip(cols, words[start:start + 3]):
+            for i, (col, w) in enumerate(zip(cols, words[start:start + 3])):
                 with col:
-                    st.markdown(_word_card(w, c), unsafe_allow_html=True)
+                    st.markdown(_word_card(w, c, i), unsafe_allow_html=True)
                     _listen(w["ar"])
         st.markdown("<div style='height:.4rem'></div>", unsafe_allow_html=True)
 
@@ -307,7 +320,7 @@ def _step_reading(con):
 # --------------------------------------------------------------------------
 # Étape 5 — vocabulaire essentiel du Coran (cartes + écoute + filtre)
 # --------------------------------------------------------------------------
-def _vocab_card(w: dict, c: dict) -> str:
+def _vocab_card(w: dict, c: dict, i: int = 0) -> str:
     """Carte d'un terme de vocabulaire : rang, racine, mot, translittération,
     sens localisé et trace dans le corpus (occurrences · versets · verset)."""
     root = html.escape(w.get("root_ar") or "")
@@ -315,7 +328,8 @@ def _vocab_card(w: dict, c: dict) -> str:
     meta = html.escape(t("iqra.vocab_meta", occ=w["occ"], verses=w["verses"],
                          ref=w.get("ref", "")))
     return (
-        "<div class='ql-card'>"
+        f"<div class='ql-card'{_delay(i)}>"
+        "<span class='ql-orn'></span>"
         "<div class='ql-head'>"
         f"<span>{w['rank']} · {html.escape(t('iqra.vocab_root'))}</span>"
         f"<span class='ql-accent' dir='rtl' lang='ar' "
@@ -356,20 +370,21 @@ def _step_vocab(con):
     c = _css()
     for i in range(0, min(len(words), shown), 3):
         cols = st.columns(3)
-        for col, w in zip(cols, words[i:i + 3]):
+        for j, (col, w) in enumerate(zip(cols, words[i:i + 3])):
             with col:
-                st.markdown(_vocab_card(w, c), unsafe_allow_html=True)
+                st.markdown(_vocab_card(w, c, j), unsafe_allow_html=True)
                 _listen(w["ar"] or w["root_ar"] or "")
 
 
 # --------------------------------------------------------------------------
 # Étape 6 — les nombres en arabe, de 1 à 1000 (+ écoute par nombre)
 # --------------------------------------------------------------------------
-def _num_card(item: dict, c: dict) -> str:
+def _num_card(item: dict, c: dict, i: int = 0) -> str:
     """Carte d'un nombre : chiffre arabo-indien, mot voyellé, transcription."""
     digit = iqra.arabic_digits(item["n"])
     return (
-        "<div class='ql-card'>"
+        f"<div class='ql-card'{_delay(i)}>"
+        "<span class='ql-orn'></span>"
         f"<div class='ql-ar ql-ar-num' dir='rtl' lang='ar'>{digit}</div>"
         f"<div dir='rtl' lang='ar' style='font-size:1rem'>"
         f"{html.escape(item['ar'])}</div>"
@@ -382,9 +397,9 @@ def _num_grid(items: list, per_row: int, c: dict) -> None:
     """Grille de cartes-nombres, chacune avec son bouton « Écouter »."""
     for i in range(0, len(items), per_row):
         cols = st.columns(per_row)
-        for col, item in zip(cols, items[i:i + per_row]):
+        for j, (col, item) in enumerate(zip(cols, items[i:i + per_row])):
             with col:
-                st.markdown(_num_card(item, c), unsafe_allow_html=True)
+                st.markdown(_num_card(item, c, j), unsafe_allow_html=True)
                 _listen(item["ar"])
 
 
@@ -405,14 +420,15 @@ def _step_numbers():
 # --------------------------------------------------------------------------
 # Étape 7 — les 99 Noms d'Allah (cartes étymologiques + écoute par Nom)
 # --------------------------------------------------------------------------
-def _asma_card(name: dict, c: dict) -> str:
+def _asma_card(name: dict, c: dict, i: int = 0) -> str:
     """Carte d'un Nom : calligraphie, translittération, traduction directe,
     racine et définition lexicographique ; repère graphique à teinte douce."""
     hue = name["hue"]
     badge_bg = f"hsla({hue},60%,50%,.16)"
     badge_br = f"hsla({hue},60%,45%,.55)"
     return (
-        "<div class='ql-card'>"
+        f"<div class='ql-card'{_delay(i)}>"
+        "<span class='ql-orn'></span>"
         "<div class='ql-head'>"
         f"<span>{name['n']} / {asma.count()}</span>"
         "<span class='ql-badge' "
@@ -444,9 +460,9 @@ def _step_asma():
     c = _css()
     for i in range(0, len(names), 3):
         cols = st.columns(3)
-        for col, name in zip(cols, names[i:i + 3]):
+        for j, (col, name) in enumerate(zip(cols, names[i:i + 3])):
             with col:
-                st.markdown(_asma_card(name, c), unsafe_allow_html=True)
+                st.markdown(_asma_card(name, c, j), unsafe_allow_html=True)
                 _listen(name["ar"])
 
 
