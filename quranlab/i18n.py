@@ -267,7 +267,7 @@ _FR = {
         "Si la lecture épeille les lettres, sélectionnez une voix {lang} "
         "ci-dessous puis cliquez *Appliquer*."
     ),
-    "ui.vl_label": "Voix de synthèse (francophone de préférence)",
+    "ui.vl_label": "Voix de synthèse (de préférence en {lang})",
     "ui.apply": "Appliquer",
     "ui.test_voice": "Tester",
     "ui.voice_none": (
@@ -316,7 +316,7 @@ _FR = {
     "ui.other_voices": "Autres voix",
     "ui.loading_voices": "Chargement des voix…",
     "ui.no_tts": "Synthèse vocale indisponible dans ce navigateur.",
-    "ui.voices_found": "{n} voix francophone(s) détectée(s)",
+    "ui.voices_found": "{n} voix {lang} détectée(s)",
     "ui.voice_selected": " — sélectionnée : {name}",
     "ui.unavailable": "(introuvable)",
     "ui.then_listen": ". Puis « {label} » dans un verset.",

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from . import i18n
+from . import config, i18n
 
 # --- Contenu (français = référence ; anglais = traduction) ------------------
 _CONTENT = {
@@ -50,7 +50,7 @@ _CONTENT = {
             "**Suggestions d'amélioration** — QuranLab évolue au fil des "
             "usages. Idées, incohérences, sources à ajouter, nouveaux "
             "récitateurs ou langues, améliorations d'ergonomie : **faites-nous "
-            "en part** par **kylemarks5522@gmail.com**."
+            f"en part** par **{config.SUGGESTIONS_EMAIL}**."
         ),
         "SECTIONS": [
             {
@@ -256,7 +256,7 @@ _CONTENT = {
             "**Improvement suggestions** — QuranLab evolves with use. Ideas, "
             "inconsistencies, sources to add, new reciters or languages, UX "
             "improvements: **share them with us** at "
-            "**kylemarks5522@gmail.com**."
+            f"**{config.SUGGESTIONS_EMAIL}**."
         ),
         "SECTIONS": [
             {
@@ -425,9 +425,6 @@ _CONTENT = {
         "BTN_OPEN": "Open the getting-started guide",
     },
 }
-
-# Raccourci de compatibilité (contenu français de référence).
-SECTIONS = _CONTENT["fr"]["SECTIONS"]
 
 
 def _c() -> dict:

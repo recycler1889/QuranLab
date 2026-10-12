@@ -1,8 +1,11 @@
 """Tests du support i18n FR/EN (parité des catalogues + filtrage des versets)."""
 
+import re
 import unittest
 
 from quranlab import i18n, ui
+
+_PLACEHOLDERS = re.compile(r"\{(\w+)\}")
 
 
 class TestCatalogs(unittest.TestCase):
@@ -10,6 +13,16 @@ class TestCatalogs(unittest.TestCase):
         """Toute clé anglaisée doit exister en français et vice-versa (aucun plantage en EN)."""
         fr, en = i18n.keys_fr(), i18n.keys_en()
         self.assertEqual(fr, en, "les catalogues FR et EN doivent être identiques")
+
+    def test_memes_placeholders_fr_en(self):
+        """Une clé doit attendre exactement les mêmes paramètres nommés dans les deux langues."""
+        for key, fr in i18n._FR.items():
+            en = i18n._EN.get(key, "")
+            self.assertEqual(
+                set(_PLACEHOLDERS.findall(fr)),
+                set(_PLACEHOLDERS.findall(en)),
+                f"placeholders divergents pour {key!r}",
+            )
 
     def test_translation_has_placeholders_preserved(self):
         """La traduction formate correctement les paramètres nommés."""
