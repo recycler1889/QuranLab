@@ -297,16 +297,29 @@ database automatically** (≈30 s, once per container, cached by
 Useful deployment files: `requirements.txt` (streamlit + pandas),
 `.streamlit/config.toml` (theme), `.gitignore`.
 
+> **Deliberately lightweight dependencies.** `piper-tts` (offline neural voices)
+> is **not** in `requirements.txt`: it is distributed as source only and needs a
+> C++ build (CMake + `espeak-ng`) that **makes installation fail** on Streamlit
+> Community Cloud (the app would stay stuck on *"Your app is in the oven"*). The
+> app automatically falls back to the browser voices (Web Speech API). For Piper
+> voices **locally**: `pip install piper-tts`.
+
 ## 12. Visual theme (Light / Medium / Dark)
 
 A selector is present in the **sidebar** (`quranlab/theme.py`).
-Three palettes, applied dynamically by CSS injection (variables `--ql-*`):
+Three **Islamic-inspired** palettes (identity: **emerald green & gold**),
+applied dynamically by CSS injection (variables `--ql-*`):
 
-| Mode | Background | Text | Usage |
+| Mode | Background | Accent | Usage |
 |---|---|---|---|
-| **Light** | `#F7F5F0` (off-white) | `#23272B` | daytime reading |
-| **Medium** | `#1E293B` (slate) | `#F1F5F9` | eye comfort |
-| **Dark** | `#16181D` (grey-black) | `#E6E8EB` | low brightness |
+| **Light** | `#F2F1E8` (ivory / grey-green) | `#0C5C46` (emerald) | daytime, warm |
+| **Medium** | `#1C2622` (muted green-slate) | `#6FA98C` (sage) | eye comfort |
+| **Dark** | `#101714` (deep forest green) | `#5E8F72` (matte forest) | low brightness |
+
+Rules and ornaments use **gold/champagne** (`--ql-gold`): geometric motifs
+(zellige mosaic) on banners, `.ql-card` cards with rounded corners and soft
+shadows, serif headings. In **Dark**, the green is deliberately **matte and
+desaturated** (never glaring); in **Light**, the background is never pure white.
 
 The CSS styles backgrounds, text, sidebar, tabs, fields, expanders and internal
 HTML tables (`table.ql`). Tables are generated in HTML (`html_table()`) rather

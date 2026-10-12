@@ -5,19 +5,33 @@
 # bibliothèque standard de Python : sqlite3, urllib, json, re, unicodedata,
 # threading, argparse. Aucune dépendance externe n'est requise pour le cœur.
 #
-# Seule l'interface web (app.py) ajoute des dépendances :
+# Seule l'interface web (app.py) ajoute des dépendances. Cette liste doit
+# rester **légère et installable partout** (Streamlit Community Cloud inclus).
 
 streamlit>=1.30,<2
 
 # Dépendance de Streamlit, utilisée par st.dataframe (analyse mot-à-mot).
 pandas>=2.0
 
-# Synthèse vocale neuronale hors-ligne (voix françaises multiples, sans clé).
-# Fournit le moteur Piper ; onnxruntime est tiré automatiquement. Si l'import
-# échoue, l'app se rabat sur les voix du navigateur (Web Speech API).
-piper-tts>=1.2
-
 # Génération à la volée des icônes PWA (manifeste installable). Les icônes
 # sont versionnées dans le dépôt ; Pillow n'est requis que pour les (re)créer.
 Pillow>=9
+
+# ---------------------------------------------------------------------------
+# OPTIONNEL — synthèse vocale neuronale hors-ligne (Piper).
+# ---------------------------------------------------------------------------
+# À NE PAS placer ici : `piper-tts` n'est publié qu'en source et tente une
+# compilation C++ (CMake + espeak-ng) à l'installation. Sur un hébergeur sans
+# outillage de build (Streamlit Community Cloud), l'installation échoue et
+# l'application reste bloquée (« Your app is in the oven »).
+#
+# L'application est SANS Piper pleinement fonctionnelle : elle se rabat sur les
+# voix (neurales) du navigateur via la Web Speech API — voir quranlab/tts.py,
+# dont l'import de piper est paresseux. Pour activer les voix Piper hors-ligne
+# en LOCAL uniquement :
+#
+#     pip install piper-tts
+#
+# (nécessite un compilateur C++ et la bibliothèque système espeak-ng).
+
 

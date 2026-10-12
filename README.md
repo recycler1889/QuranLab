@@ -304,16 +304,31 @@ cache par `@st.cache_resource`). Les chemins sont strictement relatifs
 Fichiers utiles au déploiement : `requirements.txt` (streamlit + pandas),
 `.streamlit/config.toml` (thème), `.gitignore`.
 
+> **Dépendances volontairement légères.** `piper-tts` (voix neuronales
+> hors-ligne) n'est **pas** dans `requirements.txt` : il n'est distribué qu'en
+> source et exige une compilation C++ (CMake + `espeak-ng`) qui **fait échouer
+> l'installation** sur Streamlit Community Cloud (l'app resterait bloquée sur
+> *« Your app is in the oven »*). L'application se rabat automatiquement sur les
+> voix du navigateur (Web Speech API). Pour les voix Piper **en local** :
+> `pip install piper-tts`.
+
 ## 12. Thème visuel (Clair / Intermédiaire / Sombre)
 
 Un sélecteur est présent dans la **barre latérale** (`quranlab/theme.py`).
-Trois palettes, appliquées dynamiquement par injection CSS (variables `--ql-*`) :
+Trois palettes d'inspiration **islamique** (identité **vert émeraude & or**),
+appliquées dynamiquement par injection CSS (variables `--ql-*`) :
 
-| Mode | Fond | Texte | Usage |
+| Mode | Fond | Accent | Usage |
 |---|---|---|---|
-| **Clair** | `#F7F5F0` (blanc cassé) | `#23272B` | lecture de jour |
-| **Intermédiaire** | `#1E293B` (ardoise) | `#F1F5F9` | confort oculaire |
-| **Sombre** | `#16181D` (gris-noir) | `#E6E8EB` | faible luminosité |
+| **Clair** | `#F2F1E8` (ivoire / vert-de-gris) | `#0C5C46` (émeraude) | lecture de jour, chaleureux |
+| **Intermédiaire** | `#1C2622` (vert-ardoise feutré) | `#6FA98C` (sauge) | confort oculaire |
+| **Sombre** | `#101714` (vert forêt profond) | `#5E8F72` (vert forêt mat) | faible luminosité |
+
+Les filets et ornements sont en **or/champagne** (`--ql-gold`) : motifs
+géométriques (mosaïque zellige) sur les bannières, cartes `.ql-card` à coins
+arrondis et ombres douces, titres serif. En **Sombre**, le vert est volontairement
+**mat et désaturé** (jamais éblouissant) ; en **Clair**, le fond n'est jamais
+blanc pur.
 
 La CSS habille les fonds, le texte, la sidebar, les onglets, les champs, les
 expanders et les tableaux HTML internes (`table.ql`). Les tableaux sont générés
