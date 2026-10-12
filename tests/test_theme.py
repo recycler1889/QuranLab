@@ -68,6 +68,14 @@ class TestThemeSvg(unittest.TestCase):
         r, g, b = (int(bg[i:i + 2], 16) for i in (0, 2, 4))
         self.assertLess(max(r, g, b), 250)  # ivoire, jamais blanc pur
 
+    def test_css_defines_thick_active_tab_indicator(self):
+        # L'indicateur d'onglet actif doit être épais et contrasté.
+        for name in theme.ORDER:
+            css = theme.css(name)
+            self.assertIn('[data-baseweb="tab-highlight"]', css)
+            self.assertIn("height: 4px", css)
+            self.assertIn("linear-gradient(", css)
+
 
 if __name__ == "__main__":
     unittest.main()

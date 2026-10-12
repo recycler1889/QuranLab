@@ -279,14 +279,31 @@ input, textarea,
     color: var(--ql-fg) !important;
 }}
 
-/* Onglets : soulignement doré sur l'onglet actif */
-.stTabs [data-baseweb="tab"] {{ color: var(--ql-fg2) !important; }}
-.stTabs [aria-selected="true"] {{ color: var(--ql-gold) !important; }}
-.stTabs [data-baseweb="tab-highlight"] {{ background-color: var(--ql-gold) !important; }}
-.stTabs [data-baseweb="tab-border"] {{
+/* Onglets : indicateur de l'onglet actif, épais et immédiatement lisible -----
+   La barre de fond (tab-border) reste fine et neutre ; l'onglet actif reçoit
+   un filet épais (4 px) en dégradé émeraude -> or, rehaussé d'un léger halo.
+   Les couleurs sont puisées dans la palette (--ql-*), donc l'indicateur se
+   détache nettement dans les trois thèmes (Clair, Intermédiaire, Sombre). */
+.stTabs [data-baseweb="tab"] {{
+    color: var(--ql-fg2) !important;
+    font-weight: 600;
+    padding-bottom: .7rem;
+}}
+.stTabs [aria-selected="true"] {{
+    color: var(--ql-gold) !important;
+    font-weight: 700 !important;
+}}
+.stTabs [data-baseweb="tab-highlight"] {{
+    height: 4px !important;
+    border-radius: 4px 4px 0 0 !important;
     background: linear-gradient(
-        90deg, transparent, var(--ql-gold), transparent
+        90deg, var(--ql-accent), var(--ql-gold)
     ) !important;
+    box-shadow: 0 0 8px var(--ql-gold-soft), 0 0 2px var(--ql-gold) !important;
+}}
+.stTabs [data-baseweb="tab-border"] {{
+    height: 1px !important;
+    background: var(--ql-border) !important;
 }}
 
 /* Boutons : liseré doré discret, accent émeraude au survol */
