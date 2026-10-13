@@ -957,6 +957,84 @@ def scroll_to(anchor: str) -> None:
         pass
 
 
+def _scroll_nav_html() -> str:
+    """Gabarit HTML/JS du widget flottant de navigation rapide (haut / bas).
+
+    Le script s'exécute dans l'iframe de composant (même origine) et agit sur le
+    document **parent** : il (re)crée, une seule fois, un conteneur
+    ``#ql-scroll-nav`` (deux boutons ↑ / ↓) à la fin du ``<body>`` parent, puis
+    branche les gestionnaires de clic. Les libellés accessibles suivent la langue
+    d'interface active (``i18n``). L'habillage (couleurs émeraude & or) vient de
+    la feuille de thème (``theme.css``) : le widget suit donc la palette choisie.
+
+    Le défilement cible le vrai conteneur scrollable de Streamlit (recherché par
+    sa plus grande réserve de défilement) avec ``scrollTo({behavior:'smooth'})``,
+    et retombe sur ``window``/``documentElement`` si nécessaire — fonctionnel sur
+    bureau comme sur mobile. Le widget n'apparaît qu'après un premier défilement
+    (classe ``.ql-visible``) pour ne pas encombrer la lecture.
+    """
+    top = json.dumps(t("ui.scroll_top"), ensure_ascii=False)
+    bottom = json.dumps(t("ui.scroll_bottom"), ensure_ascii=False)
+    label = json.dumps(t("ui.scroll_nav"), ensure_ascii=False)
+    return (
+        "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body>"
+        "<script>(function(){try{"
+        "var p=window.parent,d=p.document;if(!d||!d.body){return;}"
+        # idempotence : on retire l'ancien widget avant de le recréer
+        "var old=d.getElementById('ql-scroll-nav');"
+        "if(old&&old.parentNode){old.parentNode.removeChild(old);}"
+        "var nav=d.createElement('div');nav.id='ql-scroll-nav';"
+        "nav.className='ql-scroll-nav';nav.setAttribute('role','group');"
+        f"nav.setAttribute('aria-label',{label});"
+        "function mk(id,lab,txt){var b=d.createElement('button');"
+        "b.type='button';b.id=id;b.setAttribute('aria-label',lab);"
+        "b.setAttribute('title',lab);b.textContent=txt;return b;}"
+        f"var up=mk('ql-scroll-up',{top},'\\u2191');"
+        f"var down=mk('ql-scroll-down',{bottom},'\\u2193');"
+        "nav.appendChild(up);nav.appendChild(down);d.body.appendChild(nav);"
+        # conteneur scrollable réel de Streamlit (plus grande réserve de scroll)
+        "function scroller(){var c=["
+        "d.querySelector('[data-testid=\"stAppViewContainer\"]'),"
+        "d.querySelector('[data-testid=\"stMain\"]'),"
+        "d.querySelector('section.main'),d.querySelector('.main'),"
+        "d.scrollingElement,d.documentElement,d.body];"
+        "var best=null,bd=0;for(var i=0;i<c.length;i++){var e=c[i];"
+        "if(!e){continue;}var df=e.scrollHeight-e.clientHeight;"
+        "if(df>bd){best=e;bd=df;}}"
+        "return best||d.scrollingElement||d.documentElement;}"
+        "function go(top){var el=scroller();var tg=top?0:el.scrollHeight;"
+        "try{el.scrollTo({top:tg,behavior:'smooth'});}catch(e){el.scrollTop=tg;}}"
+        "up.addEventListener('click',function(){go(true);});"
+        "down.addEventListener('click',function(){go(false);});"
+        # un seul jeu d'écouteurs par session parente
+        "if(!p.__qlScrollNavBound){p.__qlScrollNavBound=true;"
+        "var upd=function(){var n=d.getElementById('ql-scroll-nav');"
+        "if(!n){return;}var el=scroller();"
+        "var y=(el&&el.scrollTop)||p.pageYOffset||d.documentElement.scrollTop||0;"
+        "if(y>260){n.classList.add('ql-visible');}"
+        "else{n.classList.remove('ql-visible');}};"
+        "p.__qlScrollNavUpdate=upd;p.addEventListener('scroll',upd,true);"
+        "d.addEventListener('scroll',upd,true);"
+        "p.addEventListener('resize',upd,true);}"
+        "if(p.__qlScrollNavUpdate){setTimeout(p.__qlScrollNavUpdate,80);}"
+        "}catch(e){}})();</script></body></html>"
+    )
+
+
+def scroll_nav() -> None:
+    """Affiche le widget flottant de navigation rapide (haut / bas de page).
+
+    Appelé **une fois** par exécution (intégration globale dans ``app.py``). Le
+    composant est un iframe de hauteur nulle : tout se passe dans le document
+    parent (voir ``_scroll_nav_html``). Échec silencieux si l'accès parent est
+    indisponible — l'absence du widget ne doit jamais bloquer l'application.
+    """
+    try:
+        st.iframe(_scroll_nav_html(), height=0, width=0)
+    except Exception:
+        pass
+
+
 def bookmark_button(sura: int, aya: int, key_prefix: str = "bmv") -> None:
     """Petit bouton d'ajout / retrait d'un verset aux favoris.
 

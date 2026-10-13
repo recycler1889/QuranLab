@@ -686,6 +686,72 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     padding: .35rem .75rem;
 }}
 
+/* --- Navigation rapide flottante (haut / bas de page) --------------------
+   Widget discret ancré en bas à droite : deux boutons empilés — remonter (↑)
+   et descendre (↓) — en émeraude rehaussée d'un filet doré. Il suit la palette
+   active via les variables --ql-*. Il reste **masqué** tant que la page n'a pas
+   défilé (classe .ql-visible posée par le script de ``ui.scroll_nav``), afin de
+   ne jamais gêner la lecture. ``env(safe-area-inset-bottom)`` le tient à
+   l'écart de la barre gestuelle iOS en mode PWA. */
+.ql-scroll-nav {{
+    position: fixed;
+    right: 18px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    z-index: 999990;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--ql-gold);
+    border-radius: 15px;
+    background: var(--ql-bg2);
+    box-shadow: 0 1px 0 var(--ql-gold-soft) inset,
+                0 10px 26px -12px rgba(0, 0, 0, .55);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
+    pointer-events: none;
+}}
+.ql-scroll-nav.ql-visible {{
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+}}
+.ql-scroll-nav button {{
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 0;
+    background: var(--ql-accent);
+    color: var(--ql-bg);
+    font-family: var(--ql-font);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+    transition: box-shadow .15s ease, filter .15s ease;
+}}
+.ql-scroll-nav button + button {{
+    border-top: 1px solid var(--ql-gold);
+}}
+.ql-scroll-nav button:hover {{
+    box-shadow: inset 0 0 0 2px var(--ql-gold);
+    filter: brightness(1.08);
+}}
+.ql-scroll-nav button:active {{
+    filter: brightness(.94);
+}}
+.ql-scroll-nav button:focus-visible {{
+    outline: 2px solid var(--ql-gold);
+    outline-offset: -3px;
+}}
+
 /* --- Modale st.dialog ---
    Streamlit colore la fenêtre (panneau `[data-testid="stDialog"]`) avec le
    thème JS ; on remplace fond ET texte de la palette courante, appariés, pour
@@ -724,6 +790,12 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     .ql-card .ql-ar.ql-ar-num {{ font-size: 1.6rem; }}
     .stApp h2 {{ font-size: 1.35rem; }}
     .stButton > button {{ min-height: 2.75rem; }}
+    .ql-scroll-nav {{
+        right: 12px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        border-radius: 13px;
+    }}
+    .ql-scroll-nav button {{ width: 42px; height: 42px; font-size: 1.15rem; }}
     .stTabs [data-baseweb="tab"] {{
         padding-left: .5rem;
         padding-right: .5rem;

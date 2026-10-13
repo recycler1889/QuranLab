@@ -362,6 +362,9 @@ _FR = {
     "ui.verse": "Verset",
     "ui.bookmark_add": "☆ Ajouter aux favoris",
     "ui.bookmark_remove": "★ En favori",
+    "ui.scroll_nav": "Navigation rapide",
+    "ui.scroll_top": "Remonter en haut",
+    "ui.scroll_bottom": "Descendre en bas",
     "app.tab.read": "Lire le Coran Iqra",
     "app.read_title": "Lire le Coran Iqra",
     "app.read_caption": (
@@ -939,6 +942,9 @@ _EN = {
     "ui.verse": "Verse",
     "ui.bookmark_add": "☆ Add to bookmarks",
     "ui.bookmark_remove": "★ Bookmarked",
+    "ui.scroll_nav": "Quick navigation",
+    "ui.scroll_top": "Back to top",
+    "ui.scroll_bottom": "Go to bottom",
     "app.tab.read": "Read the Quran Iqra",
     "app.read_title": "Read the Quran Iqra",
     "app.read_caption": (

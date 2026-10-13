@@ -98,6 +98,9 @@ pwa.inject(theme_mod.PALETTES[theme_name]["accent"])
 
 ui.page_header("QuranLab", t("app.subtitle"))
 
+# Navigation rapide flottante (remonter / descendre) — widget global, discret.
+ui.scroll_nav()
+
 # Tutoriel de première visite (modale) + rappel accessible en permanence.
 onboarding.init()
 onboarding.render()

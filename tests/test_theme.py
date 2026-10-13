@@ -54,6 +54,15 @@ class TestThemeSvg(unittest.TestCase):
                      ".ql-verse-ar", ".ql-target"):
             self.assertIn(part, css)
 
+    def test_css_defines_floating_scroll_nav(self):
+        for name in theme.ORDER:
+            css = theme.css(name)
+            self.assertIn(".ql-scroll-nav", css)
+            self.assertIn(".ql-scroll-nav.ql-visible", css)
+            self.assertIn(".ql-scroll-nav button", css)
+        # ancrage sûr (barre gestuelle iOS en PWA)
+        self.assertIn("safe-area-inset-bottom", theme.css("Clair"))
+
     def test_dark_accent_is_muted_forest_green(self):
         # Le vert du thème sombre doit rester mat/désaturé (pas de vert vif).
         accent = theme.PALETTES["Sombre"]["accent"].lstrip("#")
