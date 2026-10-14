@@ -75,6 +75,7 @@ def _player_html(
     prev_sura_name: str | None,
     reciters: list | None = None,
     current_reciter_key: str | None = None,
+    autoplay_requested: bool = False,
 ) -> str:
     pal = ui._palette()
     payload = json.dumps(items, ensure_ascii=False).replace("<", "\\u003c")
@@ -224,6 +225,7 @@ def _player_html(
     var PREV_SURA = {prev_sura_js};
     var PREV_SURA_NAME = {prev_sura_name_js};
     var MODE = "{mode}";
+    var AUTOPLAY_REQUESTED = {str(autoplay_requested).lower()};
     var TOTAL_EST = {float(total_est_seconds)};
     function fmt(t){{ if(!isFinite(t)) return "00:00"; var m=Math.floor(t/60), s=Math.floor(t%60); return (m<10?"0":"")+m+":"+(s<10?"0":"")+s; }}
     function show(i, fr){{
@@ -302,6 +304,10 @@ def _player_html(
     document.getElementById('fwd10').addEventListener('click', forward10);
     document.getElementById('prev_sura').addEventListener('click', prevSurah);
     document.getElementById('next_sura').addEventListener('click', nextSurah);
+    // Auto-play on load if requested
+    if (AUTOPLAY_REQUESTED) {{
+      setTimeout(function() {{ start(); }}, 100);
+    }}
   </script>
 </body></html>"""
     return comp
@@ -341,13 +347,36 @@ def render_tab(con) -> None:
     if "audio_reciter_key" not in st.session_state:
         st.session_state.audio_reciter_key = ui.active_reciter()["key"]
 
-    # Gestion clic tableau via query_params
+    # Gestion clic tableau via postMessage (iframe -> parent)
+    msg_js = """
+    <script>
+    (function(){
+      if (window._qlMsgHandler) return;
+      window._qlMsgHandler = true;
+      window.addEventListener('message', function(e) {
+        if (!e.data || e.data.type !== 'ql_load_surah') return;
+        var sura = e.data.sura;
+        var autoplay = e.data.autoplay;
+        var url = new URL(window.location.href);
+        url.searchParams.set('audio_sura', sura);
+        if (autoplay) url.searchParams.set('audio_autoplay', '1');
+        window.history.replaceState({}, '', url);
+        window.location.reload();
+      });
+    })();
+    </script>
+    """
+    st.components.v1.html(msg_js, height=0)
+
+    # Gestion clic tableau via query_params (fallback / reload)
     qp = st.query_params
     if "audio_sura" in qp:
         try:
             clicked = int(qp["audio_sura"])
             if any(s["number"] == clicked for s in filtered):
                 st.session_state.audio_current_sura = clicked
+                if qp.get("audio_autoplay") == "1":
+                    st.session_state.audio_autoplay_requested = True
                 st.query_params.clear()
         except (ValueError, TypeError):
             pass
@@ -366,7 +395,7 @@ def render_tab(con) -> None:
 
     info = next(s for s in stats if s["number"] == sura)
 
-    # Tableau sourates cliquable (durées AR / BI)
+    # Tableau sourates cliquable (durées AR / BI séparées)
     table_rows = []
     for s in filtered:
         table_rows.append({
@@ -374,7 +403,8 @@ def render_tab(con) -> None:
             t("audio.col_name_ar"): s["name_ar"],
             t("audio.col_name_lat"): s["name_translit"],
             t("audio.col_verses"): s["verses_count"],
-            t("audio.col_duration"): _fmt_duration_pair(s.get("seconds_ar", 0), s.get("seconds_bi", 0)),
+            t("audio.col_duration_ar"): _fmt_duration(s.get("seconds_ar", 0)),
+            t("audio.col_duration_bi"): _fmt_duration(s.get("seconds_bi", 0)),
         })
 
     click_js = """
@@ -393,10 +423,8 @@ def render_tab(con) -> None:
               if (cells.length === 0) return;
               var sura = cells[0].textContent.trim();
               if (/^\\d+$/.test(sura)) {
-                var url = new URL(window.location.href);
-                url.searchParams.set('audio_sura', sura);
-                window.history.replaceState({}, '', url);
-                window.location.reload();
+                // Send message to parent Streamlit app
+                window.parent.postMessage({type: 'ql_load_surah', sura: parseInt(sura, 10), autoplay: true}, '*');
               }
             });
           }
@@ -495,6 +523,7 @@ def render_tab(con) -> None:
     reciters_for_player = [{"key": r["key"], "label": r["label"], "edition": r["edition"]} for r in _reciters]
 
     # Lecteur STICKY ultra-compact
+    autoplay_requested = st.session_state.pop("audio_autoplay_requested", False)
     items = _build_surah_items(con, sura, reciter, mode)
     player_html = _player_html(
         items=items,
@@ -511,5 +540,6 @@ def render_tab(con) -> None:
         prev_sura_name=prev_sura_name,
         reciters=reciters_for_player,
         current_reciter_key=reciter_key,
+        autoplay_requested=autoplay_requested,
     )
     st.components.v1.html(player_html, height=140)

@@ -1302,12 +1302,13 @@ mark.ql-hit {{
 }}
 
 /* --- Navigation rapide flottante (haut / bas de page) --------------------
-   Widget discret ancre en bas a droite : deux boutons empiles -- remonter (^)
-   et descendre (v) -- en emeraude rehaussee d'un filet dore. Glassmorphism. */
+   Widget discret ancre a droite a ~30% du haut : deux boutons empiles --
+   remonter (^) et descendre (v) -- en emeraude rehausse d'un filet dore.
+   Glassmorphism. */
 .ql-scroll-nav {{
     position: fixed;
     right: 18px;
-    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    top: 30vh;
     z-index: 999990;
     display: flex;
     flex-direction: column;
