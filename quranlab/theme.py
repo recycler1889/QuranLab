@@ -309,95 +309,206 @@ input, textarea,
     background: var(--ql-border) !important;
 }}
 
-/* Boutons : liseré doré discret, accent émeraude au survol */
+/* Boutons : glassmorphism, liseré doré, accent émeraude au survol */
 .stButton > button {{
     border: 1px solid var(--ql-border) !important;
-    border-radius: 12px !important;
-    background-color: var(--ql-field) !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.05) 0%, 
+        rgba(255,255,255,0.02) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     color: var(--ql-fg) !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
-    transition: border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        0 2px 8px -2px rgba(0, 0, 0, .15);
+    transition: all .18s cubic-bezier(.2,.7,.3,1);
+    position: relative;
+    overflow: hidden;
+}}
+.stButton > button::after {{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0) 0%, 
+        rgba(169,138,69,0.12) 50%, 
+        rgba(169,138,69,0) 100%);
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+    transition: opacity .2s ease, transform .5s ease;
+    pointer-events: none;
 }}
 .stButton > button:hover {{
     border-color: var(--ql-gold) !important;
     color: var(--ql-accent) !important;
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 4px 16px -4px rgba(0, 0, 0, .2),
+        0 0 0 1px var(--ql-gold-soft);
+    transform: translateY(-1px);
+}}
+.stButton > button:hover::after {{
+    opacity: 1;
+    transform: translateX(120%) skewX(-12deg);
+    animation: ql-sheen .6s ease;
+}}
+.stButton > button:active {{
+    transform: translateY(0) scale(.99);
+    transition-duration: .05s;
 }}
 .stButton > button:focus:not(:active) {{
     border-color: var(--ql-gold) !important;
-    box-shadow: 0 0 0 2px var(--ql-gold-soft) !important;
+    box-shadow: 0 0 0 3px var(--ql-gold-soft) !important;
 }}
 .stButton > button[kind="primary"] {{
-    background-color: var(--ql-accent) !important;
+    background: linear-gradient(135deg, var(--ql-accent) 0%, #0a4d3a 100%) !important;
     border-color: var(--ql-accent) !important;
-    color: {p['bg']} !important;
+    color: var(--ql-bg) !important;
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 4px 16px -4px var(--ql-accent);
+}}
+.stButton > button[kind="primary"]:hover {{
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.15) inset,
+        0 6px 24px -6px var(--ql-accent),
+        0 0 0 1px var(--ql-gold);
+    transform: translateY(-1px);
 }}
 
-/* Encadrés, expanders, alertes : bord gauche orné doré, aplats et contraste sûr */
+/* Encadrés, expanders, alertes : glassmorphism + bord gauche orné */
 [data-testid="stExpander"] {{
-    background-color: var(--ql-bg2) !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.04) 0%, 
+        rgba(255,255,255,0.01) 100%) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     border: 1px solid var(--ql-border) !important;
-    border-left: 3px solid var(--ql-gold) !important;
-    border-radius: 12px;
+    border-left: 4px solid var(--ql-gold) !important;
+    border-radius: 14px;
     color: var(--ql-fg) !important;
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,0.15);
+    transition: border-color .2s ease, box-shadow .2s ease;
 }}
-[data-testid="stExpander"] summary {{ color: var(--ql-fg) !important; }}
+[data-testid="stExpander"]:hover {{
+    border-left-color: var(--ql-accent) !important;
+    box-shadow: 0 6px 20px -6px rgba(0,0,0,0.2);
+}}
+[data-testid="stExpander"] summary {{ 
+    color: var(--ql-fg) !important; 
+    font-weight: 600;
+    letter-spacing: .01em;
+}}
 [data-testid="stAlert"] {{
-    background-color: var(--ql-bg2) !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.05) 0%, 
+        rgba(255,255,255,0.01) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     color: var(--ql-fg) !important;
     border: 1px solid var(--ql-border) !important;
-    border-radius: 12px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,0.15);
 }}
 code, pre, .stCode, [data-testid="stCodeBlock"] {{
-    background-color: var(--ql-bg2) !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.03) 0%, 
+        rgba(255,255,255,0.01) 100%) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
     color: var(--ql-fg) !important;
+    border: 1px solid var(--ql-border) !important;
+    border-radius: 12px;
 }}
 hr {{ border-color: var(--ql-border) !important; }}
 [data-testid="stSidebar"] hr {{
-    height: 12px; border: none;
-    background: var(--ql-ornament) center/120px 16px no-repeat;
-    opacity: .8;
+    height: 14px; border: none;
+    background: var(--ql-ornament) center/130px 18px no-repeat;
+    opacity: .85;
 }}
 
-/* Tableaux HTML internes (table.ql) */
+/* Tableaux HTML internes (table.ql) - glassmorphism */
 table.ql {{
     border-collapse: collapse;
     width: 100%;
     margin: 0.4rem 0 0.8rem 0;
     font-size: 0.92rem;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.03) 0%, 
+        rgba(255,255,255,0.01) 100%),
+        var(--ql-bg2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,0.2);
+    animation: ql-rise .3s cubic-bezier(.2,.7,.3,1) both;
 }}
 table.ql th, table.ql td {{
     border: 1px solid var(--ql-border);
-    padding: 5px 9px;
+    padding: 8px 12px;
     text-align: left;
     color: var(--ql-fg);
     vertical-align: top;
+    transition: background .2s ease;
 }}
 table.ql th {{
-    background-color: var(--ql-bg2);
-    border-bottom: 1px solid var(--ql-gold);
+    background: linear-gradient(180deg, 
+        rgba(169,138,69,0.12) 0%, 
+        rgba(169,138,69,0.04) 100%);
+    border-bottom: 2px solid var(--ql-gold);
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-size: .78rem;
 }}
 table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
+table.ql tr:hover td {{
+    background: linear-gradient(90deg, 
+        rgba(169,138,69,0.06) 0%, 
+        transparent 100%) !important;
+}}
+
+/* Surcharge pour rendre les lignes cliquables (onglet Écouter) */
+table.ql.ql-clickable tbody tr {{
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease;
+}}
+table.ql.ql-clickable tbody tr:hover {{
+    background: rgba(169,138,69,0.12) !important;
+    transform: translateX(3px);
+}}
+table.ql.ql-clickable tbody tr:active {{
+    transform: translateX(1px) scale(.998);
+}}
 
 /* Tableaux de données natifs : rien à forcer, le texte suit --text-color. */
 
-/* --- Bandeau d'en-tête (banner) : enluminure géométrique ----------------- */
+/* --- Bandeau d'en-tête (banner) : enluminure géométrique + glassmorphism -- */
 .ql-banner {{
     position: relative;
-    padding: 1.6rem 1.9rem 1.35rem 1.9rem;
-    margin: 0 0 1.2rem 0;
+    padding: 2rem 2.2rem 1.6rem 2.2rem;
+    margin: 0 0 1.5rem 0;
     border: 1px solid var(--ql-border);
-    border-radius: 18px;
+    border-radius: 22px;
     background:
-        radial-gradient(120% 95% at 50% -25%, {glow}, transparent 62%),
-        var(--ql-mosaic) center/232px 232px,
+        radial-gradient(ellipse 140% 100% at 50% -20%, {glow}, transparent 65%),
+        linear-gradient(135deg, 
+            rgba(255,255,255,0.04) 0%, 
+            rgba(255,255,255,0.01) 50%, 
+            rgba(255,255,255,0.02) 100%),
+        var(--ql-mosaic) center/260px 260px,
         var(--ql-bg2);
-    box-shadow: 0 16px 40px -24px rgba(0, 0, 0, .5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 
+        0 20px 50px -28px rgba(0, 0, 0, .55),
+        0 0 0 1px rgba(169,138,69,0.08) inset;
     overflow: hidden;
+    animation: ql-rise .5s cubic-bezier(.2,.7,.3,1) both;
 }}
 .ql-banner::before {{
-    /* liseré supérieur : or, façon encadrement d'enluminure. Un éclat
-       traverse lentement le filet (dégradé défilant) pour animer l'en-tête
-       sans surcoût : seule la position du fond change. */
     content: "";
     position: absolute;
     left: 0; right: 0; top: 0;
@@ -405,83 +516,94 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     background: linear-gradient(
         90deg, transparent, var(--ql-gold), transparent
     );
-    background-size: 42% 100%;
+    background-size: 35% 100%;
     background-repeat: no-repeat;
     opacity: .95;
-    animation: ql-sheen-line 7s ease-in-out infinite;
+    animation: ql-sheen-line 8s ease-in-out infinite;
 }}
 .ql-banner::after {{
-    /* filet inférieur discret, en écho au liseré supérieur */
     content: "";
     position: absolute;
-    left: 18%; right: 18%; bottom: 0;
+    left: 20%; right: 20%; bottom: 0;
     height: 1px;
     background: linear-gradient(
         90deg, transparent, var(--ql-gold), transparent
     );
-    opacity: .5;
+    opacity: .45;
 }}
-/* cadre intérieur délicat (respect du geste géométrique) */
+/* cadre intérieur délicat */
 .ql-inset {{
     position: absolute;
-    inset: 8px;
+    inset: 10px;
     border: 1px solid var(--ql-border);
-    border-radius: 13px;
-    opacity: .6;
+    border-radius: 16px;
+    opacity: .5;
     pointer-events: none;
 }}
 /* fleurons d'angle (équerres fines, façon feuille d'arabesque) */
 .ql-corner {{
     position: absolute;
-    width: 15px; height: 15px;
+    width: 18px; height: 18px;
     pointer-events: none;
+    transition: transform .3s ease;
 }}
+.ql-banner:hover .ql-corner {{ transform: scale(1.15); }}
 .ql-corner::before, .ql-corner::after {{
     content: "";
     position: absolute;
     background: var(--ql-gold);
-    opacity: .8;
+    opacity: .85;
 }}
 .ql-corner::before {{ width: 1.5px; height: 100%; }}
 .ql-corner::after  {{ width: 100%; height: 1.5px; }}
-.ql-c-tl {{ top: 5px; left: 5px; }}
-.ql-c-tr {{ top: 5px; right: 5px; transform: rotate(90deg); }}
-.ql-c-br {{ bottom: 5px; right: 5px; transform: rotate(180deg); }}
-.ql-c-bl {{ bottom: 5px; left: 5px; transform: rotate(-90deg); }}
+.ql-c-tl {{ top: 6px; left: 6px; }}
+.ql-c-tr {{ top: 6px; right: 6px; transform: rotate(90deg); }}
+.ql-c-br {{ bottom: 6px; right: 6px; transform: rotate(180deg); }}
+.ql-c-bl {{ bottom: 6px; left: 6px; transform: rotate(-90deg); }}
 /* nappe calligraphique arabe au-dessus du titre */
 .ql-banner .ql-ar {{
-    margin: 0 0 .12rem 0;
+    margin: 0 0 .15rem 0;
     text-align: center;
     font-family: var(--ql-font-ar);
-    font-size: 1.18rem;
-    line-height: 1.3;
-    letter-spacing: .01em;
+    font-size: 1.3rem;
+    line-height: 1.35;
+    letter-spacing: .015em;
     color: var(--ql-gold);
     opacity: .95;
+    transition: transform .3s ease, text-shadow .3s ease;
+}}
+.ql-banner:hover .ql-ar {{
+    transform: scale(1.05);
+    text-shadow: 0 2px 16px var(--ql-gold-soft);
 }}
 .ql-banner .ql-title {{
     margin: 0;
     text-align: center;
     font-family: var(--ql-heading);
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     font-weight: 700;
-    letter-spacing: .13em;
+    letter-spacing: .14em;
     color: var(--ql-fg);
-    line-height: 1.15;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--ql-fg) 0%, var(--ql-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }}
 .ql-banner .ql-rule {{
-    width: 120px;
-    height: 16px;
-    margin: .6rem auto .05rem auto;
-    background: var(--ql-ornament) center/120px 16px no-repeat;
-    opacity: .85;
+    width: 140px;
+    height: 18px;
+    margin: .7rem auto .1rem auto;
+    background: var(--ql-ornament) center/140px 18px no-repeat;
+    opacity: .9;
 }}
 .ql-banner .ql-subtitle {{
-    margin: .4rem auto 0 auto;
+    margin: .5rem auto 0 auto;
     text-align: center;
     color: var(--ql-fg2);
-    font-size: .96rem;
+    font-size: 1rem;
     max-width: 56rem;
+    line-height: 1.5;
 }}
 
 /* Petit habillage des titres Streamlit natifs (hors bandeau) : filet doré */
@@ -492,10 +614,8 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
 }}
 
 /* --- Cartes & conteneurs (.ql-card) : composition « prestige » -----------
-   Un seul gabarit habille alphabet, voyelles, signes, mots, vocabulaire,
-   nombres et 99 Noms : coins délicatement arrondis, bordure fine relevée d'un
-   filet doré en tête, ombre douce pour un effet de profondeur feutré.
-   Couleurs issues des variables --ql-*, donc contraste garanti. */
+   Glassmorphism moderne : fond semi-transparent, blur, bordure lumineuse.
+   Animations au scroll + micro-interactions au survol. */
 .ql-card {{
     position: relative;
     display: flex;
@@ -504,80 +624,87 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     height: 100%;
     padding: 1.05rem .9rem .9rem .9rem;
     border: 1px solid var(--ql-border);
-    border-radius: 16px;
+    border-radius: 18px;
     background:
-        linear-gradient(180deg, {card_edge}, transparent 38%),
+        linear-gradient(135deg, 
+            rgba(255,255,255,0.06) 0%, 
+            rgba(255,255,255,0.02) 50%, 
+            rgba(255,255,255,0.03) 100%),
         var(--ql-bg2);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
     color: var(--ql-fg);
     text-align: center;
     overflow: hidden;
     isolation: isolate;
     -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 1px 0 {card_edge} inset,
-                0 2px 4px -1px rgba(0, 0, 0, .06),
-                0 14px 30px -22px rgba(0, 0, 0, .55);
-    transition: transform .22s cubic-bezier(.2, .7, .3, 1),
-                box-shadow .22s ease, border-color .22s ease;
-    animation: ql-rise .34s cubic-bezier(.2, .7, .3, 1) both;
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 4px 20px -6px rgba(0, 0, 0, .25),
+        0 20px 40px -24px rgba(0, 0, 0, .4);
+    transition: transform .28s cubic-bezier(.2, .7, .3, 1),
+                box-shadow .28s ease, border-color .28s ease;
+    animation: ql-rise .4s cubic-bezier(.2, .7, .3, 1) both;
     animation-delay: var(--ql-delay, 0ms);
-    will-change: transform;
+    will-change: transform, box-shadow;
 }}
 .ql-card::before {{
     /* filet doré en tête de carte, discret */
     content: "";
     position: absolute;
-    top: 0; left: 12%; right: 12%;
-    height: 2px;
+    top: 0; left: 10%; right: 10%;
+    height: 1.5px;
     background: linear-gradient(
         90deg, transparent, var(--ql-gold), transparent
     );
-    opacity: .55;
-    transition: opacity .22s ease;
+    opacity: .5;
+    transition: opacity .28s ease, width .28s ease;
 }}
 .ql-card::after {{
     /* éclat lumineux qui balaie la carte au survol */
     content: "";
     position: absolute;
     top: 0; bottom: 0; left: 0;
-    width: 55%;
+    width: 60%;
     background: linear-gradient(
-        100deg, transparent, {sheen}, transparent
+        100deg, transparent, rgba(169,138,69,0.18), transparent
     );
-    transform: translateX(-160%) skewX(-16deg);
+    transform: translateX(-180%) skewX(-18deg);
     opacity: 0;
     pointer-events: none;
     z-index: 1;
 }}
 .ql-card:hover {{
-    transform: translateY(-4px) scale(1.015);
+    transform: translateY(-6px) scale(1.018);
     border-color: var(--ql-gold);
-    box-shadow: 0 1px 0 {card_edge} inset,
-                0 6px 14px -6px rgba(0, 0, 0, .22),
-                0 22px 40px -22px rgba(0, 0, 0, .5),
-                0 0 0 1px {gold_soft};
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 12px 32px -8px rgba(0, 0, 0, .3),
+        0 28px 50px -24px rgba(0, 0, 0, .45),
+        0 0 0 1px var(--ql-gold-soft);
 }}
-.ql-card:hover::before {{ opacity: 1; }}
-.ql-card:hover::after {{ opacity: 1; animation: ql-sheen .85s ease; }}
+.ql-card:hover::before {{ opacity: 1; width: 80%; left: 10%; }}
+.ql-card:hover::after {{ opacity: 1; animation: ql-sheen .9s ease; }}
 .ql-card:active {{
-    transform: translateY(-1px) scale(.995);
+    transform: translateY(-2px) scale(.995);
     transition-duration: .08s;
 }}
 /* halo doré sur le glyphe arabe au survol : la carte « répond » au doigt */
 .ql-card:hover .ql-ar {{
-    transform: scale(1.06);
-    text-shadow: 0 2px 12px {gold_glow};
+    transform: scale(1.08);
+    text-shadow: 0 4px 20px {gold_glow};
 }}
 .ql-card .ql-ar {{
-    transition: transform .22s cubic-bezier(.2, .7, .3, 1),
-                text-shadow .22s ease;
+    transition: transform .28s cubic-bezier(.2, .7, .3, 1),
+                text-shadow .28s ease;
 }}
 /* petit fleuron d'angle (rosette géométrique, 100 % CSS) */
 .ql-card .ql-orn {{
     position: absolute;
-    top: 9px; right: 9px;
-    width: 12px; height: 12px;
-    opacity: .35;
-    transition: opacity .22s ease, transform .4s ease;
+    top: 10px; right: 10px;
+    width: 14px; height: 14px;
+    opacity: .3;
+    transition: opacity .28s ease, transform .45s cubic-bezier(.2,.7,.3,1);
     pointer-events: none;
     z-index: 2;
 }}
@@ -586,10 +713,10 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     position: absolute;
     inset: 0;
     border: 1px solid var(--ql-gold);
-    border-radius: 2px;
+    border-radius: 3px;
 }}
 .ql-card .ql-orn::after {{ transform: rotate(45deg); }}
-.ql-card:hover .ql-orn {{ opacity: .9; transform: rotate(45deg); }}
+.ql-card:hover .ql-orn {{ opacity: .95; transform: rotate(45deg) scale(1.1); }}
 .ql-card .ql-ar,
 .ql-ar {{ font-family: var(--ql-font-ar); color: var(--ql-accent); }}
 .ql-card .ql-ar {{
@@ -656,62 +783,87 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
 .ql-verse-ref {{
     display: flex;
     align-items: center;
-    gap: .55rem;
-    margin: .15rem 0;
+    gap: .6rem;
+    margin: .2rem 0;
+    padding-left: .4rem;
+    border-left: 2px solid var(--ql-gold);
+    opacity: .9;
+    transition: opacity .2s ease, border-color .2s ease;
 }}
-.ql-verse-ref::before {{
-    content: "";
-    width: 1.7rem;
-    height: 1px;
-    background: var(--ql-gold);
-    opacity: .85;
-    flex: none;
+.ql-verse-ref:hover {{
+    opacity: 1;
+    border-left-color: var(--ql-accent);
 }}
 .ql-verse-ref .ql-ref-num {{
     font-family: var(--ql-heading);
     font-weight: 600;
-    font-size: 1.02rem;
+    font-size: 1.05rem;
     color: var(--ql-accent);
     letter-spacing: .02em;
+    background: linear-gradient(135deg, var(--ql-accent) 0%, var(--ql-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }}
 .ql-verse-ar {{
     font-family: var(--ql-font-ar);
-    line-height: 2.3;
-    margin: .2rem 0 .5rem 0;
+    line-height: 2.5;
+    margin: .25rem 0 .6rem 0;
+    font-size: 1.2rem;
+    color: var(--ql-fg);
+    transition: transform .2s ease;
+}}
+.ql-verse-ar:hover {{
+    transform: translateX(2px);
 }}
 .ql-target {{
     border-left: 3px solid var(--ql-gold);
-    background: var(--ql-gold-soft);
-    border-radius: 10px;
-    padding: .35rem .75rem;
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.18) 0%, 
+        rgba(12,92,70,0.12) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: .4rem .85rem;
+    border: 1px solid rgba(169,138,69,0.2);
+    animation: ql-slide-in-right .3s cubic-bezier(.2,.7,.3,1) both;
 }}
 
 /* --- Surbrillance de recherche (onglet Recherche) ------------------------
-   Le terme recherché est encadré par <mark class="ql-hit">. Filet doré sur
-   fond émeraude pâle : lisible dans les trois palettes, sans masquer le texte
-   arabe (qui garde sa propre couleur). */
+   Glassmorphism, fond émeraude doré, lisible dans les trois palettes. */
 mark.ql-hit {{
-    background: var(--ql-gold-soft);
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.35) 0%, 
+        rgba(12,92,70,0.25) 100%);
     color: inherit;
-    padding: 0 .12em;
-    border-radius: 4px;
-    box-shadow: inset 0 -2px 0 var(--ql-gold);
+    padding: .04em .14em;
+    border-radius: 5px;
+    box-shadow: 
+        inset 0 -2px 0 var(--ql-gold),
+        0 1px 3px -1px rgba(0,0,0,0.2);
     font-weight: 600;
+    border: 1px solid rgba(169,138,69,0.3);
+    animation: ql-fade-in .2s ease-out;
 }}
 
 /* --- Synthèse convergente (encadré sous les traductions) -----------------
-   Charte vert émeraude + or : liseré doré, fond dégradé émeraude, en-tête en
-   petites capitales dorées. Les « unités lexicales convergentes » sont des
-   pastilles ; le compteur (n/N) indique dans combien de traductions le mot
-   apparaît. Purement analytique — aucune conclusion doctrinale. */
+   Glassmorphism, liseré doré, fond dégradé émeraude, en-tête petites capitales. */
 .ql-synth {{
-    margin: .55rem 0 .2rem 0;
-    padding: .8rem .95rem .7rem .95rem;
+    margin: .6rem 0 .3rem 0;
+    padding: 1rem 1.1rem .85rem 1.1rem;
     border: 1px solid var(--ql-gold);
     border-left: 4px solid var(--ql-accent);
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--ql-accent-soft), transparent 70%);
-    box-shadow: 0 1px 0 var(--ql-gold-soft) inset;
+    border-radius: 16px;
+    background: linear-gradient(135deg, 
+        rgba(12,92,70,0.12) 0%, 
+        rgba(12,92,70,0.04) 50%, 
+        transparent 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 
+        0 1px 0 rgba(169,138,69,0.1) inset,
+        0 4px 16px -4px rgba(0,0,0,0.12);
+    animation: ql-rise .35s cubic-bezier(.2,.7,.3,1) both;
 }}
 .ql-synth-head {{
     font-family: var(--ql-font);
@@ -721,52 +873,73 @@ mark.ql-hit {{
     text-transform: uppercase;
     color: var(--ql-accent);
     margin-bottom: .15rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}}
+.ql-synth-head::before {{
+    content: "";
+    width: 24px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--ql-gold), transparent);
 }}
 .ql-synth-note {{
     font-size: .74rem;
     color: var(--ql-fg2);
     margin-bottom: .5rem;
+    line-height: 1.5;
 }}
 .ql-synth-terms {{
     display: flex;
     flex-wrap: wrap;
-    gap: .34rem;
+    gap: .3rem;
 }}
 .ql-synth-term {{
     display: inline-flex;
     align-items: center;
-    gap: .32rem;
-    padding: .18rem .5rem .18rem .6rem;
+    gap: .28rem;
+    padding: .16rem .5rem .16rem .55rem;
     border: 1px solid var(--ql-gold);
     border-radius: 999px;
-    background: var(--ql-bg2);
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.04) 0%, 
+        rgba(255,255,255,0.01) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: var(--ql-fg);
-    font-size: .82rem;
+    font-size: .8rem;
     line-height: 1.4;
+    transition: all .2s ease;
+    animation: ql-slide-in-right .35s cubic-bezier(.2,.7,.3,1) both;
+}}
+.ql-synth-term:hover {{
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.18) 0%, 
+        rgba(169,138,69,0.08) 100%);
+    border-color: var(--ql-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px -2px var(--ql-gold-soft);
 }}
 .ql-synth-n {{
-    font-size: .66rem;
+    font-size: .64rem;
     font-weight: 700;
     color: var(--ql-bg);
-    background: var(--ql-accent);
+    background: linear-gradient(135deg, var(--ql-accent) 0%, #0a4d3a 100%);
     border-radius: 999px;
-    padding: .02rem .34rem;
+    padding: .02rem .3rem;
+    box-shadow: 0 1px 3px -1px rgba(0,0,0,0.3);
 }}
 .ql-synth-foot {{
-    margin-top: .5rem;
+    margin-top: .55rem;
     font-size: .68rem;
     color: var(--ql-fg2);
     border-top: 1px solid var(--ql-border);
     padding-top: .35rem;
+    line-height: 1.5;
 }}
 
 /* --- Navigation rapide flottante (haut / bas de page) --------------------
    Widget discret ancré en bas à droite : deux boutons empilés — remonter (↑)
-   et descendre (↓) — en émeraude rehaussée d'un filet doré. Il suit la palette
-   active via les variables --ql-*. Il reste **masqué** tant que la page n'a pas
-   défilé (classe .ql-visible posée par le script de ``ui.scroll_nav``), afin de
-   ne jamais gêner la lecture. ``env(safe-area-inset-bottom)`` le tient à
-   l'écart de la barre gestuelle iOS en mode PWA. */
+   et descendre (↓) — en émeraude rehaussée d'un filet doré. Glassmorphism. */
 .ql-scroll-nav {{
     position: fixed;
     right: 18px;
@@ -776,14 +949,19 @@ mark.ql-hit {{
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--ql-gold);
-    border-radius: 15px;
-    background: var(--ql-bg2);
-    box-shadow: 0 1px 0 var(--ql-gold-soft) inset,
-                0 10px 26px -12px rgba(0, 0, 0, .55);
+    border-radius: 18px;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.06) 0%, 
+        rgba(255,255,255,0.02) 100%) !important;
+    backdrop-filter: blur(20px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+    box-shadow: 
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        0 12px 36px -16px rgba(0, 0, 0, .6);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(10px);
-    transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
+    transform: translateY(12px) scale(0.95);
+    transition: opacity .3s ease, transform .3s cubic-bezier(.2,.7,.3,1), visibility .3s ease;
     pointer-events: none;
 }}
 .ql-scroll-nav.ql-visible {{
@@ -793,8 +971,8 @@ mark.ql-hit {{
     pointer-events: auto;
 }}
 .ql-scroll-nav button {{
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     margin: 0;
     padding: 0;
     display: flex;
@@ -802,37 +980,67 @@ mark.ql-hit {{
     justify-content: center;
     cursor: pointer;
     border: 0;
-    background: var(--ql-accent);
+    background: linear-gradient(135deg, var(--ql-accent) 0%, #0a4d3a 100%);
     color: var(--ql-bg);
     font-family: var(--ql-font);
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 700;
     line-height: 1;
     -webkit-tap-highlight-color: transparent;
-    transition: box-shadow .15s ease, filter .15s ease;
+    transition: all .15s ease;
+    position: relative;
+    overflow: hidden;
+}}
+.ql-scroll-nav button::after {{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0) 0%, 
+        rgba(255,255,255,0.18) 50%, 
+        rgba(255,255,255,0) 100%);
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+    transition: opacity .2s ease, transform .5s ease;
+    pointer-events: none;
 }}
 .ql-scroll-nav button + button {{
     border-top: 1px solid var(--ql-gold);
 }}
 .ql-scroll-nav button:hover {{
-    box-shadow: inset 0 0 0 2px var(--ql-gold);
-    filter: brightness(1.08);
+    box-shadow: inset 0 0 0 2px var(--ql-gold), 0 0 16px var(--ql-gold-soft);
+    filter: brightness(1.1);
+}}
+.ql-scroll-nav button:hover::after {{
+    opacity: 1;
+    transform: translateX(120%) skewX(-12deg);
+    animation: ql-sheen .5s ease;
 }}
 .ql-scroll-nav button:active {{
-    filter: brightness(.94);
+    filter: brightness(.95);
+    transform: scale(.97);
 }}
 .ql-scroll-nav button:focus-visible {{
     outline: 2px solid var(--ql-gold);
     outline-offset: -3px;
 }}
 
-/* --- Modale st.dialog ---
-   Streamlit colore la fenêtre (panneau `[data-testid="stDialog"]`) avec le
-   thème JS ; on remplace fond ET texte de la palette courante, appariés, pour
-   un contraste garanti quel que soit le mode (Clair / Intermédiaire / Sombre). */
+/* --- Modale st.dialog : glassmorphism */
 [data-testid="stDialog"] {{
-    background: var(--ql-bg) !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.04) 0%, 
+        rgba(255,255,255,0.01) 100%) !important;
+    backdrop-filter: blur(24px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+    border: 1px solid var(--ql-border) !important;
+    border-radius: 22px !important;
     color: var(--ql-fg) !important;
+    box-shadow: 
+        0 24px 60px -20px rgba(0, 0, 0, .7),
+        0 0 0 1px rgba(169,138,69,0.1) inset !important;
+}}
+[data-testid="stDialog"] > div:first-child {{
+    border-radius: 22px !important;
 }}
 [data-testid="stDialog"] p, [data-testid="stDialog"] li,
 [data-testid="stDialog"] label, [data-testid="stDialog"] caption,
@@ -844,10 +1052,19 @@ mark.ql-hit {{
     color: var(--ql-fg) !important;
 }}
 [data-testid="stDialog"] [data-testid="stExpander"] {{
-    background-color: var(--ql-bg2) !important;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.04) 0%, 
+        rgba(255,255,255,0.01) 100%) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     color: var(--ql-fg) !important;
 }}
 [data-testid="stDialog"] hr {{ border-color: var(--ql-border) !important; }}
+[data-testid="stDialog"] .stButton > button {{
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.08) 0%, 
+        rgba(255,255,255,0.03) 100%) !important;
+}}
 
 /* --- Confort mobile : l'app installée (PWA) reste lisible et tactile ---- */
 @media (max-width: 780px) {{
@@ -884,6 +1101,82 @@ mark.ql-hit {{
     .ql-card .ql-ar {{ font-size: 1.6rem; }}
 }}
 
+/* --- Glassmorphism utilities ------------------------------------------------ */
+.ql-glass {{
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.08) 0%, 
+        rgba(255,255,255,0.02) 50%, 
+        rgba(255,255,255,0.04) 100%) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    box-shadow: 
+        0 8px 32px -8px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1) !important;
+}}
+.ql-glass-light {{
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.25) 0%, 
+        rgba(255,255,255,0.1) 50%, 
+        rgba(255,255,255,0.15) 100%) !important;
+    backdrop-filter: blur(20px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+    border: 1px solid rgba(169,138,69,0.2) !important;
+    box-shadow: 
+        0 4px 24px -4px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}}
+
+/* --- Scroll Reveal (entrée progressive au scroll) ---------------------------
+   Utilisation : ajouter la classe .ql-reveal aux éléments à animer.
+   Le script d'observation (dans app.py) pose .ql-visible quand l'élément
+   entre dans le viewport. Les délais sont gérés via --ql-delay (ms). */
+.ql-reveal {{
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s cubic-bezier(.2,.7,.3,1),
+                transform 0.6s cubic-bezier(.2,.7,.3,1);
+    transition-delay: var(--ql-delay, 0ms);
+    will-change: opacity, transform;
+}}
+.ql-reveal.ql-visible {{
+    opacity: 1;
+    transform: none;
+}}
+/* Variantes de direction */
+.ql-reveal-left {{
+    transform: translateX(-32px);
+}}
+.ql-reveal-left.ql-visible {{
+    transform: none;
+}}
+.ql-reveal-right {{
+    transform: translateX(32px);
+}}
+.ql-reveal-right.ql-visible {{
+    transform: none;
+}}
+.ql-reveal-scale {{
+    transform: scale(0.92);
+}}
+.ql-reveal-scale.ql-visible {{
+    transform: none;
+}}
+
+/* Stagger delays automatiques pour les grilles (premier = 0ms, +60ms/item) */
+.ql-stagger > *:nth-child(1)  {{ --ql-delay: 0ms;   }}
+.ql-stagger > *:nth-child(2)  {{ --ql-delay: 60ms;  }}
+.ql-stagger > *:nth-child(3)  {{ --ql-delay: 120ms; }}
+.ql-stagger > *:nth-child(4)  {{ --ql-delay: 180ms; }}
+.ql-stagger > *:nth-child(5)  {{ --ql-delay: 240ms; }}
+.ql-stagger > *:nth-child(6)  {{ --ql-delay: 300ms; }}
+.ql-stagger > *:nth-child(7)  {{ --ql-delay: 360ms; }}
+.ql-stagger > *:nth-child(8)  {{ --ql-delay: 420ms; }}
+.ql-stagger > *:nth-child(9)  {{ --ql-delay: 480ms; }}
+.ql-stagger > *:nth-child(10) {{ --ql-delay: 540ms; }}
+.ql-stagger > *:nth-child(11) {{ --ql-delay: 600ms; }}
+.ql-stagger > *:nth-child(12) {{ --ql-delay: 660ms; }}
+
 /* --- Animations : entrée en cascade, éclats — transform/opacity seuls,
    accélérés par le GPU, donc fluides même sur mobile/PWA ------------------- */
 @keyframes ql-rise {{
@@ -904,6 +1197,36 @@ mark.ql-hit {{
     70%  {{ box-shadow: 0 0 0 8px transparent; }}
     100% {{ box-shadow: 0 0 0 0 transparent; }}
 }}
+@keyframes ql-float {{
+    0%, 100% {{ transform: translateY(0); }}
+    50%      {{ transform: translateY(-4px); }}
+}}
+@keyframes ql-glow-pulse {{
+    0%, 100% {{ box-shadow: 0 0 0 0 var(--ql-gold-soft); }}
+    50%      {{ box-shadow: 0 0 0 6px var(--ql-gold-soft); }}
+}}
+@keyframes ql-slide-in-right {{
+    from {{ opacity: 0; transform: translateX(20px); }}
+    to   {{ opacity: 1; transform: none; }}
+}}
+@keyframes ql-fade-in {{
+    from {{ opacity: 0; }}
+    to   {{ opacity: 1; }}
+}}
+
+/* Classes utilitaires d'animation */
+.ql-float {{
+    animation: ql-float 3.5s ease-in-out infinite;
+}}
+.ql-glow-pulse {{
+    animation: ql-glow-pulse 2.5s ease-in-out infinite;
+}}
+.ql-slide-in {{
+    animation: ql-slide-in-right 0.5s cubic-bezier(.2,.7,.3,1) both;
+}}
+.ql-fade-in {{
+    animation: ql-fade-in 0.4s ease-out both;
+}}
 
 /* Tactile : pas de survol persistant ; l'appui direct donne le retour visuel */
 @media (hover: none) {{
@@ -922,15 +1245,223 @@ mark.ql-hit {{
     }}
 }}
 
-/* Respect des préférences d'accessibilité : on coupe le mouvement */
-@media (prefers-reduced-motion: reduce) {{
-    .ql-card, .ql-card::after, .ql-card .ql-ar, .ql-card .ql-orn,
-    .ql-banner::before {{
-        animation: none !important;
-        transition: none !important;
-    }}
-    .ql-card:hover {{ transform: none; }}
-    .ql-card:hover::after {{ display: none; }}
+/* --- Audio Player (onglet Écoute) ------------------------------------------ */
+.ql-audio-player {{
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.04) 0%, 
+        rgba(255,255,255,0.01) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--ql-border);
+    border-radius: 18px;
+    padding: 1.2rem;
+    box-shadow: 0 8px 32px -8px rgba(0,0,0,0.25);
+    animation: ql-rise .4s cubic-bezier(.2,.7,.3,1) both;
+}}
+.ql-audio-player .ql-player-head {{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}}
+.ql-audio-player .ql-surah-badge {{
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .8rem;
+    background: linear-gradient(135deg, var(--ql-accent) 0%, #0a4d3a 100%);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .85rem;
+    color: var(--ql-bg);
+    box-shadow: 0 2px 10px -2px var(--ql-accent);
+}}
+.ql-audio-player .ql-mode-pills {{
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}}
+.ql-audio-player .ql-mode-pill {{
+    padding: .35rem .85rem;
+    border: 1px solid var(--ql-border);
+    border-radius: 999px;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.03) 0%, 
+        rgba(255,255,255,0.01) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--ql-fg2);
+    font-size: .78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s ease;
+}}
+.ql-audio-player .ql-mode-pill.active,
+.ql-audio-player .ql-mode-pill:hover {{
+    border-color: var(--ql-gold);
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.18) 0%, 
+        rgba(12,92,70,0.12) 100%);
+    color: var(--ql-fg);
+}}
+.ql-audio-player .ql-mode-pill.active {{
+    box-shadow: 0 0 0 1px var(--ql-gold-soft);
+}}
+.ql-audio-player .ql-controls {{
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}}
+.ql-audio-player .ql-btn {{
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .55rem 1.1rem;
+    border: 1px solid var(--ql-border);
+    border-radius: 12px;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.05) 0%, 
+        rgba(255,255,255,0.02) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--ql-fg);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s cubic-bezier(.2,.7,.3,1);
+}}
+.ql-audio-player .ql-btn:hover {{
+    border-color: var(--ql-gold);
+    color: var(--ql-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px -4px rgba(0,0,0,0.2);
+}}
+.ql-audio-player .ql-btn.primary {{
+    background: linear-gradient(135deg, var(--ql-accent) 0%, #0a4d3a 100%);
+    border-color: var(--ql-accent);
+    color: var(--ql-bg);
+}}
+.ql-audio-player .ql-btn.primary:hover {{
+    box-shadow: 0 6px 20px -6px var(--ql-accent);
+}}
+.ql-audio-player .ql-time {{
+    font-family: var(--ql-font);
+    font-size: .95rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ql-fg2);
+    min-width: 90px;
+    text-align: center;
+}}
+.ql-audio-player .ql-progress {{
+    flex: 1;
+    min-width: 120px;
+    height: 4px;
+    background: rgba(169,138,69,0.15);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0 .5rem;
+}}
+.ql-audio-player .ql-progress-bar {{
+    height: 100%;
+    background: linear-gradient(90deg, var(--ql-accent) 0%, var(--ql-gold) 100%);
+    border-radius: 999px;
+    transition: width .15s linear;
+    box-shadow: 0 0 8px var(--ql-gold-soft);
+}}
+.ql-audio-player .ql-next-surah {{
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .8rem;
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.12) 0%, 
+        transparent 100%);
+    border: 1px solid var(--ql-gold);
+    border-radius: 999px;
+    color: var(--ql-gold);
+    font-size: .78rem;
+    font-weight: 500;
+    transition: all .2s ease;
+}}
+.ql-audio-player .ql-next-surah:hover {{
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.22) 0%, 
+        rgba(169,138,69,0.1) 100%);
+    transform: translateX(3px);
+}}
+
+/* --- Multi-Traductions (affichage verset) ---------------------------------- */
+.ql-translations {{
+    margin: .5rem 0;
+}}
+.ql-translation {{
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.02) 0%, 
+        rgba(255,255,255,0.005) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--ql-border);
+    border-left: 3px solid var(--ql-gold);
+    border-radius: 12px;
+    padding: .7rem .9rem;
+    margin-bottom: .5rem;
+    animation: ql-rise .3s cubic-bezier(.2,.7,.3,1) both;
+}}
+.ql-translation:hover {{
+    border-left-color: var(--ql-accent);
+    box-shadow: 0 2px 10px -2px rgba(0,0,0,0.1);
+}}
+.ql-translation-header {{
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    margin-bottom: .35rem;
+    flex-wrap: wrap;
+}}
+.ql-translation-author {{
+    font-family: var(--ql-heading);
+    font-weight: 600;
+    font-size: .88rem;
+    color: var(--ql-accent);
+}}
+.ql-translation-lang {{
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ql-fg2);
+    background: rgba(169,138,69,0.15);
+    padding: .08rem .45rem;
+    border-radius: 999px;
+}}
+.ql-translation-text {{
+    line-height: 1.7;
+    color: var(--ql-fg);
+    font-size: .95rem;
+}}
+.ql-translations-toggle {{
+    margin: .5rem 0 1rem 0;
+    padding: .6rem 1.2rem;
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.08) 0%, 
+        transparent 100%);
+    border: 1px solid var(--ql-gold);
+    border-radius: 10px;
+    color: var(--ql-gold);
+    font-weight: 600;
+    font-size: .85rem;
+    cursor: pointer;
+    transition: all .2s ease;
+}}
+.ql-translations-toggle:hover {{
+    background: linear-gradient(135deg, 
+        rgba(169,138,69,0.18) 0%, 
+        rgba(169,138,69,0.08) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px -4px var(--ql-gold-soft);
 }}
 </style>
 """

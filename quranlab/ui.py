@@ -1092,6 +1092,7 @@ def _render_synthesis(synth: dict) -> None:
     Purement analytique : on affiche les unités lexicales présentes dans la
     majorité des traductions comparées, avec leur fréquence documentaire. Aucune
     conclusion doctrinale n'est produite (le Coran reste commenté par lui-même).
+    Glassmorphism + pastilles animées.
     """
     terms = synth.get("terms") or []
     if not terms:
@@ -1119,13 +1120,12 @@ def _render_translations(
     query: str | None = None,
     seed: str = "",
 ) -> None:
-    """Affiche les traductions d'un verset : socle de référence + extension.
+    """Affiche les traductions d'un verset : socle de référence (3) + extension.
 
-    Par défaut, le **socle de traductions de référence** de la langue active
-    (littérales, sans exégèse) ; un bouton discret révèle les autres traductions
-    du catalogue. Une **synthèse convergente** (voir ``synthesis``) est affichée
-    sous les traductions : elle met en avant les éléments lexicaux qui se
-    recoupent d'une traduction à l'autre.
+    Par défaut, le **socle de 3 traductions littérales de référence** (FR :
+    Hamidullah, Maash, Montada ; EN : Saheeh, Pickthall) — sans exégèse.
+    Bouton élégant "Afficher plus" pour révéler les autres traductions.
+    Synthèse convergente glassmorphism sous les traductions.
     """
     lg = i18n.lang()
     ext_key = f"ql_trans_ext_{seed}"
@@ -1134,20 +1134,40 @@ def _render_translations(
     if not shown:
         st.caption(t("ui.no_translation"))
         return
+
     for tr in shown:
         text = tr.get("text", "")
         body = highlight_html(text, query) if query else html.escape(text or "")
+        lang_code = str(tr.get("language", "")).lower()
+        lang_label = "FR" if lang_code == "fr" else "EN" if lang_code == "en" else lang_code.upper()
         st.markdown(
-            f"**{html.escape(str(tr.get('author', '')))}** — {body}",
+            f"""<div class="ql-translation">
+                <div class="ql-translation-header">
+                    <span class="ql-translation-author">{html.escape(str(tr.get('author', '')))}</span>
+                    <span class="ql-translation-lang">{lang_label}</span>
+                </div>
+                <div class="ql-translation-text">{body}</div>
+            </div>""",
             unsafe_allow_html=True,
         )
+
     if others and not extended:
-        if st.button(
-            t("ui.show_more_translations", n=len(others)),
-            key=unique_key(f"tmore_{seed}"),
-        ):
+        st.markdown(
+            f"""<button class="ql-translations-toggle" onclick="
+                var url = new URL(window.location.href);
+                url.searchParams.set('trans_ext', '{seed}');
+                window.history.replaceState({{}}, '', url);
+                window.location.reload();
+            ">{t('ui.show_more_translations', n=len(others))}</button>""",
+            unsafe_allow_html=True,
+        )
+        # Gestion via query_params (plus fiable que st.button dans markdown)
+        qp = st.query_params
+        if qp.get("trans_ext") == seed:
             st.session_state[ext_key] = True
+            st.query_params.clear()
             st.rerun()
+
     synth = synthesis.synthesize(shown, lg)
     if synth:
         _render_synthesis(synth)

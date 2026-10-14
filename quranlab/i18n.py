@@ -647,11 +647,11 @@ _FR = {
     "iqra.listen": "Écouter",
     "iqra.listen_ar": "Écouter la prononciation arabe",
     # --- Onglet Écouter -----------------------------------------------------
-    "audio.title": "Écouter le Coran",
+    "audio.title": "Écoute du Coran",
     "audio.caption": (
         "Sourate par sourate : numéro, nom arabe et nom latin, nombre de versets "
-        "et durée d'écoute approximative. Récitation arabe, ou récitation suivie "
-        "de la traduction française de chaque verset."
+        "et durée d'écoute approximative. Cliquez sur une sourate pour la lire. "
+        "Enchaînement automatique : la sourate suivante démarre à la fin."
     ),
     "audio.filter": "Filtrer les sourates",
     "audio.filter_ph": "Nom (arabe ou latin) ou numéro de sourate…",
@@ -673,6 +673,14 @@ _FR = {
     ),
     "audio.bilingual_toggle": "Lire la traduction française après chaque verset",
     "audio.bilingual_legend": "Prêt — récitation puis traduction.",
+    "audio.mode_label": "Mode audio",
+    "audio.mode_arabic_only": "Arabe seul (récitation)",
+    "audio.mode_bilingual": "Arabe + Traduction française (TTS)",
+    "audio.auto_chain": "Enchaînement automatique des sourates",
+    "audio.auto_chain_help": "À la fin d'une sourate, la suivante démarre automatiquement.",
+    "audio.now_playing": "En lecture : {sura} — {name}",
+    "audio.next_surah": "Suivante : {sura} — {name}",
+    "audio.click_to_play": "Cliquez sur une ligne pour lancer la lecture.",
 }
 
 _EN = {
@@ -1287,6 +1295,14 @@ _EN = {
     ),
     "audio.bilingual_toggle": "Read the French translation after each verse",
     "audio.bilingual_legend": "Ready — recitation then translation.",
+    "audio.mode_label": "Audio mode",
+    "audio.mode_arabic_only": "Arabic only (recitation)",
+    "audio.mode_bilingual": "Arabic + French translation (TTS)",
+    "audio.auto_chain": "Auto-chain surahs",
+    "audio.auto_chain_help": "Automatically start the next surah when the current one ends.",
+    "audio.now_playing": "Playing: {sura} — {name}",
+    "audio.next_surah": "Next: {sura} — {name}",
+    "audio.click_to_play": "Click a row to start playback.",
 }
 
 # --- API ------------------------------------------------------------------

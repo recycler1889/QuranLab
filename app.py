@@ -26,6 +26,30 @@ pwa.ensure_assets()
 st.set_page_config(page_title=t("app.title"), page_icon=pwa.page_icon_path(),
                    layout="wide")
 
+# Scroll Reveal Observer (anime les éléments .ql-reveal au scroll)
+st.components.v1.html("""
+<script>
+(function(){
+  if (window.QLScrollObserver) return;
+  window.QLScrollObserver = true;
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting){
+        entry.target.classList.add('ql-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {root: null, rootMargin: '0px 0px -50px 0px', threshold: 0.1});
+  function scan(){ document.querySelectorAll('.ql-reveal').forEach(function(el){ observer.observe(el); }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan);
+  else scan();
+  // Re-scan after Streamlit reruns
+  var mo = new MutationObserver(scan);
+  mo.observe(document.body, {childList: true, subtree: true});
+})();
+</script>
+""", height=0)
+
 # Réinitialise les compteurs d'occurrence des clés de widgets (unicité par run).
 ui.begin_run()
 
