@@ -520,7 +520,7 @@ def css(name: str) -> str:
     p = PALETTES.get(name, PALETTES[DEFAULT])
     ornament = _ornament_svg(p["gold"])
     mosaic = _mosaic_svg(p["gold"], p["pattern_opacity"])
-    zebra = _rgba(p["bg2"], 0.5)
+    zebra = _rgba(p["bg2"], 0.04)
     sel_bg = _rgba(p["accent"], 0.28)
     glow = _rgba(p["gold"], 0.10)
     gold_soft = _rgba(p["gold"], 0.16)
