@@ -201,6 +201,7 @@ def _player_html(
       <div class="progress-wrap" id="prog"><div class="progress-bar" id="pbar" style="width:0%"></div></div>
       <span class="time" id="dur">{total_dur_fmt}</span>
       <button class="btn" id="st" title="{t('ui.stop')}">&#9632;</button>
+      <span class="reciter-select" id="reciterDisplay">{t("audio.reciter", key=reciter_key)}</span>
     </div>
     <div class="legend">{legend}</div>
     <audio id="au" preload="metadata" crossorigin="anonymous"></audio>
@@ -230,8 +231,8 @@ def _player_html(
       cur.textContent = tmpl.replace('{{a}}', tag);
     }}
     function loadSurah(suraNum, suraName){{
-      if (window.parent && window.parent.postMessage) {{
-        window.parent.postMessage({{type: 'ql_load_surah', sura: suraNum}}, '*');
+if (window.parent && window.postMessage) {{
+        window.postMessage({{type: 'ql_load_surah', sura: suraNum}}, '*');
       }}
     }}
     function playAr(){{ phase = 'ar'; au.src = ITEMS[idx].ar_url; show(idx, false); au.play(); }}
@@ -305,6 +306,21 @@ def _player_html(
     if (AUTOPLAY_REQUESTED) {{
       setTimeout(function() {{ start(); }}, 100);
     }}
+    // Reciter display click → cycle to next reciter
+    var reciterDisplay = document.getElementById('reciterDisplay');
+    reciterDisplay.addEventListener('click', function() {{
+      // Cycle through available reciters
+      var current = reciterOptions[currentReciterIdx];
+      var nextIdx = (currentReciterIdx + 1) % reciterOptions.length;
+      var nextReciter = reciterOptions[nextIdx];
+      // Post message to parent Streamlit app
+      if (window.parent) {{
+        window.parent.postMessage({{type: 'ql_change_reciter', key: nextReciter.key}}, '*');
+      }}
+      currentReciterIdx = nextIdx;
+      // Update display text
+      reciterDisplay.textContent = nextReciter.label;
+    }}
   </script>
 </body></html>"""
     return comp
@@ -360,6 +376,11 @@ def render_tab(con) -> None:
         window.history.replaceState({}, '', url);
         window.location.reload();
       });
+      // Gestion changement de récitateur
+      if (e.data && e.data.type === 'ql_change_reciter') {{
+        st.session_state.audio_reciter_key = e.data.key;
+        window.location.reload();
+      }}
     })();
     </script>
     """
@@ -421,7 +442,7 @@ def render_tab(con) -> None:
               var sura = cells[0].textContent.trim();
               if (/^\\d+$/.test(sura)) {
                 // Send message to parent Streamlit app
-                window.parent.postMessage({type: 'ql_load_surah', sura: parseInt(sura, 10), autoplay: true}, '*');
+                window.postMessage({type: 'ql_load_surah', sura: parseInt(sura, 10), autoplay: true}, '*');
               }
             });
           }
