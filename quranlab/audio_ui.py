@@ -24,9 +24,7 @@ def _fmt_duration(seconds: float) -> str:
     seconds = int(round(seconds or 0))
     h, rem = divmod(seconds, 3600)
     m, s = divmod(rem, 60)
-    if h:
-        return f"{h}:{m:02d}:{s:02d}"
-    return f"{m:02d}:{s:02d}"
+    return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 def _fmt_duration_pair(ar_sec: float, bi_sec: float) -> str:
