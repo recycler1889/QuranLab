@@ -201,7 +201,7 @@ def _player_html(
       <div class="progress-wrap" id="prog"><div class="progress-bar" id="pbar" style="width:0%"></div></div>
       <span class="time" id="dur">{total_dur_fmt}</span>
       <button class="btn" id="st" title="{t('ui.stop')}">&#9632;</button>
-      <span class="reciter-select" id="reciterDisplay">{t("audio.reciter", key=reciter_key)}</span>
+      <span class="reciter-select" id="reciterDisplay">{t("audio.reciter")}</span>
     </div>
     <div class="legend">{legend}</div>
     <audio id="au" preload="metadata" crossorigin="anonymous"></audio>
