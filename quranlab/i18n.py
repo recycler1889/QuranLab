@@ -321,6 +321,16 @@ _FR = {
     "ui.unavailable": "(introuvable)",
     "ui.then_listen": ". Puis « {label} » dans un verset.",
     "ui.no_translation": "Aucune traduction disponible.",
+    "ui.show_more_translations": "Afficher d'autres traductions ({n})",
+    "ui.synth_title": "Synthèse convergente du sens",
+    "ui.synth_note": (
+        "Éléments lexicaux présents dans la majorité des {n} traductions "
+        "littérales comparées — recoupements, sans interprétation."
+    ),
+    "ui.synth_foot": (
+        "Analyse strictement lexicale (mots pleins et expressions) : le Coran "
+        "s'explique par le Coran, aucune exégèse ajoutée."
+    ),
     "ui.root_notfound": "Racine introuvable : {q}",
     "ui.root_header": "**Racine {ar}** `[{bw}]` — {n} occurrence(s) dans {v} verset(s)",
     "ui.limit_1000": "Limite atteinte : 1000 premières occurrences affichées.",
@@ -366,6 +376,7 @@ _FR = {
     "ui.scroll_top": "Remonter en haut",
     "ui.scroll_bottom": "Descendre en bas",
     "app.tab.read": "Lire le Coran Iqra",
+    "app.tab.audio": "Écouter",
     "app.read_title": "Lire le Coran Iqra",
     "app.read_caption": (
         "Sourate par sourate, verset par verset — texte arabe, traductions et "
@@ -635,6 +646,33 @@ _FR = {
     "iqra.asma_none": "Aucun nom ne correspond au filtre.",
     "iqra.listen": "Écouter",
     "iqra.listen_ar": "Écouter la prononciation arabe",
+    # --- Onglet Écouter -----------------------------------------------------
+    "audio.title": "Écouter le Coran",
+    "audio.caption": (
+        "Sourate par sourate : numéro, nom arabe et nom latin, nombre de versets "
+        "et durée d'écoute approximative. Récitation arabe, ou récitation suivie "
+        "de la traduction française de chaque verset."
+    ),
+    "audio.filter": "Filtrer les sourates",
+    "audio.filter_ph": "Nom (arabe ou latin) ou numéro de sourate…",
+    "audio.count": "{shown} sourate(s) affichée(s) sur {total}.",
+    "audio.col_num": "N°",
+    "audio.col_name_ar": "Nom arabe",
+    "audio.col_name_lat": "Nom (latin)",
+    "audio.col_verses": "Versets",
+    "audio.col_duration": "Durée approx.",
+    "audio.none": "Aucune sourate ne correspond au filtre.",
+    "audio.surah_fmt": "{n}. {ar} — {name} ({count} versets)",
+    "audio.choose_surah": "Sourate à écouter",
+    "audio.arabic_heading": "Récitation arabe",
+    "audio.arabic_help": "Enchaîne la récitation verset par verset.",
+    "audio.bilingual_heading": "Récitation + traduction française",
+    "audio.bilingual_help": (
+        "Chaque verset est récité en arabe, puis sa traduction française est lue "
+        "par la synthèse vocale du navigateur."
+    ),
+    "audio.bilingual_toggle": "Lire la traduction française après chaque verset",
+    "audio.bilingual_legend": "Prêt — récitation puis traduction.",
 }
 
 _EN = {
@@ -903,6 +941,16 @@ _EN = {
     "ui.unavailable": "(not found)",
     "ui.then_listen": ". Then hit “{label}” in a verse.",
     "ui.no_translation": "No translation available.",
+    "ui.show_more_translations": "Show more translations ({n})",
+    "ui.synth_title": "Convergent sense synthesis",
+    "ui.synth_note": (
+        "Lexical elements present in the majority of the {n} literal "
+        "translations compared — overlaps only, no interpretation."
+    ),
+    "ui.synth_foot": (
+        "Strictly lexical analysis (content words and phrases): the Qur'an "
+        "explains itself by the Qur'an, no exegesis added."
+    ),
     "ui.root_notfound": "Root not found: {q}",
     "ui.root_header": "**Root {ar}** `[{bw}]` — {n} occurrence(s) in {v} verse(s)",
     "ui.limit_1000": "Limit reached: first 1000 occurrences shown.",
@@ -946,6 +994,7 @@ _EN = {
     "ui.scroll_top": "Back to top",
     "ui.scroll_bottom": "Go to bottom",
     "app.tab.read": "Read the Quran Iqra",
+    "app.tab.audio": "Listen",
     "app.read_title": "Read the Quran Iqra",
     "app.read_caption": (
         "Surah by surah, verse by verse — Arabic text, translations and "
@@ -1212,6 +1261,32 @@ _EN = {
     "iqra.asma_none": "No name matches the filter.",
     "iqra.listen": "Listen",
     "iqra.listen_ar": "Listen to Arabic pronunciation",
+    "audio.title": "Listen to the Qur'an",
+    "audio.caption": (
+        "Surah by surah: number, Arabic and Latin name, verse count and "
+        "approximate listening time. Arabic recitation, or recitation followed "
+        "by the French translation of each verse."
+    ),
+    "audio.filter": "Filter surahs",
+    "audio.filter_ph": "Name (Arabic or Latin) or surah number…",
+    "audio.count": "{shown} surah(s) shown out of {total}.",
+    "audio.col_num": "No.",
+    "audio.col_name_ar": "Arabic name",
+    "audio.col_name_lat": "Name (Latin)",
+    "audio.col_verses": "Verses",
+    "audio.col_duration": "Approx. length",
+    "audio.none": "No surah matches the filter.",
+    "audio.surah_fmt": "{n}. {ar} — {name} ({count} verses)",
+    "audio.choose_surah": "Surah to listen to",
+    "audio.arabic_heading": "Arabic recitation",
+    "audio.arabic_help": "Plays the recitation verse by verse.",
+    "audio.bilingual_heading": "Recitation + French translation",
+    "audio.bilingual_help": (
+        "Each verse is recited in Arabic, then its French translation is read "
+        "by the browser's speech synthesis."
+    ),
+    "audio.bilingual_toggle": "Read the French translation after each verse",
+    "audio.bilingual_legend": "Ready — recitation then translation.",
 }
 
 # --- API ------------------------------------------------------------------

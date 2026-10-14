@@ -12,6 +12,7 @@ import re
 import sqlite3
 from pathlib import Path
 
+from . import config
 from .buckwalter import (
     arabic_to_buckwalter,
     buckwalter_to_arabic,
@@ -163,6 +164,105 @@ def search_french(
     sql += " GROUP BY tv.sura, tv.aya ORDER BY tv.sura, tv.aya LIMIT ?"
     params.append(limit)
     return [dict(r) for r in con.execute(sql, params).fetchall()]
+
+
+# --------------------------------------------------------------------------
+# Recherche d'expressions (segments de phrase) + mise en surbrillance
+# --------------------------------------------------------------------------
+def _normalize_with_map(text: str, arabic: bool) -> tuple[str, list[int]]:
+    """Normalise ``text`` (latins **ou** arabe) en gardant la position d'origine.
+
+    Renvoie ``(chaîne_normalisée, index)`` où ``index[i]`` est la position, dans
+    le texte d'origine, du ``i``-e caractère normalisé. Indispensable pour
+    surligner une expression insensible aux accents/diacritiques tout en
+    conservant l'affichage d'origine.
+    """
+    norm = normalize_arabic if arabic else normalize_latin
+    chars: list[str] = []
+    index: list[int] = []
+    for i, ch in enumerate(text or ""):
+        for c in norm(ch):
+            chars.append(c)
+            index.append(i)
+    return "".join(chars), index
+
+
+def match_spans(text: str, query: str, arabic: bool | None = None) -> list:
+    """Positions ``(début, fin)`` d'une expression dans ``text``.
+
+    La comparaison est **insensible à la casse, aux accents et aux diacritiques**
+    (normalisation latin ou arabe) : « Oh notre Seigneur » retrouve « ô notre
+    Seigneur », « miséricordieux » retrouve « Misericordieux ». Les positions
+    renvoyées se rapportent au texte **d'origine**, pour une surbrillance
+    fidèle. Fonction pure (testable sans Streamlit).
+    """
+    q = (query or "").strip()
+    if not q or not text:
+        return []
+    if arabic is None:
+        arabic = is_arabic(q)
+    norm = normalize_arabic if arabic else normalize_latin
+    hay, idx = _normalize_with_map(text, arabic)
+    needle = norm(q)
+    if not needle:
+        return []
+    spans: list[tuple[int, int]] = []
+    start = 0
+    while True:
+        j = hay.find(needle, start)
+        if j < 0:
+            break
+        spans.append((idx[j], idx[j + len(needle) - 1] + 1))
+        start = j + len(needle)
+    return spans
+
+
+def search_phrase(
+    con: sqlite3.Connection,
+    query: str,
+    limit: int = 100,
+    translation_key: str | None = None,
+) -> dict:
+    """Recherche d'une **expression** (mot, segment ou phrase complète).
+
+    Cherche l'expression telle quelle (insensible à la casse et aux accents) à la
+    fois dans le **texte arabe** normalisé et dans les **traductions**
+    normalisées, et renvoie les versets où elle apparaît, avec le nombre
+    d'occurrences. C'est la brique commune des recherches multi-mots :
+    « oh notre seigneur », « fils d'adam », « يبني ادم ».
+    """
+    q = (query or "").strip()
+    if not q:
+        return {"query": q, "occurrences": 0, "verses": 0, "rows": []}
+
+    arabic = is_arabic(q)
+    if arabic:
+        summary = arabic_occurrence_summary(con, q, limit=limit)
+        return {
+            "query": q,
+            "lang": "ar",
+            "occurrences": summary["occurrences"],
+            "verses": summary["verses"],
+            "rows": [
+                {
+                    "sura": r["sura"],
+                    "aya": r["aya"],
+                    "text_uthmani": r["text_uthmani"],
+                    "hits": 1,
+                    "translation_keys": "",
+                }
+                for r in summary["rows"]
+            ],
+        }
+
+    rows = search_french(con, q, limit=limit, translation_key=translation_key)
+    return {
+        "query": q,
+        "lang": "fr",
+        "occurrences": sum(r["hits"] for r in rows),
+        "verses": len(rows),
+        "rows": rows,
+    }
 
 
 def french_matches_rows(
@@ -1065,6 +1165,29 @@ def surah_list(con: sqlite3.Connection) -> list:
         "FROM surahs ORDER BY number"
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def surah_audio_stats(con: sqlite3.Connection) -> list:
+    """Sourates + **durée d'écoute approximative** (estimation, pas une mesure).
+
+    La source audio (EveryAyah) ne fournit aucune durée : on l'estime à partir
+    du volume de texte (somme des longueurs du texte arabe simplifié de chaque
+    sourate) divisé par un rythme moyen de récitation
+    (``config.AUDIO_CHARS_PER_SEC``). Uniquement indicatif.
+    """
+    per_sec = float(getattr(config, "AUDIO_CHARS_PER_SEC", 3.6) or 3.6)
+    rows = con.execute(
+        "SELECT s.number, s.name_translit, s.name_ar, s.name_en, s.revelation, "
+        "s.verses_count, COALESCE(SUM(LENGTH(v.text_simple)), 0) AS chars "
+        "FROM surahs s LEFT JOIN verses v ON v.sura = s.number "
+        "GROUP BY s.number ORDER BY s.number"
+    ).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["seconds"] = round((d.get("chars") or 0) / per_sec, 1)
+        out.append(d)
+    return out
 
 
 def surah_verses(

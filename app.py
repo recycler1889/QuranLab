@@ -9,6 +9,7 @@ import sqlite3
 import streamlit as st
 
 from quranlab import bookmarks, cache, config, db, i18n, iqra_ui, learn_ui, onboarding, pwa, search, ui
+from quranlab import audio_ui
 from quranlab import theme as theme_mod
 from quranlab.buckwalter import buckwalter_to_arabic
 
@@ -187,9 +188,10 @@ with st.sidebar:
     )
 
 
-tab_read, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, tab_cross, tab_bm, tab_learn = st.tabs(
+tab_read, tab_audio, tab_root, tab_search, tab_verse, tab_theme, tab_controv, tab_concord, tab_cross, tab_bm, tab_learn = st.tabs(
     [
         t("app.tab.read"),
+        t("app.tab.audio"),
         t("app.tab.root"),
         t("app.tab.search"),
         t("app.tab.verse"),
@@ -315,6 +317,11 @@ with tab_read:
         ui.scroll_to(_scroll)
 
 
+# ------------------------------------------------------- Écouter le Coran
+with tab_audio:
+    audio_ui.render_tab(con)
+
+
 # --------------------------------------------------- Rendu partagé : racine
 with tab_root:
     st.subheader(t("app.root_title"))
@@ -408,6 +415,7 @@ with tab_search:
                     n=r["hits"],
                     keys=r["translation_keys"],
                 ),
+                highlight=q,
             )
 
     elif q:
@@ -426,6 +434,7 @@ with tab_search:
                 r["sura"], r["aya"],
                 data.get("text_uthmani", r.get("text_uthmani", "")),
                 data.get("translations", []),
+                highlight=q,
             )
 
 # ------------------------------------------------------------------- Verset

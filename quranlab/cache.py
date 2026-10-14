@@ -44,6 +44,12 @@ def surah_list_cached(con: sqlite3.Connection) -> list:
     return search.surah_list(con)
 
 
+@st.cache_data(show_spinner=False, hash_funcs={sqlite3.Connection: _connection_hash})
+def surah_audio_stats_cached(con: sqlite3.Connection) -> list:
+    from . import search
+    return search.surah_audio_stats(con)
+
+
 # --- Recherches (rejouées à chaque rendu Streamlit sans cache) -------------
 @st.cache_data(show_spinner=False, hash_funcs={sqlite3.Connection: _connection_hash})
 def search_arabic_cached(con: sqlite3.Connection, query: str,

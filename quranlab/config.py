@@ -60,6 +60,20 @@ TRANSLATIONS = [
     },
 ]
 
+# Socle de traductions de RÉFÉRENCE affiché par défaut dans chaque vue de verset.
+# Toutes les traductions retenues dans le catalogue sont **littérales /
+# lexicales** : aucune n'est un tafsir ni ne porte d'appareil d'exégèse ou de
+# commentaire théologique post-coranique. Les traductions du catalogue qui ne
+# figurent pas ici restent accessibles via le bouton « Afficher d'autres
+# traductions ». Ordonné : c'est aussi l'ordre de comparaison de la synthèse.
+REFERENCE_TRANSLATIONS = [
+    "fr.hamidullah",
+    "fr.rashidmaash",
+    "fr.montada",
+    "en.sahih",
+    "en.pickthall",
+]
+
 # Locale BCP-47 par langue, utilisée par la synthèse vocale du navigateur.
 TTS_LOCALES = {"fr": "fr-FR", "en": "en-US", "ar": "ar-SA"}
 
@@ -174,6 +188,13 @@ RECITERS = [
 # URL audio d'un verset pour une édition (dossier) de récitateur donné.
 def audio_url(edition: str, sura: int, aya: int) -> str:
     return f"{AUDIO_BASE}/{edition}/{int(sura):03d}{int(aya):03d}.mp3"
+
+
+# Rythme de récitation moyen (caractères arabes normalisés par seconde) servant
+# à ESTIMER la durée d'écoute d'une sourate — purement indicatif (aucune
+# durée n'est fournie par la source audio everyayah). Valeur volontairement
+# prudente (tajwīd / pauses) : l'estimation reste dans le bon ordre de grandeur.
+AUDIO_CHARS_PER_SEC = 3.6
 
 
 def reciter_edition(key: str | None) -> str:

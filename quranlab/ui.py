@@ -17,7 +17,7 @@ from urllib.parse import quote
 
 import streamlit as st
 
-from . import bookmarks, cache, config, db, i18n, search
+from . import bookmarks, cache, config, db, i18n, search, synthesis
 from . import theme as theme_mod
 from . import tts as tts_mod
 from .buckwalter import is_arabic
@@ -118,6 +118,29 @@ def page_header(title: str, subtitle: str) -> None:
         "</div>",
         unsafe_allow_html=True,
     )
+
+
+def highlight_html(text: str, query: str | None, arabic: bool | None = None) -> str:
+    """Texte échappé avec l'expression recherchée mise en surbrillance.
+
+    La recherche est insensible à la casse, aux accents et aux diacritiques
+    (``search.match_spans``) ; les segments trouvés sont encadrés par
+    ``<mark class='ql-hit'>``, habillé par la charte courante.
+    """
+    text = text or ""
+    spans = search.match_spans(text, query or "", arabic=arabic)
+    if not spans:
+        return html.escape(text)
+    out = []
+    pos = 0
+    for start, end in spans:
+        out.append(html.escape(text[pos:start]))
+        out.append(
+            "<mark class='ql-hit'>" + html.escape(text[start:end]) + "</mark>"
+        )
+        pos = end
+    out.append(html.escape(text[pos:]))
+    return "".join(out)
 
 
 def html_table(rows: list, columns: list | None = None) -> None:
@@ -1063,6 +1086,73 @@ def _word_link(sura: int, aya: int, word_index: int, form: str) -> str:
     )
 
 
+def _render_synthesis(synth: dict) -> None:
+    """Encadré de synthèse convergente (éléments lexicaux qui se recoupent).
+
+    Purement analytique : on affiche les unités lexicales présentes dans la
+    majorité des traductions comparées, avec leur fréquence documentaire. Aucune
+    conclusion doctrinale n'est produite (le Coran reste commenté par lui-même).
+    """
+    terms = synth.get("terms") or []
+    if not terms:
+        return
+    n = synth["n"]
+    chips = "".join(
+        "<span class='ql-synth-term'>"
+        f"{html.escape(str(d['term']))}"
+        f"<span class='ql-synth-n'>{d['docs']}/{n}</span></span>"
+        for d in terms
+    )
+    st.markdown(
+        "<div class='ql-synth'>"
+        f"<div class='ql-synth-head'>{html.escape(t('ui.synth_title'))}</div>"
+        f"<div class='ql-synth-note'>{html.escape(t('ui.synth_note', n=n))}</div>"
+        f"<div class='ql-synth-terms'>{chips}</div>"
+        f"<div class='ql-synth-foot'>{html.escape(t('ui.synth_foot'))}</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _render_translations(
+    translations: list,
+    query: str | None = None,
+    seed: str = "",
+) -> None:
+    """Affiche les traductions d'un verset : socle de référence + extension.
+
+    Par défaut, le **socle de traductions de référence** de la langue active
+    (littérales, sans exégèse) ; un bouton discret révèle les autres traductions
+    du catalogue. Une **synthèse convergente** (voir ``synthesis``) est affichée
+    sous les traductions : elle met en avant les éléments lexicaux qui se
+    recoupent d'une traduction à l'autre.
+    """
+    lg = i18n.lang()
+    ext_key = f"ql_trans_ext_{seed}"
+    extended = bool(st.session_state.get(ext_key))
+    shown, others = synthesis.split_translations(translations, lg, extended)
+    if not shown:
+        st.caption(t("ui.no_translation"))
+        return
+    for tr in shown:
+        text = tr.get("text", "")
+        body = highlight_html(text, query) if query else html.escape(text or "")
+        st.markdown(
+            f"**{html.escape(str(tr.get('author', '')))}** — {body}",
+            unsafe_allow_html=True,
+        )
+    if others and not extended:
+        if st.button(
+            t("ui.show_more_translations", n=len(others)),
+            key=unique_key(f"tmore_{seed}"),
+        ):
+            st.session_state[ext_key] = True
+            st.rerun()
+    synth = synthesis.synthesize(shown, lg)
+    if synth:
+        _render_synthesis(synth)
+
+
 def render_verse(
     sura: int,
     aya: int,
@@ -1078,6 +1168,7 @@ def render_verse(
     con=None,
     anchor: str | None = None,
     target: bool = False,
+    highlight: str | None = None,
 ) -> None:
     """Affiche un verset : référence (avec nom de sourate), texte arabe uthmani
     puis, systématiquement, les traductions empilées.
@@ -1129,6 +1220,8 @@ def render_verse(
             _word_link(sura, aya, t["word_index"], t["form_arabic"])
             for t in tokens
         )
+    elif highlight:
+        body = highlight_html(text_uthmani, highlight, arabic=is_arabic(highlight))
     else:
         body = html.escape(text_uthmani)
     body_class = "ql-verse-ar ql-target" if target else "ql-verse-ar"
@@ -1141,10 +1234,7 @@ def render_verse(
         verse_media(sura, aya, trans)
     if bookmark:
         bookmark_button(sura, aya)
-    if not trans:
-        st.caption(t("ui.no_translation"))
-    for tr in trans:
-        st.markdown(f"**{tr['author']}** — {tr['text']}")
+    _render_translations(translations, query=highlight, seed=f"{sura}_{aya}")
     if caption:
         st.caption(caption)
     st.divider()
@@ -1306,8 +1396,12 @@ def counter_label(summary: dict) -> str:
     )
 
 
-def _render_rows(con, rows) -> None:
-    """Affiche des versets (lignes brutes) avec leurs traductions."""
+def _render_rows(con, rows, highlight: str | None = None) -> None:
+    """Affiche des versets (lignes brutes) avec leurs traductions.
+
+    ``highlight`` met l'expression recherchée en surbrillance dans le texte
+    arabe et les traductions.
+    """
     if not rows:
         return
     refs = tuple((r["sura"], r["aya"]) for r in rows)
@@ -1318,6 +1412,7 @@ def _render_rows(con, rows) -> None:
             r["sura"], r["aya"],
             data.get("text_uthmani", r.get("text_uthmani", "")),
             data.get("translations", []),
+            highlight=highlight,
         )
 
 
@@ -1438,7 +1533,7 @@ def universal_search(
     # --- Versets contextualisés -------------------------------------------
     if summary["kind"] == "text":
         # Mot arabe : occurrences textuelles directes.
-        _render_rows(con, summary["ar_rows"])
+        _render_rows(con, summary["ar_rows"], highlight=q)
         if summary["verses"] > len(summary["ar_rows"]):
             st.caption(
                 t(
@@ -1481,7 +1576,7 @@ def universal_search(
                 n=summary["fr_verses"],
             )
         ):
-            _render_rows(con, summary["fr_rows"])
+            _render_rows(con, summary["fr_rows"], highlight=q)
 
     st.divider()
 

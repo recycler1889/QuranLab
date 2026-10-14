@@ -686,6 +686,80 @@ table.ql tr:nth-child(even) td {{ background-color: {zebra}; }}
     padding: .35rem .75rem;
 }}
 
+/* --- Surbrillance de recherche (onglet Recherche) ------------------------
+   Le terme recherché est encadré par <mark class="ql-hit">. Filet doré sur
+   fond émeraude pâle : lisible dans les trois palettes, sans masquer le texte
+   arabe (qui garde sa propre couleur). */
+mark.ql-hit {{
+    background: var(--ql-gold-soft);
+    color: inherit;
+    padding: 0 .12em;
+    border-radius: 4px;
+    box-shadow: inset 0 -2px 0 var(--ql-gold);
+    font-weight: 600;
+}}
+
+/* --- Synthèse convergente (encadré sous les traductions) -----------------
+   Charte vert émeraude + or : liseré doré, fond dégradé émeraude, en-tête en
+   petites capitales dorées. Les « unités lexicales convergentes » sont des
+   pastilles ; le compteur (n/N) indique dans combien de traductions le mot
+   apparaît. Purement analytique — aucune conclusion doctrinale. */
+.ql-synth {{
+    margin: .55rem 0 .2rem 0;
+    padding: .8rem .95rem .7rem .95rem;
+    border: 1px solid var(--ql-gold);
+    border-left: 4px solid var(--ql-accent);
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--ql-accent-soft), transparent 70%);
+    box-shadow: 0 1px 0 var(--ql-gold-soft) inset;
+}}
+.ql-synth-head {{
+    font-family: var(--ql-font);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ql-accent);
+    margin-bottom: .15rem;
+}}
+.ql-synth-note {{
+    font-size: .74rem;
+    color: var(--ql-fg2);
+    margin-bottom: .5rem;
+}}
+.ql-synth-terms {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: .34rem;
+}}
+.ql-synth-term {{
+    display: inline-flex;
+    align-items: center;
+    gap: .32rem;
+    padding: .18rem .5rem .18rem .6rem;
+    border: 1px solid var(--ql-gold);
+    border-radius: 999px;
+    background: var(--ql-bg2);
+    color: var(--ql-fg);
+    font-size: .82rem;
+    line-height: 1.4;
+}}
+.ql-synth-n {{
+    font-size: .66rem;
+    font-weight: 700;
+    color: var(--ql-bg);
+    background: var(--ql-accent);
+    border-radius: 999px;
+    padding: .02rem .34rem;
+}}
+.ql-synth-foot {{
+    margin-top: .5rem;
+    font-size: .68rem;
+    color: var(--ql-fg2);
+    border-top: 1px solid var(--ql-border);
+    padding-top: .35rem;
+}}
+
 /* --- Navigation rapide flottante (haut / bas de page) --------------------
    Widget discret ancré en bas à droite : deux boutons empilés — remonter (↑)
    et descendre (↓) — en émeraude rehaussée d'un filet doré. Il suit la palette
