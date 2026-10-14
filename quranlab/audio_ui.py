@@ -99,6 +99,7 @@ def _player_html(
     gold = pal['gold']
     fg = pal['fg']
     fg2 = pal['fg2']
+    fg3 = pal['fg']  # Use darker fg for better contrast in light theme
 
     comp = f"""
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -125,13 +126,13 @@ def _player_html(
   .surah-badge {{
     display:inline-flex; align-items:center; gap:.4rem;
     padding:.25rem .6rem;
-    background: linear-gradient(135deg, {accent} 0%, #0a4d3a 100%);
+    background: linear-gradient(135deg, {accent} 0%, #1a6b4a 100%);
     border-radius: 999px; font-weight:600; font-size:.72rem;
-    color: {pal['bg']}; box-shadow: 0 2px 8px -2px {accent};
+    color: #FDF6E3; box-shadow: 0 2px 8px -2px {accent};
     white-space: nowrap;
   }}
-  .surah-meta {{ font-size:.7rem; color:{fg2}; line-height:1.3; flex:1; min-width:180px; }}
-  .time-lapse {{ font-family:ui-monospace,monospace; font-size:.75rem; font-variant-numeric:tabular-nums; color:{gold}; background:rgba(169,138,69,0.12); padding:.15rem .5rem; border-radius:999px; border:1px solid rgba(169,138,69,0.25); }}
+  .surah-meta {{ font-size:.7rem; color:{fg}; line-height:1.3; flex:1; min-width:180px; }}
+  .time-lapse {{ font-family:ui-monospace,monospace; font-size:.75rem; font-variant-numeric:tabular-nums; color:{fg}; background:rgba(12,92,70,0.18); padding:.15rem .5rem; border-radius:999px; border:1px solid rgba(12,92,70,0.35); }}
   .mode-pills {{ display:flex; gap:.35rem; }}
   .mode-pill {{
     padding:.2rem .55rem;
@@ -168,7 +169,7 @@ def _player_html(
     border-color: {accent}; color: {pal['bg']};
   }}
   .btn.primary:hover {{ box-shadow: 0 4px 14px -4px {accent}; }}
-  .time {{ font-family:ui-monospace,monospace; font-size:.7rem; font-variant-numeric:tabular-nums; color:{fg2}; min-width:42px; text-align:center; }}
+  .time {{ font-family:ui-monospace,monospace; font-size:.7rem; font-variant-numeric:tabular-nums; color:{fg}; min-width:42px; text-align:center; }}
   .progress-wrap {{ flex:1; min-width:140px; height:5px; cursor:pointer;
     background: rgba(169,138,69,0.15); border-radius: 999px; overflow:hidden; margin:0 .4rem; position:relative; }}
   .progress-bar {{
@@ -191,14 +192,12 @@ def _player_html(
         <span class="mode-pill {'active' if mode=='bilingual' else ''}" data-mode="bilingual">{t("audio.mode_bilingual")}</span>
       </div>
     </div>
-    <!-- Ligne 2 : Contrôles complets -->
+    <!-- Ligne 2 : Contrôles complets (disposition symétrique Windows Media Player) -->
     <div class="controls">
-      <div class="nav-surah">
-        <button class="btn nav-btn" id="prev_sura" title="{t('audio.prev_surah')}">&#171;</button>
-        <button class="btn nav-btn" id="next_sura" title="{t('audio.next_surah')}">&#187;</button>
-      </div>
       <button class="btn" id="rew10" title="{t('audio.rewind_10')}">-10s</button>
+      <button class="btn nav-btn" id="prev_sura" title="{t('audio.prev_surah')}">&#171;</button>
       <button class="btn primary" id="pp">&#9654;</button>
+      <button class="btn nav-btn" id="next_sura" title="{t('audio.next_surah')}">&#187;</button>
       <button class="btn" id="fwd10" title="{t('audio.forward_10')}">+10s</button>
       <span class="time" id="cur">00:00</span>
       <div class="progress-wrap" id="prog"><div class="progress-bar" id="pbar" style="width:0%"></div></div>

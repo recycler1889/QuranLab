@@ -1639,7 +1639,7 @@ mark.ql-hit {{
     border-radius: 999px;
     font-weight: 600;
     font-size: .85rem;
-    color: var(--ql-bg);
+    color: #FDF6E3;
     box-shadow: 0 2px 10px -2px var(--ql-accent);
 }}
 .ql-audio-player .ql-mode-pills {{
