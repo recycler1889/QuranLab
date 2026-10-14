@@ -376,7 +376,7 @@ _FR = {
     "ui.scroll_top": "Remonter en haut",
     "ui.scroll_bottom": "Descendre en bas",
     "app.tab.read": "Lire le Coran Iqra",
-    "app.tab.audio": "Écouter",
+    "app.tab.audio": "Écoute du Coran",
     "app.read_title": "Lire le Coran Iqra",
     "app.read_caption": (
         "Sourate par sourate, verset par verset — texte arabe, traductions et "
@@ -994,7 +994,7 @@ _EN = {
     "ui.scroll_top": "Back to top",
     "ui.scroll_bottom": "Go to bottom",
     "app.tab.read": "Read the Quran Iqra",
-    "app.tab.audio": "Listen",
+    "app.tab.audio": "Qur'an Listening",
     "app.read_title": "Read the Quran Iqra",
     "app.read_caption": (
         "Surah by surah, verse by verse — Arabic text, translations and "

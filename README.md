@@ -28,11 +28,13 @@ quran-lab/
 │  ├─ download.py             # téléchargement des sources
 │  ├─ build.py                # schéma + construction de la base SQLite
 │  ├─ db.py                   # connexion SQLite
-│  ├─ search.py               # moteur : texte, racines, versets, thèmes, référence
+│  ├─ search.py               # moteur : texte, expressions, racines, versets, thèmes, référence
+│  ├─ synthesis.py            # multi-traductions littérales + synthèse convergente
 │  ├─ ui.py                   # vues partagées : versets, tableaux, recherche universelle
 │  ├─ theme.py                # palettes Clair / Intermédiaire / Sombre
 │  ├─ i18n.py                 # traductions FR/EN (parité des clés)
 │  ├─ cache.py                # wrappers st.cache_data (racines, mots, sourates)
+│  ├─ audio_ui.py             # onglet « Écouter » (sourates, durées, récitation + traduction)
 │  ├─ onboarding.py           # guide de démarrage (modale latérale)
 │  ├─ bookmarks.py            # favoris (data/bookmarks.json)
 │  ├─ learn_ui.py             # onglet « Apprendre » (tableau de bord SRS)
@@ -53,7 +55,7 @@ quran-lab/
 ├─ static/                    # ressources servies (manifeste PWA + icônes PNG)
 │  ├─ manifest.webmanifest
 │  └─ icons/                  # 192 / 512 / maskable / apple-touch-icon
-└─ tests/                     # 18 fichiers unittest : buckwalter, search, i18n,
+└─ tests/                     # 21 fichiers unittest : buckwalter, search, synthèse,
                               # thème, TTS, iqra, asma, onboarding, SRS, favoris, PWA…
 ```
 
@@ -193,7 +195,7 @@ les formes de la racine y sont listées.
 ### 7.1 Barre de recherche universelle bilingue (dans chaque onglet)
 
 Chaque onglet (*Racine*, *Recherche*, *Verset comparé*, *Thèmes*, *Idées reçues*,
-*Concordance*) ouvre sur une **barre de recherche universelle**
+*Concordance*, *Écouter*) ouvre sur une **barre de recherche universelle**
 (`quranlab/ui.py`, `ui.universal_search()`) qui accepte **indifféremment le
 français ou l'arabe**. La langue est détectée automatiquement
 (`ui.occurrence_summary()`, via `buckwalter.is_arabic`) :
@@ -221,6 +223,13 @@ sans passer par la recherche textuelle (`search.parse_ref()`, regex
 `^\s*(\d{1,3})\s*[:./\s]\s*(\d{1,3})\s*$`). Une saisie qui n'est pas une
 référence valide (hors bornes, verset inexistant… ou simple texte) retombe
 automatiquement sur la recherche classique.
+
+**Recherche d'expressions et surbrillance** : une expression multi-mots (ex.
+« les cieux et la terre », « ô notre seigneur », « رحمة الله ») est
+recherchée telle quelle (**insensible aux accents et diacritiques**) via
+`search.search_phrase()`. L'expression trouvée est **mise en surbrillance** dans
+le texte arabe et les traductions grâce à `ui.highlight_html()` (`<mark
+class='ql-hit'>`), stylée par la charte émeraude/or.
 
 Les composants de vue (`html_table`, `render_verse`, `render_verses`,
 `render_root_results`, `universal_search`, `verse_picker`) sont **mutualisés dans
