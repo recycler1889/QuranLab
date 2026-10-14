@@ -528,7 +528,7 @@ def css(name: str) -> str:
     sheen = _rgba(p["gold"], 0.20)
     card_edge = _rgba(p["fg"], 0.06)
     gold_glow = _rgba(p["gold"], 0.28)
-    return f"""
+    css_content = f"""
     /* Palette QuranLab : composants internes (bandeau, cartes, tableaux) */
     --ql-bg: {p['bg']};
     --ql-bg2: {p['bg2']};
@@ -1830,3 +1830,4 @@ mark.ql-hit {{
 {_illuminated_css()}
 </style>
 """
+    return f"<style>{css_content}</style>"
