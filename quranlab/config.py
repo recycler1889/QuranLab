@@ -190,6 +190,22 @@ def audio_url(edition: str, sura: int, aya: int) -> str:
     return f"{AUDIO_BASE}/{edition}/{int(sura):03d}{int(aya):03d}.mp3"
 
 
+# Configuration audio français (optionnel — à définir si une source native existe).
+# Exemple: FRENCH_AUDIO_BASE = "https://example.com/audio/french"
+#          FRENCH_AUDIO_EDITION = "french_translation"
+# Si non défini, le mode bilingue sera masqué.
+FRENCH_AUDIO_BASE = ""
+FRENCH_AUDIO_EDITION = ""
+
+def french_audio_url(sura: int, aya: int) -> str:
+    """URL audio français d'un verset (si source configurée)."""
+    base = FRENCH_AUDIO_BASE
+    edition = FRENCH_AUDIO_EDITION
+    if not base or not edition:
+        return ""
+    return f"{base}/{edition}/{int(sura):03d}{int(aya):03d}.mp3"
+
+
 # Rythme de récitation moyen (caractères arabes normalisés par seconde) servant
 # à ESTIMER la durée d'écoute d'une sourate — purement indicatif (aucune
 # durée n'est fournie par la source audio everyayah). Valeur volontairement

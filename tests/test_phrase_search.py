@@ -133,12 +133,29 @@ def _make_audio_db() -> sqlite3.Connection:
             number INTEGER PRIMARY KEY, name_translit TEXT, name_ar TEXT,
             name_en TEXT, revelation TEXT, verses_count INTEGER);
         CREATE TABLE verses (sura INTEGER, aya INTEGER, text_simple TEXT);
+        CREATE TABLE translations (
+            id INTEGER PRIMARY KEY, key TEXT, author TEXT, language TEXT);
+        CREATE TABLE translation_verses (
+            sura INTEGER, aya INTEGER, translation_id INTEGER, text TEXT);
         """
     )
     con.execute("INSERT INTO surahs VALUES (1,'Al-Faatiha','الفاتحة','The Opening','Meccan',2)")
     con.execute("INSERT INTO surahs VALUES (2,'Al-Baqara','البقرة','The Cow','Medinan',1)")
     for sura, aya, txt in [(1, 1, "بسم الله"), (1, 2, "الحمد لله"), (2, 1, "الم")]:
         con.execute("INSERT INTO verses VALUES (?,?,?)", (sura, aya, txt))
+    # Insert French reference translations
+    con.execute("INSERT INTO translations VALUES (1, 'fr.hamidullah', 'Hamidullah', 'fr')")
+    con.execute("INSERT INTO translations VALUES (2, 'fr.rashidmaash', 'Maash', 'fr')")
+    con.execute("INSERT INTO translations VALUES (3, 'fr.montada', 'Montada', 'fr')")
+    con.execute("INSERT INTO translations VALUES (4, 'en.sahih', 'Sahih', 'en')")
+    # Translation verses for surah 1
+    con.execute("INSERT INTO translation_verses VALUES (1, 1, 1, 'Au nom d''Allah')")
+    con.execute("INSERT INTO translation_verses VALUES (1, 2, 1, 'Louange à Allah')")
+    con.execute("INSERT INTO translation_verses VALUES (1, 1, 2, 'Au nom de Dieu')")
+    con.execute("INSERT INTO translation_verses VALUES (1, 2, 2, 'La louange est à Dieu')")
+    # Translation verses for surah 2
+    con.execute("INSERT INTO translation_verses VALUES (2, 1, 1, 'Alif Lam Mim')")
+    con.execute("INSERT INTO translation_verses VALUES (2, 1, 2, 'A. L. M.')")
     con.commit()
     return con
 

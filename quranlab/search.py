@@ -1168,24 +1168,41 @@ def surah_list(con: sqlite3.Connection) -> list:
 
 
 def surah_audio_stats(con: sqlite3.Connection) -> list:
-    """Sourates + **durée d'écoute approximative** (estimation, pas une mesure).
+    """Sourates + **durées d'écoute approximatives** (estimation, pas une mesure).
 
     La source audio (EveryAyah) ne fournit aucune durée : on l'estime à partir
-    du volume de texte (somme des longueurs du texte arabe simplifié de chaque
-    sourate) divisé par un rythme moyen de récitation
-    (``config.AUDIO_CHARS_PER_SEC``). Uniquement indicatif.
+    du volume de texte divisé par un rythme moyen de récitation
+    (``config.AUDIO_CHARS_PER_SEC``).
+
+    Deux durées sont calculées :
+    - ``seconds_ar`` : récitation arabe seule (texte arabe simplifié)
+    - ``seconds_bi`` : mode bilingue (arabe + traduction française estimée)
+      Le temps français est estimé à partir du texte français des traductions
+      de référence (même rythme ``AUDIO_CHARS_PER_SEC`` par défaut).
     """
     per_sec = float(getattr(config, "AUDIO_CHARS_PER_SEC", 3.6) or 3.6)
     rows = con.execute(
         "SELECT s.number, s.name_translit, s.name_ar, s.name_en, s.revelation, "
-        "s.verses_count, COALESCE(SUM(LENGTH(v.text_simple)), 0) AS chars "
-        "FROM surahs s LEFT JOIN verses v ON v.sura = s.number "
+        "s.verses_count, "
+        "COALESCE(SUM(LENGTH(v.text_simple)), 0) AS chars_ar, "
+        "COALESCE(SUM(LENGTH(tv.text)), 0) AS chars_fr "
+        "FROM surahs s "
+        "LEFT JOIN verses v ON v.sura = s.number "
+        "LEFT JOIN translation_verses tv ON tv.sura = s.number "
+        "LEFT JOIN translations t ON t.id = tv.translation_id "
+        "WHERE t.key IN ('fr.hamidullah','fr.rashidmaash','fr.montada') "
         "GROUP BY s.number ORDER BY s.number"
     ).fetchall()
     out = []
     for r in rows:
         d = dict(r)
-        d["seconds"] = round((d.get("chars") or 0) / per_sec, 1)
+        chars_ar = d.get("chars_ar") or 0
+        chars_fr = d.get("chars_fr") or 0
+        d["seconds_ar"] = round(chars_ar / per_sec, 1)
+        # Bilingue = arabe + français (estimation)
+        d["seconds_bi"] = round((chars_ar + chars_fr) / per_sec, 1)
+        # Compatibilité : seconds = seconds_ar
+        d["seconds"] = d["seconds_ar"]
         out.append(d)
     return out
 

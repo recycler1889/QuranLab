@@ -1047,13 +1047,11 @@ def _scroll_nav_html() -> str:
 def scroll_nav() -> None:
     """Affiche le widget flottant de navigation rapide (haut / bas de page).
 
-    Appelé **une fois** par exécution (intégration globale dans ``app.py``). Le
-    composant est un iframe de hauteur nulle : tout se passe dans le document
-    parent (voir ``_scroll_nav_html``). Échec silencieux si l'accès parent est
-    indisponible — l'absence du widget ne doit jamais bloquer l'application.
+    Utilise ``st.components.v1.html`` pour injecter le script dans le document
+    parent. Échec silencieux si l'accès parent est indisponible.
     """
     try:
-        st.iframe(_scroll_nav_html(), height=0, width=0)
+        st.components.v1.html(_scroll_nav_html(), height=0, width=0)
     except Exception:
         pass
 

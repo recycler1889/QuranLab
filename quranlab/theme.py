@@ -1,87 +1,88 @@
-"""Gestionnaire de thèmes visuels (Clair / Intermédiaire / Sombre).
+# -*- coding: utf-8 -*-
+"""Gestionnaire de themes visuels (Clair / Intermediaire / Sombre).
 
-Identité visuelle **vert émeraude & or**, inspirée du patrimoine de l'art
-islamique (géométrie sacrée, enluminures). Pour chaque palette, une feuille de
-style est injectée via ``st.markdown(..., unsafe_allow_html=True)``. Les
-couleurs sont exposées en variables CSS (``--ql-*``) afin d'habiller
-uniformément les composants Streamlit et les blocs HTML internes (``table.ql``,
+Identite visuelle **vert emeraude & or**, inspiree du patrimoine de l'art
+islamique (geometrie sacree, enluminures). Pour chaque palette, une feuille de
+style est injectee via ``st.markdown(..., unsafe_allow_html=True)``. Les
+couleurs sont exposees en variables CSS (``--ql-*``) afin d'habiller
+uniformement les composants Streamlit et les blocs HTML internes (``table.ql``,
 ``.ql-card``, ``.ql-banner``).
 
-Repères de conception :
+Reperes de conception :
 
-* **Clair** : fond ivoire / « vert-de-gris » très clair (jamais blanc pur),
-  chaleureux et reposant, cartes à bordures épurées relevées d'un filet doré ;
-* **Intermédiaire** : vert sauge feutré sur fond sombre désaturé, pour les
+* **Clair** : fond ivoire / << vert-de-gris >> tres clair (jamais blanc pur),
+  chaleureux et reposant, cartes a bordures epurees relevees d'un filet dore ;
+* **Intermediaire** : vert sauge feutre sur fond sombre desature, pour les
   longues sessions (confort oculaire) ;
-* **Sombre** : vert forêt profond, **mat et désaturé**, jamais éblouissant,
+* **Sombre** : vert foret profond, **mat et desature**, jamais eblouissant,
   avec un contraste franc sur le texte clair.
 
-Des **motifs géométriques** subtils (étoile à huit branches / zellige) ornent
-les bannières et cartes ; ils restent discrets (opacité très basse) pour
-préserver la lisibilité et la rigueur de l'étude.
+Des **motifs geometriques** subtils (etoile a huit branches / zellige) ornent
+les bannieres et cartes ; ils restent discrets (opacite tres basse) pour
+preserver la lisibilite et la rigueur de l'etude.
 """
 
 from urllib.parse import quote
 
-# Chaque palette définit un jeu cohérent de variables. Identité commune :
-# vert émeraude (accent) + or/champagne (filets, ornements).
+# Chaque palette definit un jeu coherent de variables. Identite commune :
+# vert emeraude (accent) + or/champagne (filets, ornements).
 PALETTES = {
     "Clair": {
         "label": "Clair",
-        "bg": "#F2F1E8",       # ivoire / vert-de-gris très clair (jamais blanc pur)
-        "bg2": "#E7E8DB",      # surfaces secondaires (barre latérale, cartes)
+        "bg": "#F2F1E8",       # ivoire / vert-de-gris tres clair (jamais blanc pur)
+        "bg2": "#E7E8DB",      # surfaces secondaires (barre laterale, cartes)
         "field": "#FBFBF5",    # champs de saisie (ivoire clair)
         "fg": "#20302A",       # texte vert-anthracite profond
-        "fg2": "#5C6B62",      # texte secondaire (sauge grisée)
-        "border": "#DED9C4",   # bordure sable/champagne, épurée
-        "accent": "#0C5C46",   # émeraude profond
+        "fg2": "#5C6B62",      # texte secondaire (sauge grisee)
+        "border": "#DED9C4",   # bordure sable/champagne, epuree
+        "accent": "#0C5C46",   # emeraude profond
         "gold": "#A98A45",     # or doux / champagne
-        "pattern": "#A98A45",  # ornements dorés
+        "pattern": "#A98A45",  # ornements dores
         "pattern_opacity": "0.06",
     },
     "Intermediaire": {
-        "label": "Intermédiaire (confort oculaire)",
-        "bg": "#1C2622",       # vert-ardoise feutré
+        "label": "Intermediaire (confort oculaire)",
+        "bg": "#1C2622",       # vert-ardoise feutre
         "bg2": "#243029",
         "field": "#2A3630",
         "fg": "#EFEDE3",       # ivoire chaud
         "fg2": "#BFC6BA",      # sauge claire
         "border": "#39463F",
-        "accent": "#6FA98C",   # émeraude sauge désaturé
+        "accent": "#6FA98C",   # emeraude sauge desature
         "gold": "#C2A567",     # champagne
         "pattern": "#C2A567",
         "pattern_opacity": "0.07",
     },
     "Sombre": {
         "label": "Sombre",
-        "bg": "#101714",       # vert forêt très profond (pas de noir pur)
+        "bg": "#101714",       # vert foret tres profond (pas de noir pur)
         "bg2": "#161F1A",
         "field": "#1B2620",
         "fg": "#EAEAE2",       # blanc doux
         "fg2": "#9DAA9F",
         "border": "#28362E",
-        "accent": "#5E8F72",   # vert forêt mat, désaturé et feutré
+        "accent": "#5E8F72",   # vert foret mat, desature et feutre
         "gold": "#BFA268",     # or discret
         "pattern": "#BFA268",
         "pattern_opacity": "0.09",
     },
 }
 
-# Ordre d'affichage dans le sélecteur.
+# Ordre d'affichage dans le selecteur.
 ORDER = ["Clair", "Intermediaire", "Sombre"]
 
 DEFAULT = "Clair"
 
-# Pile de polices latines du corps de texte (repli système, aucune dépendance).
+# Pile de polices latines du corps de texte (repli systeme, aucune dependance).
 FONT_STACK = (
     '"Inter", "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif'
 )
-# Pile de polices des titres : serif classique et élégant (repli système).
+# Pile de polices des titres : serif classique et elegant (repli systeme).
 HEADING_STACK = (
     '"Cormorant Garamond", "Palatino Linotype", "Book Antiqua", Palatino, '
     'Georgia, "Iowan Old Style", "Times New Roman", serif'
 )
-# Pile de polices arabes (si installées localement, sinon repli système).
+# Pile de polices arabes (si installees localement, sinon repli systeme).
 ARABIC_STACK = (
     '"Amiri", "Scheherazade New", "Traditional Arabic", "Noto Naskh Arabic", '
     '"Times New Roman", serif'
@@ -89,24 +90,24 @@ ARABIC_STACK = (
 
 
 def _mosaic_svg(color: str, opacity: str) -> str:
-    """Motif de mosaïque (étoile à huit branches + quartiers) en data-URI SVG.
+    """Motif de mosaique (etoile a huit branches + quartiers) en data-URI SVG.
 
-    L'étoile est obtenue par deux carrés superposés dont l'un pivoté de 45° ;
-    un quadrillage fin et des demi-étoiles de coin assurent la continuité du
-    pavage. Le SVG est encodé en data-URI pour être posé en ``background-image``.
+    L'etoile est obtenue par deux carres superposes dont l'un pivote de 45deg ;
+    un quadrillage fin et des demi-etoiles de coin assurent la continuite du
+    pavage. Le SVG est encode en data-URI pour etre pose en ``background-image``.
     """
     svg = (
         "<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' "
         "viewBox='0 0 128 128'>"
         f"<g fill='none' stroke='{color}' stroke-width='0.9' "
         f"opacity='{opacity}'>"
-        # étoile à huit branches centrée sur la tuile
+        # etoile a huit branches centree sur la tuile
         "<rect x='32' y='32' width='64' height='64'/>"
         "<rect x='32' y='32' width='64' height='64' "
         "transform='rotate(45 64 64)'/>"
         "<circle cx='64' cy='64' r='12'/>"
         "<circle cx='64' cy='64' r='4.5'/>"
-        # demi-étoiles aux coins : continuité du pavage
+        # demi-etoiles aux coins : continuite du pavage
         "<rect x='-32' y='-32' width='64' height='64'/>"
         "<rect x='-32' y='-32' width='64' height='64' "
         "transform='rotate(45 0 0)'/>"
@@ -125,7 +126,7 @@ def _mosaic_svg(color: str, opacity: str) -> str:
 
 
 def _ornament_svg(color: str) -> str:
-    """Fleuron géométrique (étoile à huit branches, façon zellige) pour titres."""
+    """Fleuron geometrique (etoile a huit branches, facon zellige) pour titres."""
     svg = (
         "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='16' "
         "viewBox='0 0 120 16'>"
@@ -141,14 +142,381 @@ def _ornament_svg(color: str) -> str:
 
 
 def _rgba(hex_color: str, alpha: float) -> str:
-    """Convertit une couleur hexadécimale en rgba(…) pour les calques doux."""
+    """Convertit une couleur hexadecimale en rgba(...) pour les calques doux."""
     h = hex_color.lstrip("#")
     r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
     return f"rgba({r}, {g}, {b}, {alpha})"
 
 
+def _illuminated_css() -> str:
+    """Styles pour le design << manuscrit enlumine >> des cartes des 99 Noms.
+
+    Cette fonction retourne une chaine CSS statique (sans interpolation f-string)
+    pour eviter les problemes d'echappement des accolades CSS dans les f-strings.
+    """
+    return """
+/* ============================================================================
+   ILLUMINATED MANUSCRIPT STYLE -- Cartes des 99 Noms (Asmāʾ al-Ḥusnā)
+   Inspiration : enluminures traditionnelles (rabats de manuscrits, tapis de priere)
+   Palette : bleu lapis profond, or chaud, rouge cinabre, vert emeraude, ivoire
+   ============================================================================ */
+
+/* Motif de bordure ornementale (data-URI SVG) -- reutilise pour border-image */
+:root {{
+    --ql-illum-border-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3Cpattern id='illumPattern' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M20 0 Q40 0 40 20 Q40 40 20 40 Q0 40 0 20 Q0 0 20 0 Z' fill='none' stroke='%23A98A45' stroke-width='1.2' opacity='0.8'/%3E%3Ccircle cx='20' cy='20' r='8' fill='none' stroke='%231B4F72' stroke-width='1' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%23C0392B' opacity='0.7'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='200' fill='url(%23illumPattern)'/%3E%3C/svg%3E");
+    --ql-illum-border-width: 24px;
+}}
+
+/* Carte style manuscrit enlumine */
+.ql-illum-card {{
+    position: relative;
+    background:
+        linear-gradient(135deg, 
+            #FDF6E3 0%, 
+            #F5ECD5 40%, 
+            #E8DCC8 100%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 24px,
+            rgba(139, 115, 85, 0.03) 24px,
+            rgba(139, 115, 85, 0.03) 25px
+        );
+    background-blend-mode: multiply, normal;
+    border: var(--ql-illum-border-width) solid transparent;
+    border-image: var(--ql-illum-border-svg) var(--ql-illum-border-width) round;
+    border-radius: 4px;
+    padding: calc(var(--ql-illum-border-width) + 1rem) 1.5rem 1.5rem 1.5rem;
+    margin: 0.5rem;
+    min-height: 420px;
+    box-shadow: 
+        0 4px 20px -4px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(139, 115, 85, 0.1);
+    transition: transform 0.25s cubic-bezier(.2,.7,.3,1), box-shadow 0.25s ease;
+    animation: ql-rise 0.4s cubic-bezier(.2,.7,.3,1) both;
+    animation-delay: var(--ql-delay, 0ms);
+    will-change: transform;
+    overflow: hidden;
+}}
+.ql-illum-card::before {{
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    height: calc(var(--ql-illum-border-width) - 2px);
+    background: var(--ql-illum-border-svg);
+    opacity: 0.9;
+    pointer-events: none;
+}}
+.ql-illum-card::after {{
+    content: attr(data-page);
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 0.65rem;
+    font-style: italic;
+    color: rgba(139, 115, 85, 0.6);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(169, 138, 69, 0.3);
+    pointer-events: none;
+}}
+.ql-illum-card:hover {{
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 
+        0 16px 40px -8px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(139, 115, 85, 0.1);
+    z-index: 10;
+}}
+.ql-illum-card:hover::before {{
+    opacity: 1;
+}}
+
+/* Contenu interne de la carte enluminee */
+.ql-illum-inner {{
+    padding-top: 1.5rem;
+    text-align: center;
+}}
+
+/* Nom arabe -- calligraphie Naskh elegante */
+.ql-illum-arabic {{
+    font-family: 'Amiri', 'Scheherazade New', 'Traditional Arabic', 'Noto Naskh Arabic', 'Arabic Typesetting', serif;
+    font-size: 2.5rem;
+    line-height: 1.4;
+    color: #1B4F72;
+    margin: 0.5rem 0 0.75rem 0;
+    text-shadow: 0 1px 2px rgba(27, 79, 114, 0.2);
+    direction: rtl;
+    text-align: center;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}}
+
+/* Translitteration */
+.ql-illum-translit {{
+    font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    font-size: 1.1rem;
+    color: #1B4F72;
+    margin: 0.25rem 0 0.5rem 0;
+    font-style: italic;
+    letter-spacing: 0.03em;
+}}
+
+/* Traduction francaise -- rouge cinabre pour l'accent */
+.ql-illum-french {{
+    font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #C0392B;
+    margin: 0.5rem 0 1rem 0;
+    letter-spacing: 0.01em;
+}}
+
+/* Rang / numero */
+.ql-illum-rank {{
+    font-family: 'Georgia', serif;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: rgba(139, 115, 85, 0.5);
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(169, 138, 69, 0.1);
+    border: 1px solid rgba(169, 138, 69, 0.2);
+    border-radius: 999px;
+}}
+.ql-illum-rank-icon {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(var(--hue, 0), 50%, 45%), hsl(var(--hue, 0), 50%, 35%));
+    color: white;
+    font-size: 0.7rem;
+    box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+}}
+
+/* Racine */
+.ql-illum-root {{
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(169, 138, 69, 0.08), rgba(139, 115, 85, 0.05));
+    border: 1px solid rgba(169, 138, 69, 0.15);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #5C6B62;
+}}
+.ql-illum-root-label {{
+    font-weight: 600;
+    color: #1B4F72;
+    margin-right: 0.5rem;
+}}
+.ql-illum-root-arabic {{
+    font-family: 'Amiri', serif;
+    color: #1B4F72;
+    margin: 0 0.5rem;
+    direction: rtl;
+}}
+.ql-illum-root-tr {{
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    color: #5C6B62;
+}}
+
+/* Etymologie / definition */
+.ql-illum-etymology {{
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(253,246,227,0.8));
+    border: 1px solid rgba(139, 115, 85, 0.12);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #2C3E2E;
+    text-align: justify;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+}}
+
+/* Bouton Ecouter integre au style manuscrit */
+.ql-illum-listen-btn {{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 1.25rem;
+    background: linear-gradient(135deg, #A98A45 0%, #8B7333 100%);
+    border: 1px solid #8B7333;
+    border-radius: 999px;
+    color: #1B2A1A;
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px -2px rgba(169, 138, 69, 0.4);
+}}
+.ql-illum-listen-btn:hover {{
+    background: linear-gradient(135deg, #BFA268 0%, #A98A45 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -4px rgba(169, 138, 69, 0.5);
+}}
+.ql-illum-listen-btn:active {{
+    transform: translateY(0) scale(0.98);
+}}
+.ql-illum-listen-btn .ear-icon {{
+    font-size: 1rem;
+    opacity: 0.9;
+}}
+
+/* Tiroir / Modal pour les versets d'un Nom Divin */
+.ql-illum-drawer {{
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 100%;
+    max-width: 600px;
+    background: linear-gradient(180deg, #FDF6E3 0%, #F5ECD5 100%);
+    z-index: 10000;
+    box-shadow: -8px 0 32px -4px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(.2,.7,.3,1);
+    overflow-y: auto;
+    border-left: 3px solid #A98A45;
+}}
+.ql-illum-drawer.open {{
+    transform: translateX(0);
+}}
+.ql-illum-drawer-overlay {{
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}}
+.ql-illum-drawer-overlay.visible {{
+    opacity: 1;
+    visibility: visible;
+}}
+
+/* En-tete du tiroir */
+.ql-illum-drawer-header {{
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #1B4F72 0%, #0D3A5C 100%);
+    color: #FDF6E3;
+    padding: 1.5rem 1.25rem 1rem 1.25rem;
+    border-bottom: 2px solid #A98A45;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}}
+.ql-illum-drawer-close {{
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #FDF6E3;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}}
+.ql-illum-drawer-close:hover {{
+    background: rgba(192, 57, 43, 0.3);
+    border-color: #C0392B;
+}}
+
+/* Liste des versets dans le tiroir */
+.ql-illum-verse-list {{
+    padding: 1rem 1.25rem;
+}}
+.ql-illum-verse-item {{
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(139, 115, 85, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+}}
+.ql-illum-verse-item:hover {{
+    border-color: rgba(169, 138, 69, 0.4);
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+    transform: translateX(-4px);
+}}
+.ql-illum-verse-ref {{
+    font-family: 'Georgia', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #A98A45;
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.6rem;
+    background: linear-gradient(135deg, rgba(169, 138, 69, 0.15), rgba(27, 79, 114, 0.1));
+    border-radius: 999px;
+    border: 1px solid rgba(169, 138, 69, 0.2);
+}}
+.ql-illum-verse-arabic {{
+    font-family: 'Amiri', serif;
+    font-size: 1.3rem;
+    line-height: 2;
+    color: #1B4F72;
+    direction: rtl;
+    text-align: right;
+    margin: 0.5rem 0;
+}}
+.ql-illum-verse-translation {{
+    font-family: 'Georgia', serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #2C3E2E;
+    font-style: italic;
+    border-top: 1px dashed rgba(139, 115, 85, 0.2);
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+}}
+
+/* Responsive */
+@media (max-width: 780px) {{
+    .ql-illum-card {{
+        min-height: auto;
+        padding: calc(var(--ql-illum-border-width) + 1rem) 1rem 1rem 1rem;
+        margin: 0.25rem;
+    }}
+    .ql-illum-arabic {{
+        font-size: 2rem;
+    }}
+    .ql-illum-drawer {{
+        max-width: 100%;
+    }}
+}}
+"""
+
+
 def css(name: str) -> str:
-    """Retourne la feuille de style pour la palette demandée."""
     p = PALETTES.get(name, PALETTES[DEFAULT])
     ornament = _ornament_svg(p["gold"])
     mosaic = _mosaic_svg(p["gold"], p["pattern_opacity"])
@@ -161,10 +529,6 @@ def css(name: str) -> str:
     card_edge = _rgba(p["fg"], 0.06)
     gold_glow = _rgba(p["gold"], 0.28)
     return f"""
-<style>
-:root, html, body, .stApp,
-[data-testid="stApp"], [data-testid="stAppViewContainer"],
-[data-testid="stSidebar"] {{
     /* Palette QuranLab : composants internes (bandeau, cartes, tableaux) */
     --ql-bg: {p['bg']};
     --ql-bg2: {p['bg2']};
@@ -182,11 +546,11 @@ def css(name: str) -> str:
     --ql-heading: {HEADING_STACK};
     --ql-font-ar: {ARABIC_STACK};
 
-    /* Remappage des variables NATIVES de Streamlit (préfixe `--st-`, cf.
-       Streamlit 1.58). Tout composant natif — fenêtres modales (st.dialog),
-       menus, expanders, alertes, saisies, titres — tire désormais fond ET
-       texte de la MÊME palette : contraste garanti sur les trois modes. C'est
-       le mécanisme officiel de personnalisation du thème. */
+    /* Remappage des variables NATIVES de Streamlit (prefixe `--st-`, cf.
+       Streamlit 1.58). Tout composant natif -- fenetres modales (st.dialog),
+       menus, expanders, alertes, saisies, titres -- tire desormais fond ET
+       texte de la MEME palette : contraste garanti sur les trois modes. Cest
+       le mecanisme officiel de personnalisation du theme. */
     --st-background-color: {p['bg']} !important;
     --st-secondary-background-color: {p['bg2']} !important;
     --st-text-color: {p['fg']} !important;
@@ -200,9 +564,9 @@ def css(name: str) -> str:
     --st-heading-font: {HEADING_STACK} !important;
 }}
 
-/* Typographie : corps sans-serif lisible ; titres en serif classique. On évite
-   tout sélecteur « * » ou « span » global qui écraserait les fontes dédiées
-   (code, icônes Material de Streamlit : chevrons, coches, ...). */
+/* Typographie : corps sans-serif lisible ; titres en serif classique. On evite
+   tout selecteur << * >> ou << span >> global qui ecraserait les fontes dediees
+   (code, icones Material de Streamlit : chevrons, coches, ...). */
 .stApp, [data-testid="stSidebar"] {{
     font-family: var(--ql-font);
 }}
@@ -216,10 +580,10 @@ def css(name: str) -> str:
 }}
 .stApp [dir="rtl"], .stApp [lang="ar"] {{ font-family: var(--ql-font-ar); }}
 
-/* Icônes Material de Streamlit (chevron _arrow_right_, coches, flèches de
-   sélecteurs) : maintenir LA police d'icônes, jamais celle du texte courant.
-   Sinon l'identifiant s'affiche en clair (ex. « arrow_right ») et déborde sur
-   le libellé voisin. */
+/* Icones Material de Streamlit (chevron _arrow_right_, coches, fleches de
+   selecteurs) : maintenir LA police d'icones, jamais celle du texte courant.
+   Sinon l'identifiant s'affiche en clair (ex. << arrow_right >>) et deborde sur
+   le libelle voisin. */
 [class*="material"], [class*="Material"], [class*="sticon"],
 [data-testid*="icon"] {{
     font-family: "Material Symbols Rounded", "Material Symbols Outlined",
@@ -228,8 +592,8 @@ def css(name: str) -> str:
     letter-spacing: normal;
 }}
 
-/* Confort de lecture « prestige » : colonne centrale aérée, jamais pleine
-   largeur sur grand écran. */
+/* Confort de lecture << prestige >> : colonne centrale aeree, jamais pleine
+   largeur sur grand ecran. */
 [data-testid="stMainBlockContainer"], .block-container {{
     max-width: 1180px;
     margin-inline: auto;
@@ -237,11 +601,11 @@ def css(name: str) -> str:
     padding-bottom: 3rem;
 }}
 
-/* Fonds principaux : aplats solides (aucun filigrane répété ni fond fixé :
-   beaucoup plus léger pour le rendu et le défilement).
-   Le fond de la PAGE vient d'un thème JS (pas d'une variable CSS) : on force
+/* Fonds principaux : aplats solides (aucun filigrane repete ni fond fixe :
+   beaucoup plus leger pour le rendu et le defilement).
+   Le fond de la PAGE vient d'un theme JS (pas d'une variable CSS) : on force
    donc explicitement l'aplat de la palette, SINON le fond reste clair alors
-   que le texte forcé est clair → illisible en Sombre/Intermédiaire. */
+   que le texte force est clair -> illisible en Sombre/Intermediaire. */
 html, body,
 [data-testid="stApp"], .stApp,
 [data-testid="stAppViewContainer"] {{
@@ -255,10 +619,10 @@ html, body,
     color: var(--ql-fg) !important;
 }}
 
-/* Accents uniquement, complétés par un recolorage du TEXTE du contenu : la
-   coloration du texte Streamlit vient d'un thème JS (pas de variables CSS),
-   on force donc explicitement la couleur du contenu, TOUJOURS en cohérence
-   avec le fond forcé (clair/sombre), pour un contraste garanti. */
+/* Accents uniquement, completes par un recolorage du TEXTE du contenu : la
+   coloration du texte Streamlit vient d'un theme JS (pas de variables CSS),
+   on force donc explicitement la couleur du contenu, TOUJOURS en coherence
+   avec le fond force (clair/sombre), pour un contraste garanti. */
 a, a:visited {{ color: var(--ql-accent) !important; }}
 ::selection {{ background: {sel_bg}; }}
 
@@ -269,7 +633,7 @@ a, a:visited {{ color: var(--ql-accent) !important; }}
     color: var(--ql-fg);
 }}
 
-/* Champs de saisie et sélecteurs */
+/* Champs de saisie et selecteurs */
 input, textarea,
 [data-baseweb="input"], [data-baseweb="input"] input,
 [data-baseweb="select"] > div, [data-baseweb="textarea"] {{
@@ -282,11 +646,11 @@ input, textarea,
     color: var(--ql-fg) !important;
 }}
 
-/* Onglets : indicateur de l'onglet actif, épais et immédiatement lisible -----
-   La barre de fond (tab-border) reste fine et neutre ; l'onglet actif reçoit
-   un filet épais (4 px) en dégradé émeraude -> or, rehaussé d'un léger halo.
-   Les couleurs sont puisées dans la palette (--ql-*), donc l'indicateur se
-   détache nettement dans les trois thèmes (Clair, Intermédiaire, Sombre). */
+/* Onglets : indicateur de l'onglet actif, epais et immediatement lisible -----
+   La barre de fond (tab-border) reste fine et neutre ; l'onglet actif recoit
+   un filet epais (4 px) en degrade emeraude -> or, rehausse d'un leger halo.
+   Les couleurs sont puisees dans la palette (--ql-*), donc l'indicateur se
+   detache nettement dans les trois themes (Clair, Intermediaire, Sombre). */
 .stTabs [data-baseweb="tab"] {{
     color: var(--ql-fg2) !important;
     font-weight: 600;
@@ -309,7 +673,7 @@ input, textarea,
     background: var(--ql-border) !important;
 }}
 
-/* Boutons : glassmorphism, liseré doré, accent émeraude au survol */
+/* Boutons : glassmorphism, lisere dore, accent emeraude au survol */
 .stButton > button {{
     border: 1px solid var(--ql-border) !important;
     border-radius: 14px !important;
@@ -377,7 +741,7 @@ input, textarea,
     transform: translateY(-1px);
 }}
 
-/* Encadrés, expanders, alertes : glassmorphism + bord gauche orné */
+/* Encadres, expanders, alertes : glassmorphism + bord gauche orne */
 [data-testid="stExpander"] {{
     background: linear-gradient(135deg, 
         rgba(255,255,255,0.04) 0%, 
@@ -470,7 +834,7 @@ table.ql tr:hover td {{
         transparent 100%) !important;
 }}
 
-/* Surcharge pour rendre les lignes cliquables (onglet Écouter) */
+/* Surcharge pour rendre les lignes cliquables (onglet Ecouter) */
 table.ql.ql-clickable tbody tr {{
     cursor: pointer;
     transition: background .18s ease, transform .18s ease;
@@ -483,9 +847,9 @@ table.ql.ql-clickable tbody tr:active {{
     transform: translateX(1px) scale(.998);
 }}
 
-/* Tableaux de données natifs : rien à forcer, le texte suit --text-color. */
+/* Tableaux de donnees natifs : rien a forcer, le texte suit --text-color. */
 
-/* --- Bandeau d'en-tête (banner) : enluminure géométrique + glassmorphism -- */
+/* --- Bandeau d'en-tete (banner) : enluminure geometrique + glassmorphism -- */
 .ql-banner {{
     position: relative;
     padding: 2rem 2.2rem 1.6rem 2.2rem;
@@ -531,7 +895,7 @@ table.ql.ql-clickable tbody tr:active {{
     );
     opacity: .45;
 }}
-/* cadre intérieur délicat */
+/* cadre interieur delicat */
 .ql-inset {{
     position: absolute;
     inset: 10px;
@@ -540,7 +904,7 @@ table.ql.ql-clickable tbody tr:active {{
     opacity: .5;
     pointer-events: none;
 }}
-/* fleurons d'angle (équerres fines, façon feuille d'arabesque) */
+/* fleurons d'angle (equerres fines, facon feuille d'arabesque) */
 .ql-corner {{
     position: absolute;
     width: 18px; height: 18px;
@@ -606,14 +970,14 @@ table.ql.ql-clickable tbody tr:active {{
     line-height: 1.5;
 }}
 
-/* Petit habillage des titres Streamlit natifs (hors bandeau) : filet doré */
+/* Petit habillage des titres Streamlit natifs (hors bandeau) : filet dore */
 .stApp h2 {{
     border-bottom: 1px solid var(--ql-border);
     padding-bottom: .3rem;
     box-shadow: 0 6px 10px -12px var(--ql-gold);
 }}
 
-/* --- Cartes & conteneurs (.ql-card) : composition « prestige » -----------
+/* --- Cartes & conteneurs (.ql-card) : composition << prestige >> -----------
    Glassmorphism moderne : fond semi-transparent, blur, bordure lumineuse.
    Animations au scroll + micro-interactions au survol. */
 .ql-card {{
@@ -649,7 +1013,7 @@ table.ql.ql-clickable tbody tr:active {{
     will-change: transform, box-shadow;
 }}
 .ql-card::before {{
-    /* filet doré en tête de carte, discret */
+    /* filet dore en tete de carte, discret */
     content: "";
     position: absolute;
     top: 0; left: 10%; right: 10%;
@@ -661,7 +1025,7 @@ table.ql.ql-clickable tbody tr:active {{
     transition: opacity .28s ease, width .28s ease;
 }}
 .ql-card::after {{
-    /* éclat lumineux qui balaie la carte au survol */
+    /* eclat lumineux qui balaie la carte au survol */
     content: "";
     position: absolute;
     top: 0; bottom: 0; left: 0;
@@ -689,7 +1053,7 @@ table.ql.ql-clickable tbody tr:active {{
     transform: translateY(-2px) scale(.995);
     transition-duration: .08s;
 }}
-/* halo doré sur le glyphe arabe au survol : la carte « répond » au doigt */
+/* halo dore sur le glyphe arabe au survol : la carte << repond >> au doigt */
 .ql-card:hover .ql-ar {{
     transform: scale(1.08);
     text-shadow: 0 4px 20px {gold_glow};
@@ -698,7 +1062,7 @@ table.ql.ql-clickable tbody tr:active {{
     transition: transform .28s cubic-bezier(.2, .7, .3, 1),
                 text-shadow .28s ease;
 }}
-/* petit fleuron d'angle (rosette géométrique, 100 % CSS) */
+/* petit fleuron d'angle (rosette geometrique, 100 % CSS) */
 .ql-card .ql-orn {{
     position: absolute;
     top: 10px; right: 10px;
@@ -765,7 +1129,7 @@ table.ql.ql-clickable tbody tr:active {{
     flex: none;
 }}
 .ql-accent {{ color: var(--ql-accent) !important; }}
-/* En-tête de signe (soukoun / chaddah / tanwin) : carte alignée à gauche */
+/* En-tete de signe (soukoun / chaddah / tanwin) : carte alignee a gauche */
 .ql-card.ql-mark {{ text-align: left; gap: .2rem; }}
 .ql-card.ql-mark .ql-head {{ font-size: .82rem; }}
 .ql-forms {{ display: flex; gap: 3px; margin-top: .4rem; }}
@@ -778,7 +1142,7 @@ table.ql.ql-clickable tbody tr:active {{
     font-size: 1.05rem;
 }}
 
-/* --- Versets (onglet « Lire ») : référence ornée, verset ciblé ----------- */
+/* --- Versets (onglet << Lire >>) : reference ornee, verset cible ----------- */
 .ql-verse-anchor {{ display: block; height: 0; }}
 .ql-verse-ref {{
     display: flex;
@@ -830,7 +1194,7 @@ table.ql.ql-clickable tbody tr:active {{
 }}
 
 /* --- Surbrillance de recherche (onglet Recherche) ------------------------
-   Glassmorphism, fond émeraude doré, lisible dans les trois palettes. */
+   Glassmorphism, fond emeraude dore, lisible dans les trois palettes. */
 mark.ql-hit {{
     background: linear-gradient(135deg, 
         rgba(169,138,69,0.35) 0%, 
@@ -846,8 +1210,8 @@ mark.ql-hit {{
     animation: ql-fade-in .2s ease-out;
 }}
 
-/* --- Synthèse convergente (encadré sous les traductions) -----------------
-   Glassmorphism, liseré doré, fond dégradé émeraude, en-tête petites capitales. */
+/* --- Synthese convergente (encadre sous les traductions) -----------------
+   Glassmorphism, lisere dore, fond degrade emeraude, en-tete petites capitales. */
 .ql-synth {{
     margin: .6rem 0 .3rem 0;
     padding: 1rem 1.1rem .85rem 1.1rem;
@@ -938,8 +1302,8 @@ mark.ql-hit {{
 }}
 
 /* --- Navigation rapide flottante (haut / bas de page) --------------------
-   Widget discret ancré en bas à droite : deux boutons empilés — remonter (↑)
-   et descendre (↓) — en émeraude rehaussée d'un filet doré. Glassmorphism. */
+   Widget discret ancre en bas a droite : deux boutons empiles -- remonter (^)
+   et descendre (v) -- en emeraude rehaussee d'un filet dore. Glassmorphism. */
 .ql-scroll-nav {{
     position: fixed;
     right: 18px;
@@ -1066,7 +1430,7 @@ mark.ql-hit {{
         rgba(255,255,255,0.03) 100%) !important;
 }}
 
-/* --- Confort mobile : l'app installée (PWA) reste lisible et tactile ---- */
+/* --- Confort mobile : l'app installee (PWA) reste lisible et tactile ---- */
 @media (max-width: 780px) {{
     [data-testid="stMainBlockContainer"], .block-container {{
         padding-left: .9rem !important;
@@ -1092,7 +1456,7 @@ mark.ql-hit {{
         padding-right: .5rem;
         font-size: .9rem;
     }}
-    /* 16 px minimum : évite le zoom automatique des champs sur iOS */
+    /* 16 px minimum : evite le zoom automatique des champs sur iOS */
     input, textarea, select {{ font-size: 16px !important; }}
 }}
 @media (max-width: 420px) {{
@@ -1127,10 +1491,10 @@ mark.ql-hit {{
         inset 0 1px 0 rgba(255,255,255,0.3) !important;
 }}
 
-/* --- Scroll Reveal (entrée progressive au scroll) ---------------------------
-   Utilisation : ajouter la classe .ql-reveal aux éléments à animer.
-   Le script d'observation (dans app.py) pose .ql-visible quand l'élément
-   entre dans le viewport. Les délais sont gérés via --ql-delay (ms). */
+/* --- Scroll Reveal (entree progressive au scroll) ---------------------------
+   Utilisation : ajouter la classe .ql-reveal aux elements a animer.
+   Le script d'observation (dans app.py) pose .ql-visible quand l'element
+   entre dans le viewport. Les delais sont geres via --ql-delay (ms). */
 .ql-reveal {{
     opacity: 0;
     transform: translateY(24px);
@@ -1177,8 +1541,8 @@ mark.ql-hit {{
 .ql-stagger > *:nth-child(11) {{ --ql-delay: 600ms; }}
 .ql-stagger > *:nth-child(12) {{ --ql-delay: 660ms; }}
 
-/* --- Animations : entrée en cascade, éclats — transform/opacity seuls,
-   accélérés par le GPU, donc fluides même sur mobile/PWA ------------------- */
+/* --- Animations : entree en cascade, eclats -- transform/opacity seuls,
+   acceleres par le GPU, donc fluides meme sur mobile/PWA ------------------- */
 @keyframes ql-rise {{
     from {{ opacity: 0; transform: translateY(8px); }}
     to   {{ opacity: 1; transform: none; }}
@@ -1245,7 +1609,7 @@ mark.ql-hit {{
     }}
 }}
 
-/* --- Audio Player (onglet Écoute) ------------------------------------------ */
+/* --- Audio Player (onglet Ecoute) ------------------------------------------ */
 .ql-audio-player {{
     background: linear-gradient(135deg, 
         rgba(255,255,255,0.04) 0%, 
@@ -1463,5 +1827,6 @@ mark.ql-hit {{
     transform: translateY(-1px);
     box-shadow: 0 4px 14px -4px var(--ql-gold-soft);
 }}
+{_illuminated_css()}
 </style>
 """

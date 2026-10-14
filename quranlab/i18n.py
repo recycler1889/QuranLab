@@ -675,12 +675,20 @@ _FR = {
     "audio.bilingual_legend": "Prêt — récitation puis traduction.",
     "audio.mode_label": "Mode audio",
     "audio.mode_arabic_only": "Arabe seul (récitation)",
-    "audio.mode_bilingual": "Arabe + Traduction française (TTS)",
+    "audio.mode_bilingual": "Arabe + Traduction française",
     "audio.auto_chain": "Enchaînement automatique des sourates",
     "audio.auto_chain_help": "À la fin d'une sourate, la suivante démarre automatiquement.",
     "audio.now_playing": "En lecture : {sura} — {name}",
     "audio.next_surah": "Suivante : {sura} — {name}",
     "audio.click_to_play": "Cliquez sur une ligne pour lancer la lecture.",
+    "audio.prev_surah": "Sourate précédente",
+    "audio.next_surah": "Sourate suivante",
+    "audio.rewind_10": "Reculer de 10 secondes",
+    "audio.forward_10": "Avancer de 10 secondes",
+    "audio.surah_meta": "Sourate {num} — {name} ({name_ar}) · {verses} versets",
+    "audio.french_help": "Mode bilingue indisponible : aucune source audio français configurée.",
+    "audio.french_unavailable": "Traduction audio française non disponible pour cette sourate.",
+    "audio.reciter_label": "Récitateur",
 }
 
 _EN = {
@@ -1297,12 +1305,20 @@ _EN = {
     "audio.bilingual_legend": "Ready — recitation then translation.",
     "audio.mode_label": "Audio mode",
     "audio.mode_arabic_only": "Arabic only (recitation)",
-    "audio.mode_bilingual": "Arabic + French translation (TTS)",
+    "audio.mode_bilingual": "Arabic + French translation",
     "audio.auto_chain": "Auto-chain surahs",
     "audio.auto_chain_help": "Automatically start the next surah when the current one ends.",
     "audio.now_playing": "Playing: {sura} — {name}",
     "audio.next_surah": "Next: {sura} — {name}",
     "audio.click_to_play": "Click a row to start playback.",
+    "audio.prev_surah": "Previous surah",
+    "audio.next_surah": "Next surah",
+    "audio.rewind_10": "Rewind 10 seconds",
+    "audio.forward_10": "Forward 10 seconds",
+    "audio.surah_meta": "Surah {num} — {name} ({name_ar}) · {verses} verses",
+    "audio.french_help": "Bilingual mode unavailable: no French audio source configured.",
+    "audio.french_unavailable": "French audio translation not available for this surah.",
+    "audio.reciter_label": "Reciter",
 }
 
 # --- API ------------------------------------------------------------------
