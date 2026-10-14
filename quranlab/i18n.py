@@ -26,8 +26,7 @@ _FR = {
     "app.title": "QuranLab — analyse intra-coranique",
     "app.subtitle": (
         "Recherche et analyse strictement intra-coraniques — texte, structure, "
-        "linguistique et racines. Sans tafsir, hadith ni interprétation "
-        "post-coranique."
+        "linguistique et racines."
     ),
     "app.choose_lang": "Langue d'affichage",
     "app.prefs": "Préférences",
