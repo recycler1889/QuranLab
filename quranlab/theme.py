@@ -66,10 +66,23 @@ PALETTES = {
         "pattern": "#BFA268",
         "pattern_opacity": "0.09",
     },
+    "Tawatur": {
+        "label": "Tawatur Hadith",
+        "bg": "#0a1914",       # emerald profond très sombre
+        "bg2": "#0d241d",      # surfaces secondaires
+        "field": "#1a2a25",    # champs de saisie
+        "fg": "#f0f8f5",       # texte blanc cassé / ivoire
+        "fg2": "#a8d8c8",      # texte secondaire éclairé
+        "border": "#4a6b5c",   # bordure vert émeraude
+        "accent": "#c9a936",   # or lumineux / néon doux
+        "gold": "#d4af37",    # or doux premium
+        "pattern": "#c9a937",  # motifs géométriques islamiques
+        "pattern_opacity": "0.03",
+    },
 }
 
 # Ordre d'affichage dans le selecteur.
-ORDER = ["Clair", "Intermediaire", "Sombre"]
+ORDER = ["Clair", "Intermediaire", "Sombre", "Tawatur"]
 
 DEFAULT = "Clair"
 

@@ -91,13 +91,26 @@ def _player_html(
     total_dur_fmt = html.escape(_fmt_duration(total_est_seconds))
     surah_meta = html.escape(t("audio.surah_meta", num=sura, name=sura_name, name_ar=sura_name_ar, verses=verses_count))
 
-    glass_bg = "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)"
+glass_bg = "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)"
     glass_border = pal['border']
     accent = pal['accent']
     gold = pal['gold']
     fg = pal['fg']
     fg2 = pal['fg2']
-    fg3 = pal['fg']  # Use darker fg for better contrast in light theme
+    reciter_label = current_reciter_key or t("audio.default_reciter")
+
+    # Build reciter options JSON and find current index
+    reciters_list = reciters or []
+    reciters_json = json.dumps(
+        [{"key": r["key"], "label": r["label"]} for r in reciters_list],
+        ensure_ascii=False,
+    )
+    current_reciter_idx = 0
+    if current_reciter_key and reciters_list:
+        for i, r in enumerate(reciters_list):
+            if r["key"] == current_reciter_key:
+                current_reciter_idx = i
+                break
 
     comp = f"""
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -181,16 +194,18 @@ def _player_html(
   .nav-btn {{ padding:.15rem .45rem; font-size:.62rem; font-weight:600; }}
 </style></head><body>
   <div class="player-wrap">
-    <!-- Ligne 1 : Métadonnées + mode -->
+    <!-- Ligne 1 : Métadonnées + mode + réciteur -->
     <div class="meta-row">
       <span class="surah-badge">{surah_meta}</span>
-      <span class="time-lapse" id="tl">00:00 / {total_dur_fmt}</span>
+      <span class="reciter-select" id="reciterDisplay" style="display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .6rem;background:linear-gradient(135deg,{accent} 0%,#1a6b4a 100%);border-radius:999px;font-weight:600;color:#FDF6E3;box-shadow:0 2px 8px -2px {accent};min-width:140px;">
+        {reciter_label}
+      </span>
       <div class="mode-pills">
         <span class="mode-pill {'active' if mode=='arabic_only' else ''}" data-mode="arabic_only">{t("audio.mode_arabic_only")}</span>
         <span class="mode-pill {'active' if mode=='bilingual' else ''}" data-mode="bilingual">{t("audio.mode_bilingual")}</span>
       </div>
     </div>
-    <!-- Ligne 2 : Contrôles complets (disposition symétrique Windows Media Player) -->
+    <!-- Ligne 2 : Contrôles simplifiés -->
     <div class="controls">
       <button class="btn" id="rew10" title="{t('audio.rewind_10')}">-10s</button>
       <button class="btn nav-btn" id="prev_sura" title="{t('audio.prev_surah')}">&#171;</button>
@@ -199,9 +214,8 @@ def _player_html(
       <button class="btn" id="fwd10" title="{t('audio.forward_10')}">+10s</button>
       <span class="time" id="cur">00:00</span>
       <div class="progress-wrap" id="prog"><div class="progress-bar" id="pbar" style="width:0%"></div></div>
-      <span class="time" id="dur">{total_dur_fmt}</span>
+      <span class="time-lapse" id="tl">{_fmt_time_short(total_est_seconds)} / {total_dur_fmt}</span>
       <button class="btn" id="st" title="{t('ui.stop')}">&#9632;</button>
-      <span class="reciter-select" id="reciterDisplay">{t("audio.reciter")}</span>
     </div>
     <div class="legend">{legend}</div>
     <audio id="au" preload="metadata" crossorigin="anonymous"></audio>
@@ -213,7 +227,6 @@ def _player_html(
     var pbar = document.getElementById('pbar');
     var prog = document.getElementById('prog');
     var cur = document.getElementById('cur');
-    var dur = document.getElementById('dur');
     var tl = document.getElementById('tl');
     var PLAY = {play}, PAUSE = {pause}, STOP = {stop}, tmpl = {tmpl};
     var idx = 0, phase = 'ar', playing = false;
@@ -225,6 +238,8 @@ def _player_html(
     var MODE = "{mode}";
     var AUTOPLAY_REQUESTED = {str(autoplay_requested).lower()};
     var TOTAL_EST = {float(total_est_seconds)};
+    var RECITER_OPTIONS = {reciters_json};
+    var CURRENT_RECITER_IDX = {current_reciter_idx};
     function fmt(t){{ if(!isFinite(t)) return "00:00"; var m=Math.floor(t/60), s=Math.floor(t%60); return (m<10?"0":"")+m+":"+(s<10?"0":"")+s; }}
     function show(i, fr){{
       var tag = ITEMS[i].sura + ':' + ITEMS[i].aya + (fr ? ' · FR' : '');
@@ -265,13 +280,12 @@ if (window.parent && window.postMessage) {{
     function stop(){{
       playing = false; pp.textContent = PLAY; pp.innerHTML = '&#9654;'; au.pause();
       idx = 0; phase = 'ar'; au.removeAttribute('src');
-      cur.textContent = "00:00"; dur.textContent = fmt(TOTAL_EST);
+      cur.textContent = "00:00";
       pbar.style.width = "0%";
       tl.textContent = "00:00 / " + fmt(TOTAL_EST);
     }}
     au.addEventListener('loadedmetadata', function(){{
       var d = isFinite(au.duration) ? au.duration : TOTAL_EST;
-      dur.textContent = fmt(d);
       tl.textContent = "00:00 / " + fmt(d);
     }});
     au.addEventListener('timeupdate', function(){{
@@ -306,18 +320,18 @@ if (window.parent && window.postMessage) {{
     if (AUTOPLAY_REQUESTED) {{
       setTimeout(function() {{ start(); }}, 100);
     }}
-    // Reciter display click → cycle to next reciter
+// Reciter display click → cycle to next reciter
     var reciterDisplay = document.getElementById('reciterDisplay');
-    reciterDisplay.addEventListener('click', function() {{
+    reciterDisplay.addEventListener('click', function() {
       // Cycle through available reciters
-      var current = reciterOptions[currentReciterIdx];
-      var nextIdx = (currentReciterIdx + 1) % reciterOptions.length;
-      var nextReciter = reciterOptions[nextIdx];
+      var current = RECITER_OPTIONS[CURRENT_RECITER_IDX];
+      var nextIdx = (CURRENT_RECITER_IDX + 1) % RECITER_OPTIONS.length;
+      var nextReciter = RECITER_OPTIONS[nextIdx];
       // Post message to parent Streamlit app
-      if (window.parent) {{
+      if (window.parent) {
         window.parent.postMessage({{type: 'ql_change_reciter', key: nextReciter.key}}, '*');
       }}
-      currentReciterIdx = nextIdx;
+      CURRENT_RECITER_IDX = nextIdx;
       // Update display text
       reciterDisplay.textContent = nextReciter.label;
     }}
