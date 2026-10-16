@@ -1027,8 +1027,8 @@ def _scroll_nav_html() -> str:
         "return best||d.scrollingElement||d.documentElement;}"
         "function go(top){var el=scroller();var tg=top?0:el.scrollHeight;"
         "try{el.scrollTo({top:tg,behavior:'smooth'});}catch(e){el.scrollTop=tg;}}"
-        "up.addEventListener('click',function(){go(true);});"
-        "down.addEventListener('click',function(){go(false);});"
+        "up.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});"
+        "down.addEventListener('click',function(){window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});});"
         # un seul jeu d'écouteurs par session parente
         "if(!p.__qlScrollNavBound){p.__qlScrollNavBound=true;"
         "var upd=function(){var n=d.getElementById('ql-scroll-nav');"
