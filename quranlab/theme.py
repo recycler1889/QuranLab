@@ -990,87 +990,80 @@ table.ql.ql-clickable tbody tr:active {{
     box-shadow: 0 6px 10px -12px var(--ql-gold);
 }}
 
-/* --- Cartes & conteneurs (.ql-card) : composition << prestige >> -----------
-   Glassmorphism moderne : fond semi-transparent, blur, bordure lumineuse.
-   Animations au scroll + micro-interactions au survol. */
-.ql-card {{
+/* --- Cartes & conteneurs (.ql-card) : style parchemin & enluminure -----------
+   Fond type parchemin vieilli, bordures ornées de motifs géométriques/floraux
+   en tons bleu, or et rouge. Pas de verre transparent. */
+.ql-card {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: .32rem;
     height: 100%;
-    padding: 1.05rem .9rem .9rem .9rem;
-    border: 1px solid var(--ql-border);
-    border-radius: 18px;
+    padding: 1rem .9rem .9rem .9rem;
+    border: 2px solid #b8860b;
+    border-radius: 12px;
     background:
-        linear-gradient(135deg, 
-            rgba(255,255,255,0.06) 0%, 
-            rgba(255,255,255,0.02) 50%, 
-            rgba(255,255,255,0.03) 100%),
-        var(--ql-bg2);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    color: var(--ql-fg);
+        linear-gradient(135deg, #fdf6e3 0%, #e8d5a9 50%, #d4c0a0 100%),
+        url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><polygon points='50,10 90,50 50,90 10,50' fill='#b8860b'/><polygon points='50,10 10,50 50,90' fill='#8b0000'/><polygon points='90,50 50,90 50,10' fill='#006400'/><polygon points='50,90 10,50 90,50' fill='#00008b'/></svg>") repeat;
+    color: #2c1810;
     text-align: center;
     overflow: hidden;
     isolation: isolate;
     -webkit-tap-highlight-color: transparent;
-    box-shadow: 
-        0 1px 0 rgba(255,255,255,0.04) inset,
-        0 4px 20px -6px rgba(0, 0, 0, .25),
-        0 20px 40px -24px rgba(0, 0, 0, .4);
+    box-shadow:
+        0 2px 6px rgba(0,0,0,.15),
+        0 0 0 1px rgba(184,134,11,.2);
     transition: transform .28s cubic-bezier(.2, .7, .3, 1),
                 box-shadow .28s ease, border-color .28s ease;
     animation: ql-rise .4s cubic-bezier(.2, .7, .3, 1) both;
     animation-delay: var(--ql-delay, 0ms);
     will-change: transform, box-shadow;
-}}
-.ql-card::before {{
-    /* filet dore en tete de carte, discret */
+}
+.ql-card::before {
     content: "";
     position: absolute;
-    top: 0; left: 10%; right: 10%;
-    height: 1.5px;
-    background: linear-gradient(
-        90deg, transparent, var(--ql-gold), transparent
-    );
-    opacity: .5;
-    transition: opacity .28s ease, width .28s ease;
-}}
-.ql-card::after {{
-    /* eclat lumineux qui balaie la carte au survol */
-    content: "";
-    position: absolute;
-    top: 0; bottom: 0; left: 0;
-    width: 60%;
-    background: linear-gradient(
-        100deg, transparent, rgba(169,138,69,0.18), transparent
-    );
-    transform: translateX(-180%) skewX(-18deg);
-    opacity: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(184,134,11,.05) 10px,
+            rgba(184,134,11,.05) 20px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 10px,
+            rgba(184,134,11,.05) 10px,
+            rgba(184,134,11,.05) 20px
+        );
     pointer-events: none;
-    z-index: 1;
-}}
-.ql-card:hover {{
-    transform: translateY(-6px) scale(1.018);
-    border-color: var(--ql-gold);
-    box-shadow: 
-        0 1px 0 rgba(255,255,255,0.06) inset,
-        0 12px 32px -8px rgba(0, 0, 0, .3),
-        0 28px 50px -24px rgba(0, 0, 0, .45),
-        0 0 0 1px var(--ql-gold-soft);
-}}
-.ql-card:hover::before {{ opacity: 1; width: 80%; left: 10%; }}
-.ql-card:hover::after {{ opacity: 1; animation: ql-sheen .9s ease; }}
-.ql-card:active {{
+    z-index: 0;
+}
+.ql-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 0 L60 30 L30 60 L0 30 Z' fill='#b8860b'/><path d='M0 30 L30 60 L60 30 L30 0 Z' fill='#8b0000'/></svg>");
+    background-position: center;
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+.ql-card:hover {
+    transform: translateY(-5px) scale(1.015);
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.2),
+        0 0 0 2px #b8860b;
+}
+.ql-card:active {
     transform: translateY(-2px) scale(.995);
     transition-duration: .08s;
-}}
-/* halo dore sur le glyphe arabe au survol : la carte << repond >> au doigt */
-.ql-card:hover .ql-ar {{
-    transform: scale(1.08);
-    text-shadow: 0 4px 20px {gold_glow};
-}}
+}
+.ql-card .ql-ar,
+.ql-ar { font-family: var(--ql-font-ar); color: #b8860b; }
 .ql-card .ql-ar {{
     transition: transform .28s cubic-bezier(.2, .7, .3, 1),
                 text-shadow .28s ease;

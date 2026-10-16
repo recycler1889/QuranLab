@@ -24,6 +24,7 @@ d'interface passent par ``i18n.t`` (parité FR/EN).
 """
 
 import html
+import json
 
 import streamlit as st
 
@@ -422,18 +423,21 @@ def _step_numbers():
 # --------------------------------------------------------------------------
 def _asma_card(name: dict, c: dict, i: int = 0) -> str:
     """Carte d'un Nom : calligraphie, translittération, traduction directe,
-    racine et définition lexicographique ; repère graphique à teinte douce."""
-    hue = name["hue"]
-    badge_bg = f"hsla({hue},60%,50%,.16)"
-    badge_br = f"hsla({hue},60%,45%,.55)"
+    racine et définition lexicographique ; affichage parchemin sans émoji."""
+    data = {
+        "ar": name["ar"],
+        "tr": name["tr"],
+        "root_ar": name["root_ar"],
+        "root_tr": name["root_tr"],
+        "etymology": asma.etymology(name, _lang()),
+    }
+    data_attr = json.dumps(data)
+    delay = _delay(i)
     return (
-        f"<div class='ql-card'{_delay(i)}>"
-        "<span class='ql-orn'></span>"
+        f"<div class='ql-card'{delay} data-json='{data_attr}'>"
         "<div class='ql-head'>"
         f"<span>{name['n']} / {asma.count()}</span>"
-        "<span class='ql-badge' "
-        f"style='background:{badge_bg};border:1px solid {badge_br}'>"
-        f"{name['icon']}</span></div>"
+        "</div>"
         f"<div class='ql-ar ql-ar-xl' dir='rtl' lang='ar' "
         f"style='margin:.25rem 0 .1rem'>{html.escape(name['ar'])}</div>"
         f"<div class='ql-tr' style='font-size:.86rem'>"
@@ -464,6 +468,29 @@ def _step_asma():
             with col:
                 st.markdown(_asma_card(name, c, j), unsafe_allow_html=True)
                 _listen(name["ar"])
+    # Modal for detailed view
+    modal_html = "<div id='asma-modal' style='display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);justify-content:center;align-items:center;z-index:9999;'><div style='background:#fdf6e3;padding:2rem;border-radius:12px;max-width:600px;width:90%;text-align:center;position:relative;max-height:80vh;overflow:auto;'><div style='font-size:4rem;margin:1rem 0;' dir='rtl' lang='ar' id='modal-ar'></div><div style='margin:1rem 0;font-size:1.2rem;' id='modal-tr'></div><div style='margin:1rem 0;font-size:1rem;' id='modal-root'></div><div style='margin:1rem 0;font-size:0.9rem;' id='modal-etym'></div><button style='position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;background:none;font-size:2rem;cursor:pointer;' onclick='document.getElementById(\"asma-modal\").style.display=\"none\"'>×</button></div></div>"
+    st.markdown(modal_html, unsafe_allow_html=True)
+    st.markdown("""
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('asma-modal');
+            const close = modal.querySelector('button');
+            document.querySelectorAll('.ql-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    modal.style.display = 'flex';
+                    const data = JSON.parse(card.dataset.json);
+                    modal.querySelector('#modal-ar').innerHTML = data.ar;
+                    modal.querySelector('#modal-tr').innerText = data.tr;
+                    modal.querySelector('#modal-root').innerText = 'Racine arabe: ' + data.root_ar + ' · Latin: ' + data.root_tr;
+                    modal.querySelector('#modal-etym').innerText = data.etymology;
+                });
+                if(close) close.addEventListener('click', () => modal.style.display='none');
+                modal.addEventListener('click', e => { if(e.target===modal) modal.style.display='none'; });
+            });
+        });
+    </script>
+    """, unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------
